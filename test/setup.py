@@ -11,7 +11,7 @@ setuptools.setup(
     description="Unsupervized Error Logs Clusterization",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/operationalintelligence/error-log-clustering",
+    url="https://github.com/maria-grigorieva/ClusterLog.git",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
