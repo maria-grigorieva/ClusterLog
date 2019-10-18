@@ -1,114 +1,101 @@
-import numpy as np
-from kneed import KneeLocator
-import nltk
-from nltk.tokenize import TreebankWordTokenizer
-nltk.download('words')
-nltk.download('stopwords')
-from gensim.models import Word2Vec
-import math
-import pyonmttok
-from sklearn.neighbors import NearestNeighbors
-from sklearn.cluster import DBSCAN
-import re
-import logging
 import multiprocessing
+from math import sqrt
+from re import sub
 from statistics import mean, stdev
-from fuzzywuzzy import fuzz
+from time import time
+
+import numpy as np
 import pandas as pd
+from fuzzywuzzy import fuzz
+from gensim.models import Word2Vec
+from kneed import KneeLocator
+from nltk.tokenize import TreebankWordTokenizer
+from pyonmttok import Tokenizer
+from sklearn.cluster import DBSCAN
+from sklearn.neighbors import NearestNeighbors
 
-def safe_run(func):
 
-    def func_wrapper(*args, **kwargs):
+def safe_run(method):
+    def func_wrapper(self, *args, **kwargs):
 
         try:
-           return func(*args, **kwargs)
+            ts = time()
+            result = method(self, *args, **kwargs)
+            te = time()
+            self.timings[method.__name__] = te - ts
+            return result
 
-        except Exception as e:
-
-            print(e)
+        except Exception as error:
+            print(error)
             return None
 
     return func_wrapper
 
-CLUSTERING_SETTINGS = ["tokenizer","w2v_size","w2v_window","min_samples"]
+
+CLUSTERING_SETTINGS = ["tokenizer", "w2v_size", "w2v_window", "min_samples"]
+
 DATA_SETTINGS = ["index", "target"]
 
-class Cluster:
+STATISTICS = ["cluster_name", "cluster_size", "first_entry",
+              "mean_length", "mean_similarity", "std_length", "std_similarity"]
 
+
+class Cluster:
     def __init__(self, data, mode, _cluster, _data):
         self.data = data
         self.mode = mode
-        self.set_cluster_parameters(_cluster)
+        self.set_cluster_settings(_cluster)
         self.set_data_settings(_data)
         self.cpu_number = self.get_cpu_number()
-        self.errors = self.get_errors()
+        self.messages = self.extract_messages()
+        self.timings = {}
 
     @staticmethod
     def get_cpu_number():
         return multiprocessing.cpu_count()
 
-    @safe_run
-    def set_cluster_parameters(self, params):
+    def set_cluster_settings(self, params):
         for key in CLUSTERING_SETTINGS:
             setattr(self, key, params.get(key))
 
-    @safe_run
     def set_data_settings(self, params):
         for key in DATA_SETTINGS:
             setattr(self, key, params.get(key))
 
-    @safe_run
-    def get_errors(self):
+    def extract_messages(self):
         return list(self.data[self.target])
 
-    @safe_run
     def process(self):
-        return self.data_preparation()\
-            .tokens_vectorization()\
-            .sentence_vectorization()\
-            .tuning_parameters()\
-            .dbscan()\
+        """
+        Chain of methods, providing data preparation, vectorization and clusterization
+        :return:
+        """
+        return self.data_preparation() \
+            .tokenization() \
+            .tokens_vectorization() \
+            .sentence_vectorization() \
+            .tuning_parameters() \
+            .dbscan() \
             .clustered()
 
     @safe_run
     def data_preparation(self):
-        self.clear_strings()
-        self.tokenization()
+        """
+        Cleaning log messages from unnucessary substrings and tokenization
+        :return:
+        """
+        self.messages_cleaned = cleaner(self.messages)
         return self
 
     @safe_run
     def tuning_parameters(self):
+        """
+        Automatic definition of epsilon value for the DBSCAN algorithm
+        :return:
+        """
         self.distances = self.kneighbors()
         self.epsilon = self.epsilon_search()
         return self
-
-    @staticmethod
-    def remove_whitespaces(sentence):
-        """
-        Some error messages has multiple spaces, so we change it to one space.
-        :param sentence:
-        :return:
-        """
-        return " ".join(sentence.split())
-
-    @safe_run
-    def clear_strings(self):
-        """
-        Clear error messages from unnecessary data:
-        - UID/UUID in file paths
-        - line numbers - as an example "error at line number ..."
-        Removed parts of text are substituted with titles
-        :return:
-        """
-        _uid = r'[0-9a-zA-Z]{12,128}'
-        _line_number = r'(at line[:]*\s*\d+)'
-        _uuid = r'[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
-
-        for idx, item in enumerate(self.errors):
-            _cleaned = re.sub(_line_number, "at line LINE_NUMBER", item)
-            _cleaned = re.sub(_uid, "UID", _cleaned)
-            _cleaned = re.sub(_uuid, "UUID", _cleaned)
-            self.errors[idx] = self.remove_whitespaces(_cleaned)
 
     @safe_run
     def tokenization(self):
@@ -123,27 +110,37 @@ class Cluster:
         """
         tokenized = []
         if self.tokenizer == 'nltk':
-            for line in self.errors:
+            for line in self.messages:
                 tokenized.append(TreebankWordTokenizer().tokenize(line))
-            logging.info("Stage 1 finished")
-        elif self.tokenizer  == 'pyonmttok':
-            tokenizer = pyonmttok.Tokenizer("space", joiner_annotate=False, segment_numbers=False)
-            for doc in self.errors:
-                tokens, features = tokenizer.tokenize(doc)
+        elif self.tokenizer == 'pyonmttok':
+            tokenizer = Tokenizer("space", joiner_annotate=False, segment_numbers=False)
+            for line in self.messages:
+                tokens, features = tokenizer.tokenize(line)
                 tokenized.append(tokens)
         self.tokenized = tokenized
+        return self
 
     @safe_run
     def tokens_vectorization(self, min_count=1, iterations=10):
         """
         Training word2vec model
+        :param iterations:
         :param min_count: minimium frequency count of words (recommended value is 1)
-        :param iter: (recommended value is 10)
         :return:
         """
         self.word2vec = Word2Vec(self.tokenized, size=self.w2v_size, window=self.w2v_window,
-                            min_count=min_count, workers=self.cpu_number, iter=iterations)
+                                 min_count=min_count, workers=self.cpu_number, iter=iterations)
         return self
+
+    def get_vocabulary(self):
+        """
+        Returns the vocabulary with word frequencies
+        :return:
+        """
+        w2c = dict()
+        for item in self.word2vec.wv.vocab:
+            w2c[item] = self.word2vec.wv.vocab[item].count
+        return w2c
 
     @safe_run
     def sentence_vectorization(self):
@@ -176,7 +173,7 @@ class Cluster:
         Calculates average distances for k-nearest neighbors
         :return:
         """
-        k = round(math.sqrt(len(self.sent2vec)))
+        k = round(sqrt(len(self.sent2vec)))
         neigh = NearestNeighbors(n_neighbors=k)
         nbrs = neigh.fit(self.sent2vec)
         distances, indices = nbrs.kneighbors(self.sent2vec)
@@ -192,11 +189,11 @@ class Cluster:
     @safe_run
     def epsilon_search(self):
         """
-        Search epsilon for DBSCAN
+        Search epsilon for the DBSCAN clusterization
         :return:
         """
         kneedle = KneeLocator(self.distances, list(range(len(self.distances))))
-        if len(kneedle.all_elbows)>0:
+        if len(kneedle.all_elbows) > 0:
             return max(kneedle.all_elbows)
         else:
             return 1
@@ -204,17 +201,32 @@ class Cluster:
     @safe_run
     def dbscan(self):
         """
-        :return: DBSCAN labels
+        Execution of the DBSCAN clusterization algorithm.
+        Returns cluster labels
+        :return:
         """
-        self.cluster_labels = DBSCAN(eps=self.epsilon, min_samples=self.min_samples, n_jobs=self.cpu_number).fit_predict(self.sent2vec)
-        print(self.cluster_labels)
+        self.cluster_labels = DBSCAN(eps=self.epsilon, min_samples=self.min_samples, n_jobs=self.cpu_number) \
+            .fit_predict(self.sent2vec)
         return self
 
-
-    @safe_run
     def clustered(self):
         """
         Returns dictionary of clusters with the arrays of elements
+        If mode == ALL:
+        { "<cluster_1>": [
+                "<feature_name_1>": "<value>",
+                "<feature_name_2>": "<value>",
+                ...
+            ],
+          "<cluster_2>": [...],
+            ...
+        }
+        If mode == INDEX:
+        {
+            "<cluster_1>": [id_1, id_2, id_3, ...id_N],
+            "<cluster_2>": [id_x, id_y, id_z, ...id_M],
+            ...
+        }
         :return:
         """
         groups = {}
@@ -226,51 +238,87 @@ class Cluster:
                 groups[str(key)] = value[self.index].values.tolist()
         return groups
 
-    @safe_run
-    def errors_in_cluster(self, cluster_label):
-        """
+    def total_time(self):
+        self.timings['total'] = sum([self.timings[i] for i in self.timings])
 
+
+    def in_cluster(self, cluster_label):
+        """
+        Returns all log messages in particular cluster
         :param cluster_label:
         :return:
         """
         results = []
         for idx, l in enumerate(self.cluster_labels):
             if l == cluster_label:
-                results.append(self.errors[idx])
+                results.append(self.messages[idx])
         return results
 
-    # noinspection PyBroadException
-    @safe_run
+    def levenshtein_similarity(self, rows):
+        """
+        Takes a list of log messages and calculates similarity between
+        first and all other messages.
+        :param rows:
+        :return:
+        """
+        x0 = rows[0][self.target]
+        return ([fuzz.ratio(x0, rows[i][self.target]) for i in range(0, len(rows))])
+
+
     def statistics(self, clustered_df):
         """
-
+        Returns DataFrame with statistic for all clusters
+        "cluster_name" - name of a cluster
+        "cluster_size" = number of log messages in cluster
+        "first_entry" - first log message in cluster
+        "mean_length" - average length of log messages in cluster
+        "std_length" - standard deviation of length of log messages in cluster
+        "mean_similarity" - average similarity of log messages in cluster
+        (calculated as the levenshtein distances between the 1st and all other log messages)
+        "std_similarity" - standard deviation of similarity of log messages in cluster
         :param clustered_df:
         :return:
         """
         clusters = []
         for item in clustered_df:
-            cluster = {"cluster_name": item, "first_entry": clustered_df[item][0][self.target],
-                       "cluster_size": len(clustered_df[item])}
-            lengths = []
-            for s in clustered_df[item]:
-                lengths.append(len(s[self.target]))
-            mean_length = mean(lengths)
-            try:
-                std_length = stdev(lengths)
-            except Exception as error:
-                std_length = 0
-            cluster["mean_length"] = mean_length
-            cluster["std_lengt"] = std_length
-            x0 = clustered_df[item][0][self.target]
-            dist = []
-            for i in range(0, len(clustered_df[item])):
-                x = clustered_df[item][i][self.target]
-                dist.append(fuzz.ratio(x0, x))
-            cluster["mean_similarity"] = mean(dist)
-            try:
-                cluster["std_similarity"] = stdev(dist)
-            except Exception as error:
-                cluster["std_similarity"] = 0
-            clusters.append(cluster)
-        df = pd.DataFrame(clusters).round(2)
+            rows = clustered_df[item]
+            lengths = [len(s[self.target]) for s in rows]
+            similarity = self.levenshtein_similarity(rows)
+            clusters.append([item,
+                             len(rows),
+                             rows[0][self.target],
+                             mean(lengths),
+                             mean(similarity),
+                             stdev(lengths) if len(rows)>1 else 0,
+                             stdev(similarity) if len(rows)>1 else 0])
+        df = pd.DataFrame(clusters, columns=STATISTICS).round(2)
         return df.T.to_dict()
+
+
+def remove_whitespaces(sentence):
+    """
+    Some error messages has multiple spaces, so we change it to one space.
+    :param sentence:
+    :return:
+    """
+    return " ".join(sentence.split())
+
+
+def cleaner(messages):
+    """
+    Clear error messages from unnecessary data:
+    - UID/UUID in file paths
+    - line numbers - as an example "error at line number ..."
+    Removed parts of text are substituted with titles
+    :return:
+    """
+    _uid = r'[0-9a-zA-Z]{12,128}'
+    _line_number = r'(at line[:]*\s*\d+)'
+    _uuid = r'[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+
+    for idx, item in enumerate(messages):
+        _cleaned = sub(_line_number, "at line LINE_NUMBER", item)
+        _cleaned = sub(_uid, "UID", _cleaned)
+        _cleaned = sub(_uuid, "UUID", _cleaned)
+        messages[idx] = remove_whitespaces(_cleaned)
+    return messages

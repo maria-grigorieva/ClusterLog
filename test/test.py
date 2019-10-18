@@ -19,7 +19,14 @@ def main():
     pprint.pprint(clustered_df)
     pprint.pprint(stats)
 
-    pprint.pprint(cluster.errors_in_cluster(1))
+    pprint.pprint(cluster.in_cluster(1))
+
+    pprint.pprint(cluster.messages_cleaned)
+    pprint.pprint(cluster.tokenized)
+    pprint.pprint(cluster.epsilon)
+    pprint.pprint(cluster.get_vocabulary())
+    cluster.total_time()
+    pprint.pprint(cluster.timings)
 
 if __name__ == "__main__":
     sys.exit(main())
