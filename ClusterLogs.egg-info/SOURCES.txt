@@ -1,0 +1,8 @@
+README.md
+setup.py
+ClusterLogs.egg-info/PKG-INFO
+ClusterLogs.egg-info/SOURCES.txt
+ClusterLogs.egg-info/dependency_links.txt
+ClusterLogs.egg-info/top_level.txt
+log_cluster/__init__.py
+log_cluster/cluster_pipeline.py
