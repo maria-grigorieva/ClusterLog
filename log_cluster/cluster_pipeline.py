@@ -177,14 +177,7 @@ class Cluster:
         neigh = NearestNeighbors(n_neighbors=k)
         nbrs = neigh.fit(self.sent2vec)
         distances, indices = nbrs.kneighbors(self.sent2vec)
-        distances = np.sort(distances, axis=0)
-        if k > 2:
-            avg_distances = []
-            for line in distances:
-                avg_distances.append(mean(line))
-            return avg_distances
-        else:
-            return distances[:, 1]
+        return [np.mean(d) for d in np.sort(distances, axis=0)]
 
     @safe_run
     def epsilon_search(self):
