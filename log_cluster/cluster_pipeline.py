@@ -22,11 +22,10 @@ def safe_run(method):
             ts = time()
             result = method(self, *args, **kwargs)
             te = time()
-            self.timings[method.__name__] = te - ts
+            self.timings[method.__name__] = round((te - ts), 4)
             return result
 
-        except Exception as error:
-            print(error)
+        except Exception:
             return None
 
     return func_wrapper
@@ -34,21 +33,38 @@ def safe_run(method):
 
 CLUSTERING_SETTINGS = ["tokenizer", "w2v_size", "w2v_window", "min_samples"]
 
-DATA_SETTINGS = ["index", "target"]
-
 STATISTICS = ["cluster_name", "cluster_size", "first_entry",
               "mean_length", "mean_similarity", "std_length", "std_similarity"]
 
 
 class Cluster:
-    def __init__(self, data, mode, _cluster, _data):
+    def __init__(self, data, index, target, mode, _cluster):
+        # Initialize Pandas DataFrame
         self.data = data
+        # Index column
+        self.index = index
+        # Target column for clusterization
+        self.target = target
+        # ALL | INDEX
         self.mode = mode
+        # Initialize clusterization settings
         self.set_cluster_settings(_cluster)
-        self.set_data_settings(_data)
         self.cpu_number = self.get_cpu_number()
         self.messages = self.extract_messages()
         self.timings = {}
+        self.messages_cleaned = None
+        # Tokenized error messages (a list of tokens for each message)
+        self.tokenized = None
+        # Word2Vec Model
+        self.word2vec = None
+        # Sentence2Vec Model
+        self.sent2vec = None
+        # K-neighbors distances for sent2vec
+        self.distances = None
+        # Epsilon value for DBSCAN clusterization algorithm
+        self.epsilon = None
+        self.cluster_labels = None
+
 
     @staticmethod
     def get_cpu_number():
@@ -58,13 +74,14 @@ class Cluster:
         for key in CLUSTERING_SETTINGS:
             setattr(self, key, params.get(key))
 
-    def set_data_settings(self, params):
-        for key in DATA_SETTINGS:
-            setattr(self, key, params.get(key))
-
     def extract_messages(self):
+        """
+        Returns a list of all error messages from target column
+        :return:
+        """
         return list(self.data[self.target])
 
+    @safe_run
     def process(self):
         """
         Chain of methods, providing data preparation, vectorization and clusterization
@@ -74,7 +91,8 @@ class Cluster:
             .tokenization() \
             .tokens_vectorization() \
             .sentence_vectorization() \
-            .tuning_parameters() \
+            .kneighbors() \
+            .epsilon_search() \
             .dbscan() \
             .clustered()
 
@@ -87,15 +105,6 @@ class Cluster:
         self.messages_cleaned = cleaner(self.messages)
         return self
 
-    @safe_run
-    def tuning_parameters(self):
-        """
-        Automatic definition of epsilon value for the DBSCAN algorithm
-        :return:
-        """
-        self.distances = self.kneighbors()
-        self.epsilon = self.epsilon_search()
-        return self
 
     @safe_run
     def tokenization(self):
@@ -120,6 +129,7 @@ class Cluster:
         self.tokenized = tokenized
         return self
 
+
     @safe_run
     def tokens_vectorization(self, min_count=1, iterations=10):
         """
@@ -128,9 +138,14 @@ class Cluster:
         :param min_count: minimium frequency count of words (recommended value is 1)
         :return:
         """
-        self.word2vec = Word2Vec(self.tokenized, size=self.w2v_size, window=self.w2v_window,
-                                 min_count=min_count, workers=self.cpu_number, iter=iterations)
+        self.word2vec = Word2Vec(self.tokenized,
+                                 size=self.w2v_size,
+                                 window=self.w2v_window,
+                                 min_count=min_count,
+                                 workers=self.cpu_number,
+                                 iter=iterations)
         return self
+
 
     def get_vocabulary(self):
         """
@@ -141,6 +156,7 @@ class Cluster:
         for item in self.word2vec.wv.vocab:
             w2c[item] = self.word2vec.wv.vocab[item].count
         return w2c
+
 
     @safe_run
     def sentence_vectorization(self):
@@ -155,17 +171,14 @@ class Cluster:
             numw = 0
             for w in sent:
                 try:
-                    if numw == 0:
-                        sent_vec = self.word2vec[w]
-                    else:
-                        sent_vec = np.add(sent_vec, self.word2vec[w])
+                    sent_vec = self.word2vec[w] if numw == 0 else np.add(sent_vec, self.word2vec[w])
                     numw += 1
-                except Exception as error:
+                except Exception:
                     pass
-
             sent2vec.append(np.asarray(sent_vec) / numw)
         self.sent2vec = np.array(sent2vec)
         return self
+
 
     @safe_run
     def kneighbors(self):
@@ -177,7 +190,9 @@ class Cluster:
         neigh = NearestNeighbors(n_neighbors=k)
         nbrs = neigh.fit(self.sent2vec)
         distances, indices = nbrs.kneighbors(self.sent2vec)
-        return [np.mean(d) for d in np.sort(distances, axis=0)]
+        self.distances = [np.mean(d) for d in np.sort(distances, axis=0)]
+        return self
+
 
     @safe_run
     def epsilon_search(self):
@@ -186,10 +201,9 @@ class Cluster:
         :return:
         """
         kneedle = KneeLocator(self.distances, list(range(len(self.distances))))
-        if len(kneedle.all_elbows) > 0:
-            return max(kneedle.all_elbows)
-        else:
-            return 1
+        self.epsilon = max(kneedle.all_elbows) if (len(kneedle.all_elbows) > 0) else 1
+        return self
+
 
     @safe_run
     def dbscan(self):
@@ -201,6 +215,7 @@ class Cluster:
         self.cluster_labels = DBSCAN(eps=self.epsilon, min_samples=self.min_samples, n_jobs=self.cpu_number) \
             .fit_predict(self.sent2vec)
         return self
+
 
     def clustered(self):
         """
@@ -231,9 +246,6 @@ class Cluster:
                 groups[str(key)] = value[self.index].values.tolist()
         return groups
 
-    def total_time(self):
-        self.timings['total'] = sum([self.timings[i] for i in self.timings])
-
 
     def in_cluster(self, cluster_label):
         """
@@ -246,6 +258,7 @@ class Cluster:
             if l == cluster_label:
                 results.append(self.messages[idx])
         return results
+
 
     def levenshtein_similarity(self, rows):
         """

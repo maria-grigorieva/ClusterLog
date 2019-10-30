@@ -10,9 +10,10 @@ def main():
                              'w2v_size': 200,
                              'w2v_window': 5,
                              'min_samples': 1}
-    data_parameters = {'target': 'exeerrordiag',
-                       'index': 'pandaid'}
-    cluster = cluster_pipeline.Cluster(df, 'ALL', clustering_parameters, data_parameters)
+    target = 'exeerrordiag'
+    index = 'pandaid'
+    mode = 'ALL'
+    cluster = cluster_pipeline.Cluster(df, index, target, mode, clustering_parameters)
     clustered_df = cluster.process()
     stats = cluster.statistics(clustered_df)
 
@@ -25,7 +26,6 @@ def main():
     pprint.pprint(cluster.tokenized)
     pprint.pprint(cluster.epsilon)
     pprint.pprint(cluster.get_vocabulary())
-    cluster.total_time()
     pprint.pprint(cluster.timings)
 
 if __name__ == "__main__":

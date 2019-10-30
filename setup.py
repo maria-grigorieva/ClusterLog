@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="ClusterLogs",
-    version="0.0.2",
+    version="0.0.3",
     author="Maria Grigorieva",
     author_email="magsend@gmail.com",
     description="Unsupervized Error Logs Clusterization",
