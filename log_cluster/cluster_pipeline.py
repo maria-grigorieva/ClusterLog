@@ -221,18 +221,16 @@ class Cluster:
         """
         Returns dictionary of clusters with the arrays of elements
         If mode == ALL:
-        { "<cluster_1>": [
-                "<feature_name_1>": "<value>",
-                "<feature_name_2>": "<value>",
+        { cluster: [
+                { feature: value, ... },
+                { feature: value, ... },
                 ...
             ],
-          "<cluster_2>": [...],
             ...
         }
         If mode == INDEX:
         {
-            "<cluster_1>": [id_1, id_2, id_3, ...id_N],
-            "<cluster_2>": [id_x, id_y, id_z, ...id_M],
+            cluster: [<list of IDs>],
             ...
         }
         :return:
