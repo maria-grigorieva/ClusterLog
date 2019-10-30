@@ -220,19 +220,6 @@ class Cluster:
     def clustered(self):
         """
         Returns dictionary of clusters with the arrays of elements
-        If mode == ALL:
-        { cluster: [
-                { feature: value, ... },
-                { feature: value, ... },
-                ...
-            ],
-            ...
-        }
-        If mode == INDEX:
-        {
-            cluster: [<list of IDs>],
-            ...
-        }
         :return:
         """
         groups = {}

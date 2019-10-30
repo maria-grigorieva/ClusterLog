@@ -47,20 +47,26 @@ clustered_df = cluster.process()
 
 mode == 'ALL'
 ```
-    { cluster: [
-            { feature: value, ... },
-            { feature: value, ... },
+    { cluster_1: [
+            { feature_1: value, ... },
             ...
-        ],
-        ...
+            { feature_N: value, ... },
+      ],
+      ...
+      cluster_N: [
+            { feature_1: value, ... },
+            ...
+            { feature_N: value, ... },
+      ]
     }
 ```
 
 mode == 'INDEX'
 ```
     {
-        cluster: [<list of IDs>],
+        cluster_1: [<list of IDs>],
         ...
+        cluster_N: [<list of IDs>],
     }
 ```
 
@@ -108,4 +114,4 @@ Get timings (execution time for each stage of clustering pipeline)
 ```
 cluster.timings
 ```
-Note: process: <time> - it aa total time of a pipeline
+Note: process: <time> - total time of a pipeline
