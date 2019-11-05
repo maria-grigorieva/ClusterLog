@@ -2,7 +2,7 @@
 
 **Requirements:**
 ```
-Python 3.7
+Python >= 3.6
 
 fuzzywuzzy==0.17.0
 gensim==3.4.0
@@ -33,7 +33,7 @@ scikit-learn==0.21.2
 
 **Requirements:**
 ```
-python > 3.6
+python >= 3.6
 ```
 ```
 fuzzywuzzy==0.17.0
@@ -77,10 +77,10 @@ cluster = cluster_pipeline.Cluster(df, index, target, mode, clustering_parameter
 
 4) Execute Clustering Pipeline
 ```
-clustered_df = cluster.process()
+cluster.process()
 ```
 
-5) Output (clustered_df) depends of mode
+5) Output (clustered data) depends of mode
 
 mode == 'ALL'
 ```
@@ -127,7 +127,7 @@ Clusters Statistics returns DataFrame with statistic for all clusters:
 (calculated as the levenshtein distances between the 1st and all other log messages)
 = "std_similarity" - standard deviation of similarity of log messages in cluster
 ```
-stats = cluster.statistics(clustered_df)
+stats = cluster.statistics()
 ```
 
 Get elements of a single cluster:
