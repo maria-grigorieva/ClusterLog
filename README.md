@@ -1,6 +1,7 @@
 # ClusterLog: Unsupervised Clusterization of Error Messages
 
 **Requirements:**
+```
 Python 3.7
 
 fuzzywuzzy==0.17.0
@@ -11,6 +12,7 @@ numpy==1.16.4
 pandas==0.25.1
 pyonmttok==1.10.1
 scikit-learn==0.21.2
+```
 
 **Input:**
    Pandas DataFrame with error log messages
