@@ -38,17 +38,15 @@ STATISTICS = ["cluster_name", "cluster_size", "first_entry",
 
 
 class Cluster:
-    def __init__(self, data, index, target, mode, _cluster):
+    def __init__(self, data, index, target, cluster_settings):
         # Initialize Pandas DataFrame
         self.data = data
         # Index column
         self.index = index
         # Target column for clusterization
         self.target = target
-        # ALL | INDEX
-        self.mode = mode
         # Initialize clusterization settings
-        self.set_cluster_settings(_cluster)
+        self.set_cluster_settings(cluster_settings)
         self.cpu_number = self.get_cpu_number()
         self.messages = self.extract_messages()
         self.timings = {}
@@ -93,8 +91,7 @@ class Cluster:
             .sentence_vectorization() \
             .kneighbors() \
             .epsilon_search() \
-            .dbscan() \
-            .clustered()
+            .dbscan()
 
     @safe_run
     def data_preparation(self):
@@ -216,8 +213,7 @@ class Cluster:
             .fit_predict(self.sent2vec)
         return self
 
-
-    def clustered(self):
+    def clustered_output(self, mode='INDEX'):
         """
         Returns dictionary of clusters with the arrays of elements
         :return:
@@ -225,10 +221,12 @@ class Cluster:
         groups = {}
         self.data['cluster'] = self.cluster_labels
         for key, value in self.data.groupby(['cluster']):
-            if self.mode == 'ALL':
+            if mode == 'ALL':
                 groups[str(key)] = value.to_dict(orient='records')
-            elif self.mode == 'INDEX':
+            elif mode == 'INDEX':
                 groups[str(key)] = value[self.index].values.tolist()
+            elif mode == 'TARGET':
+                groups[str(key)] = value[self.target].values.tolist()
         return groups
 
 
@@ -252,11 +250,10 @@ class Cluster:
         :param rows:
         :return:
         """
-        x0 = rows[0][self.target]
-        return ([fuzz.ratio(x0, rows[i][self.target]) for i in range(0, len(rows))])
+        return ([fuzz.ratio(rows[0], rows[i]) for i in range(0, len(rows))])
 
 
-    def statistics(self, clustered_df):
+    def statistics(self):
         """
         Returns DataFrame with statistic for all clusters
         "cluster_name" - name of a cluster
@@ -271,17 +268,18 @@ class Cluster:
         :return:
         """
         clusters = []
+        clustered_df = self.clustered_output(mode='TARGET')
         for item in clustered_df:
-            rows = clustered_df[item]
-            lengths = [len(s[self.target]) for s in rows]
-            similarity = self.levenshtein_similarity(rows)
+            row = clustered_df[item]
+            lengths = [len(s) for s in row]
+            similarity = self.levenshtein_similarity(row)
             clusters.append([item,
-                             len(rows),
-                             rows[0][self.target],
+                             len(row),
+                             row[0],
                              mean(lengths),
                              mean(similarity),
-                             stdev(lengths) if len(rows)>1 else 0,
-                             stdev(similarity) if len(rows)>1 else 0])
+                             stdev(lengths) if len(row)>1 else 0,
+                             stdev(similarity) if len(row)>1 else 0])
         df = pd.DataFrame(clusters, columns=STATISTICS).round(2)
         return df.T.to_dict()
 

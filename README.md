@@ -8,12 +8,35 @@
 
 **Clusterization of error log messages is implemented as a chain of methods:**
 
-1. data_preparation - cleaning initial log messages from unnecessary substrings (UUID, line numbers,...)
-2. tokenization - split each log message into tokens (NLTK|pyonmttok)
-3. tokens_vectorization - train word2vec model
-4. sentence_vectorization - convert word2vec to sent2vec model
-5. tuning_parameters - search epsilon for the DBSCAN algorithm
-6. dbscan - execute DBSCAN clusterization, returns cluster labels
+1. *data_preparation* - cleaning initial log messages from unnecessary substrings (UUID, line numbers,...)
+2. *tokenization* - split each log message into tokens (NLTK|pyonmttok)
+3. *tokens_vectorization* - train word2vec model
+4. *sentence_vectorization* - convert word2vec to sent2vec model
+5. *kneighbors* - calculate k-neighbors
+6. *epsilon_search* - search epsilon for the DBSCAN algorithm
+7. *dbscan* - execute DBSCAN clusterization, returns cluster labels
+
+
+**Requirements:**
+```
+python > 3.6
+```
+```
+fuzzywuzzy==0.17.0
+gensim==3.4.0
+kneed==0.4.1
+nltk==3.4.5
+numpy==1.16.4
+pandas==0.25.1
+pyonmttok==1.10.1
+scikit-learn==0.21.2
+```
+
+**Installation:**
+
+```
+pip install ClusterLogs
+```
 
 **Usage:**
 
@@ -29,7 +52,7 @@
                              'min_samples': <minimum size of cluster, it's better to set it as 1>}
     target = '<target column with error messages>'
     index = '<index column of DataFrame>'
-    mode = 'ALL|INDEX' (see 'Output' for details)
+    mode = 'ALL|INDEX|TARGET' (see 'Output' for details)
 ```
 
 
@@ -70,6 +93,14 @@ mode == 'INDEX'
     }
 ```
 
+mode == 'TARGET'
+```
+    {
+        cluster_1: [<list of error messages>],
+        ...
+        cluster_N: [<list of error messages>],
+    }
+```
 **Additionally:**
 
 Clusters Statistics returns DataFrame with statistic for all clusters:

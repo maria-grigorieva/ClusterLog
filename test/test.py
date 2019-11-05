@@ -12,12 +12,14 @@ def main():
                              'min_samples': 1}
     target = 'exeerrordiag'
     index = 'pandaid'
-    mode = 'ALL'
-    cluster = cluster_pipeline.Cluster(df, index, target, mode, clustering_parameters)
-    clustered_df = cluster.process()
-    stats = cluster.statistics(clustered_df)
+    mode = 'INDEX'
+    cluster = cluster_pipeline.Cluster(df, index, target, clustering_parameters)
+    cluster.process()
+    output = cluster.clustered_output(mode)
+    stats = cluster.statistics()
 
-    pprint.pprint(clustered_df)
+    pprint.pprint(cluster.cluster_labels)
+    pprint.pprint(output)
     pprint.pprint(stats)
 
     pprint.pprint(cluster.in_cluster(1))
