@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="clusterlogs",
-    version="1.0.2",
+    version="1.0.3",
     author="Maria Grigorieva",
     author_email="magsend@gmail.com",
     description="Unsupervized Error Logs Clusterization",
@@ -13,6 +13,16 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/maria-grigorieva/ClusterLog.git",
     packages=setuptools.find_packages(),
+    install_requires=[
+        "fuzzywuzzy",
+        "gensim",
+        "kneed",
+        "nltk",
+        "numpy",
+        "pandas",
+        "pyonmttok",
+        "scikit-learn"
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

@@ -47,7 +47,7 @@ The output is available in different views:
 
 **Requirements:**
 ```
-python >= 3.6
+python >= 3.7
 ```
 ```
 fuzzywuzzy==0.17.0
