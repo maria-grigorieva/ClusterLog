@@ -2,8 +2,11 @@
 
 **Requirements:**
 ```
-Python >= 3.6
+Python >= 3.6 < 3.8
+```
+This package doesn't work currently with python 2.7 because of `kneed` library, and with python 3.8 because of `gensim`.
 
+```
 fuzzywuzzy==0.17.0
 gensim==3.4.0
 kneed==0.4.1
@@ -47,7 +50,7 @@ The output is available in different views:
 
 **Requirements:**
 ```
-python >= 3.7
+python >= 3.6 < 3.8
 ```
 ```
 fuzzywuzzy==0.17.0

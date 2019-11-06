@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="clusterlogs",
-    version="1.0.3",
+    version="1.0.4",
     author="Maria Grigorieva",
     author_email="magsend@gmail.com",
     description="Unsupervized Error Logs Clusterization",
@@ -26,7 +26,7 @@ setuptools.setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
+        "Operating System :: OS Independent"
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.6, != 3.8.*'
 )
