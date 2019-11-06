@@ -1,19 +1,18 @@
-from log_cluster import cluster_pipeline
 import pandas as pd
 import sys
 import pprint
-
+from clusterlogs import pipeline
 
 def main():
-    df = pd.read_csv('test_data.csv')
+    df = pd.read_csv('test_data.csv', index_col=0)
+    df.set_index('pandaid', inplace=True)
     clustering_parameters = {'tokenizer':'nltk',
                              'w2v_size': 200,
                              'w2v_window': 5,
                              'min_samples': 1}
     target = 'exeerrordiag'
-    index = 'pandaid'
     mode = 'INDEX'
-    cluster = cluster_pipeline.Cluster(df, index, target, clustering_parameters)
+    cluster = pipeline.ml_clustering(df, target, clustering_parameters)
     cluster.process()
     output = cluster.clustered_output(mode)
     stats = cluster.statistics()

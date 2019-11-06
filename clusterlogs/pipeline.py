@@ -1,7 +1,6 @@
 import multiprocessing
 from math import sqrt
 from re import sub
-from statistics import mean, stdev
 from time import time
 
 import numpy as np
@@ -37,12 +36,10 @@ STATISTICS = ["cluster_name", "cluster_size", "first_entry",
               "mean_length", "mean_similarity", "std_length", "std_similarity"]
 
 
-class Cluster:
-    def __init__(self, data, index, target, cluster_settings):
+class ml_clustering:
+    def __init__(self, df, target, cluster_settings):
         # Initialize Pandas DataFrame
-        self.data = data
-        # Index column
-        self.index = index
+        self.df = df
         # Target column for clusterization
         self.target = target
         # Initialize clusterization settings
@@ -77,7 +74,7 @@ class Cluster:
         Returns a list of all error messages from target column
         :return:
         """
-        return list(self.data[self.target])
+        return list(self.df[self.target])
 
     @safe_run
     def process(self):
@@ -219,12 +216,12 @@ class Cluster:
         :return:
         """
         groups = {}
-        self.data['cluster'] = self.cluster_labels
-        for key, value in self.data.groupby(['cluster']):
+        self.df['cluster'] = self.cluster_labels
+        for key, value in self.df.groupby(['cluster']):
             if mode == 'ALL':
                 groups[str(key)] = value.to_dict(orient='records')
             elif mode == 'INDEX':
-                groups[str(key)] = value[self.index].values.tolist()
+                groups[str(key)] = value.index.values.tolist()
             elif mode == 'TARGET':
                 groups[str(key)] = value[self.target].values.tolist()
         return groups
@@ -276,10 +273,10 @@ class Cluster:
             clusters.append([item,
                              len(row),
                              row[0],
-                             mean(lengths),
-                             mean(similarity),
-                             stdev(lengths) if len(row)>1 else 0,
-                             stdev(similarity) if len(row)>1 else 0])
+                             np.mean(lengths),
+                             np.mean(similarity),
+                             np.std(lengths) if len(row)>1 else 0,
+                             np.std(similarity) if len(row)>1 else 0])
         df = pd.DataFrame(clusters, columns=STATISTICS).round(2)
         return df.T.to_dict()
 

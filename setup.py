@@ -4,8 +4,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="ClusterLogs",
-    version="1.0.0",
+    name="clusterlogs",
+    version="1.0.2",
     author="Maria Grigorieva",
     author_email="magsend@gmail.com",
     description="Unsupervized Error Logs Clusterization",
