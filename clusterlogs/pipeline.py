@@ -252,7 +252,7 @@ class ml_clustering:
 
     def statistics(self):
         """
-        Returns DataFrame with statistic for all clusters
+        Returns dictionary with statistic for all clusters
         "cluster_name" - name of a cluster
         "cluster_size" = number of log messages in cluster
         "first_entry" - first log message in cluster
@@ -278,7 +278,7 @@ class ml_clustering:
                              np.std(lengths) if len(row)>1 else 0,
                              np.std(similarity) if len(row)>1 else 0])
         df = pd.DataFrame(clusters, columns=STATISTICS).round(2)
-        return df.T.to_dict()
+        return df.to_dict(orient='records')
 
 
 def remove_whitespaces(sentence):
