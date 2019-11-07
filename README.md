@@ -74,9 +74,8 @@ pip install clusterlogs
 from clusterlogs import pipeline
 ```
 
-Detailed usage of this library is described in `test/clusterlogs_notebook.ipynb`.
-
-Sample data is provided in `test/test_data.csv`.
+Detailed usage of this library is described at
+[clusterlogs_notebook.ipynb](https://github.com/maria-grigorieva/ClusterLog/blob/master/test/clusterlogs_notebook.ipynb).
 
 
 **Author:**
