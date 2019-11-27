@@ -5,13 +5,13 @@ from time import time
 
 import numpy as np
 import pandas as pd
-from fuzzywuzzy import fuzz
-from gensim.models import Word2Vec
+import editdistance
 from kneed import KneeLocator
-from nltk.tokenize import TreebankWordTokenizer
-from pyonmttok import Tokenizer
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors import NearestNeighbors
+import matplotlib.pyplot as plt
+
+from .tokenization import Tokens
 
 
 def safe_run(method):
@@ -30,44 +30,47 @@ def safe_run(method):
     return func_wrapper
 
 
-CLUSTERING_SETTINGS = ["tokenizer", "w2v_size", "w2v_window", "min_samples"]
+CLUSTERING_DEFAULTS = {"tokenizer": "nltk",
+                       "w2v_size": "auto",
+                       "w2v_window": 7,
+                       "min_samples": 1}
 
-STATISTICS = ["cluster_name", "cluster_size", "first_entry",
+STATISTICS = ["cluster_name", "cluster_size", "first_entry", "vocab", "vocab_length",
               "mean_length", "mean_similarity", "std_length", "std_similarity"]
 
 
 class ml_clustering:
-    def __init__(self, df, target, cluster_settings):
-        # Initialize Pandas DataFrame
+
+
+    def __init__(self, df, target, cluster_settings=None, model_name='word2vec.model', mode='create'):
         self.df = df
-        # Target column for clusterization
         self.target = target
-        # Initialize clusterization settings
-        self.set_cluster_settings(cluster_settings)
+        self.set_cluster_settings(cluster_settings or CLUSTERING_DEFAULTS)
         self.cpu_number = self.get_cpu_number()
         self.messages = self.extract_messages()
         self.timings = {}
         self.messages_cleaned = None
-        # Tokenized error messages (a list of tokens for each message)
         self.tokenized = None
-        # Word2Vec Model
-        self.word2vec = None
-        # Sentence2Vec Model
         self.sent2vec = None
-        # K-neighbors distances for sent2vec
         self.distances = None
-        # Epsilon value for DBSCAN clusterization algorithm
         self.epsilon = None
         self.cluster_labels = None
+        self.model_name = model_name
+        self.mode = mode
 
 
     @staticmethod
     def get_cpu_number():
         return multiprocessing.cpu_count()
 
+
     def set_cluster_settings(self, params):
-        for key in CLUSTERING_SETTINGS:
-            setattr(self, key, params.get(key))
+        for key,value in CLUSTERING_DEFAULTS.items():
+            if params.get(key) is not None:
+                setattr(self, key, params.get(key))
+            else:
+                setattr(self, key, value)
+
 
     def extract_messages(self):
         """
@@ -75,6 +78,7 @@ class ml_clustering:
         :return:
         """
         return list(self.df[self.target])
+
 
     @safe_run
     def process(self):
@@ -90,6 +94,7 @@ class ml_clustering:
             .epsilon_search() \
             .dbscan()
 
+
     @safe_run
     def data_preparation(self):
         """
@@ -104,52 +109,41 @@ class ml_clustering:
     def tokenization(self):
         """
         Tokenization of a list of error messages.
-        The best tokenizer for error messages is TreebankWordTokenizer (nltk).
-        It's good at tokenizing file paths.
-        Alternative tokenizer. It performs much faster, but worse in tokenizing of paths.
-        It splits all paths by "/".
-        TODO: This method should be optimized to the same tokenization quality as TreebankWordTokenizer
         :return:
         """
-        tokenized = []
-        if self.tokenizer == 'nltk':
-            for line in self.messages:
-                tokenized.append(TreebankWordTokenizer().tokenize(line))
-        elif self.tokenizer == 'pyonmttok':
-            tokenizer = Tokenizer("space", joiner_annotate=False, segment_numbers=False)
-            for line in self.messages:
-                tokens, features = tokenizer.tokenize(line)
-                tokenized.append(tokens)
-        self.tokenized = tokenized
+        tokens = Tokens(self.messages, type=self.tokenizer)
+        self.tokenized = tokens.process()
+        if self.w2v_size == 'auto':
+            # Based on https://developers.googleblog.com/2017/11/introducing-tensorflow-feature-columns.html
+            vocab = tokens.get_vocabulary()
+            embedding_size = round(len(vocab) ** 0.6)
+            if embedding_size >= 400:
+                embedding_size = 400
+            self.w2v_size = embedding_size
         return self
 
 
     @safe_run
-    def tokens_vectorization(self, min_count=1, iterations=10):
+    def tokens_vectorization(self):
         """
         Training word2vec model
         :param iterations:
         :param min_count: minimium frequency count of words (recommended value is 1)
         :return:
         """
-        self.word2vec = Word2Vec(self.tokenized,
-                                 size=self.w2v_size,
-                                 window=self.w2v_window,
-                                 min_count=min_count,
-                                 workers=self.cpu_number,
-                                 iter=iterations)
+        from .vectorization import Vector
+        self.word_vector = Vector(self.tokenized,
+                                  self.w2v_size,
+                                  self.w2v_window,
+                                  self.cpu_number,
+                                  self.model_name)
+        if self.mode == 'create':
+            self.word_vector.create_word2vec_model(min_count=1, iterations=10)
+        if self.mode == 'update':
+            self.word_vector.update_word2vec_model()
+        if self.mode == 'process':
+            self.word_vector.load_word2vec_model()
         return self
-
-
-    def get_vocabulary(self):
-        """
-        Returns the vocabulary with word frequencies
-        :return:
-        """
-        w2c = dict()
-        for item in self.word2vec.wv.vocab:
-            w2c[item] = self.word2vec.wv.vocab[item].count
-        return w2c
 
 
     @safe_run
@@ -159,18 +153,7 @@ class ml_clustering:
         of all the words in each sentence
         :return:
         """
-        sent2vec = []
-        for sent in self.tokenized:
-            sent_vec = []
-            numw = 0
-            for w in sent:
-                try:
-                    sent_vec = self.word2vec[w] if numw == 0 else np.add(sent_vec, self.word2vec[w])
-                    numw += 1
-                except Exception:
-                    pass
-            sent2vec.append(np.asarray(sent_vec) / numw)
-        self.sent2vec = np.array(sent2vec)
+        self.sent2vec = self.word_vector.sent2vec()
         return self
 
 
@@ -206,9 +189,12 @@ class ml_clustering:
         Returns cluster labels
         :return:
         """
-        self.cluster_labels = DBSCAN(eps=self.epsilon, min_samples=self.min_samples, n_jobs=self.cpu_number) \
+        self.cluster_labels = DBSCAN(eps=self.epsilon,
+                                     min_samples=self.min_samples,
+                                     n_jobs=self.cpu_number) \
             .fit_predict(self.sent2vec)
         return self
+
 
     def clustered_output(self, mode='INDEX'):
         """
@@ -247,21 +233,24 @@ class ml_clustering:
         :param rows:
         :return:
         """
-        return ([fuzz.ratio(rows[0], rows[i]) for i in range(0, len(rows))])
+        return ([100 - (editdistance.eval(rows[0], rows[i])*100) / len(rows[0]) for i in range(0, len(rows))])
 
 
-    def statistics(self):
+    def statistics(self, output_mode='frame'):
         """
         Returns dictionary with statistic for all clusters
         "cluster_name" - name of a cluster
         "cluster_size" = number of log messages in cluster
         "first_entry" - first log message in cluster
+        "vocab" - vocabulary of all messages within the cluster (without punctuation and stop words)
+        "vocab_length" - the length of vocabulary
         "mean_length" - average length of log messages in cluster
         "std_length" - standard deviation of length of log messages in cluster
         "mean_similarity" - average similarity of log messages in cluster
         (calculated as the levenshtein distances between the 1st and all other log messages)
         "std_similarity" - standard deviation of similarity of log messages in cluster
         :param clustered_df:
+        :param output_mode: frame | dict
         :return:
         """
         clusters = []
@@ -270,15 +259,52 @@ class ml_clustering:
             row = clustered_df[item]
             lengths = [len(s) for s in row]
             similarity = self.levenshtein_similarity(row)
+            tokens = Tokens(row, self.tokenizer)
+            tokens.process()
+            tokens.clean_tokens()
+            vocab = tokens.get_vocabulary()
+            vocab_length = len(vocab)
             clusters.append([item,
                              len(row),
                              row[0],
+                             vocab,
+                             vocab_length,
                              np.mean(lengths),
                              np.mean(similarity),
                              np.std(lengths) if len(row)>1 else 0,
                              np.std(similarity) if len(row)>1 else 0])
-        df = pd.DataFrame(clusters, columns=STATISTICS).round(2)
-        return df.to_dict(orient='records')
+        df = pd.DataFrame(clusters, columns=STATISTICS).round(2).sort_values(by='cluster_size', ascending=False)
+        if output_mode == 'frame':
+            return df
+        else:
+            return df.to_dict(orient='records')
+
+
+def distance_curve(distances, mode='show'):
+    """
+    Save distance curve with knee candidates in file.
+    :param distances:
+    :param mode: show | save
+    :return:
+    """
+    sensitivity = [1, 3, 5, 10, 100, 150]
+    knees = []
+    y = list(range(len(distances)))
+    for s in sensitivity:
+        kl = KneeLocator(distances, y, S=s)
+        knees.append(kl.knee)
+
+    plt.style.use('ggplot');
+    plt.figure(figsize=(10, 10))
+    plt.plot(distances, y)
+    colors = ['r', 'g', 'k', 'm', 'c', 'b', 'y']
+    for k, c, s in zip(knees, colors, sensitivity):
+        plt.vlines(k, 0, len(distances), linestyles='--', colors=c, label=f'S = {s}')
+    plt.legend()
+    if mode == 'show':
+        plt.show()
+    else:
+        plt.savefig("distance_curve.png")
 
 
 def remove_whitespaces(sentence):
