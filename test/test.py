@@ -13,7 +13,7 @@ def main():
     #                          'min_samples': 1}
     target = 'exeerrordiag'
     mode = 'INDEX'
-    cluster = pipeline.ml_clustering(df, target, mode='create')
+    cluster = pipeline.ml_clustering(df, target, mode='process', model_name='word2vec.model')
 
     cluster.process()
     output = cluster.clustered_output(mode)

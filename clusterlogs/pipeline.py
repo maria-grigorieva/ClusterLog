@@ -120,7 +120,7 @@ class ml_clustering:
 
     def detect_embedding_size(self, tokens):
         vocab = tokens.get_vocabulary()
-        embedding_size = round(len(vocab) ** 0.6)
+        embedding_size = round(len(vocab) ** (2/3))
         if embedding_size >= 400:
             embedding_size = 400
         return embedding_size

@@ -45,13 +45,13 @@ Optional input:
 
 **Modes:**
 1) `create`
-- Create word2vec model based on large sample of error logs
-- Save it to file ‘word2vec.model’ on server for further usage
+    - Create word2vec model based on large sample of error logs
+    - Save it to file ‘word2vec.model’ on server for further usage
 2) `load`
-- Load word2vec model from file (without re-training the model)
+    - Load word2vec model from file (without re-training the model)
 3) `update`
-- Load word2vec model from file and train (update) this model with new error logs
-- Save updated model in file
+    - Load word2vec model from file and train (update) this model with new error logs
+    - Save updated model in file
 
 **Output:**
 The output is available in different views:
