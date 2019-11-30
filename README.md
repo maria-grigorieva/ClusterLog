@@ -7,7 +7,7 @@ Python >= 3.6 < 3.8
 This package doesn't work currently with python 2.7 because of `kneed` library, and with python 3.8 because of `gensim`.
 
 ```
-fuzzywuzzy==0.17.0
+editdistance==0.5.3
 gensim==3.4.0
 kneed==0.4.1
 nltk==3.4.5
@@ -29,13 +29,36 @@ scikit-learn==0.21.2
     2   |   AODtoDAOD got a SIGKILL signal (exit code 137)                         | 2019-10-01T09:01:57
     ...
    ```
+Required input:
+- `df`
+- `target`
+
+Optional input:
+
+- clusterization_settings
+    - `tokenizer` (default: 'nltk')
+    - `w2v_size` (default: 'auto')
+    - `w2v_window` (default: 7)
+    - `min_samples` (default: 1)
+- `model_name` (path to a file with word2vec model)
+- `mode` ('create'(default) | 'update' | 'load')
+
+**Modes:**
+1) `create`
+- Create word2vec model based on large sample of error logs
+- Save it to file ‘word2vec.model’ on server for further usage
+2) `load`
+- Load word2vec model from file (without re-training the model)
+3) `update`
+- Load word2vec model from file and train (update) this model with new error logs
+- Save updated model in file
 
 **Output:**
 The output is available in different views:
    1) `ALL` - DataFrame grouped by cluster numbers
    2) `INDEX` - dictionary of lists of indexes for all clusters
    3) `TARGET` - dictionary of lists of error messages for all clusters
-   4) `cluster labels` - array of cluster labels (as output of DBSCAN -> fit_predict()
+   4) `cluster labels` - array of cluster labels (as output of DBSCAN -> fit_predict())
 
 **Clusterization of error log messages is implemented as a chain of methods:**
 
@@ -47,21 +70,6 @@ The output is available in different views:
 6. *epsilon_search* - search epsilon for the DBSCAN algorithm
 7. *dbscan* - execute DBSCAN clusterization, returns cluster labels
 
-
-**Requirements:**
-```
-python >= 3.6 < 3.8
-```
-```
-fuzzywuzzy==0.17.0
-gensim==3.8.1
-kneed==0.5.0
-nltk==3.4.5
-numpy==1.16.4
-pandas==0.25.1
-pyonmttok==1.10.1
-scikit-learn==0.21.2
-```
 
 **Installation:**
 
