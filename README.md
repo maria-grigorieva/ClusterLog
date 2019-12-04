@@ -56,13 +56,13 @@ Optional input:
 
 **Clusterization of error log messages is implemented as a chain of methods:**
 
-1. *data_preparation* - cleaning initial log messages from unnecessary substrings (UUID, line numbers,...)
-2. *tokenization* - split each log message into tokens (NLTK|pyonmttok)
-3. *tokens_vectorization* - train word2vec model
-4. *sentence_vectorization* - convert word2vec to sent2vec model
-5. *kneighbors* - calculate k-neighbors
-6. *epsilon_search* - search epsilon for the DBSCAN algorithm
-7. *dbscan* - execute DBSCAN clusterization, returns cluster labels
+1.`data_preparation` - cleaning initial log messages from unnecessary substrings (UUID, line numbers,...)
+2. `tokenization` - split each log message into tokens (NLTK|pyonmttok)
+3. `tokens_vectorization` - train word2vec model
+4. `sentence_vectorization` - convert word2vec to sent2vec model
+5. `kneighbors` - calculate k-neighbors
+6. `epsilon_search` - search epsilon for the DBSCAN algorithm
+7. `dbscan` - execute DBSCAN clusterization, returns cluster labels
 
 **Output:**
 
@@ -70,7 +70,7 @@ The output is available in different views:
    1) `ALL` - DataFrame grouped by cluster numbers
    2) `INDEX` - dictionary of lists of indexes for all clusters
    3) `TARGET` - dictionary of lists of error messages for all clusters
-   4) `cluster labels` - array of cluster labels (as output of DBSCAN -> fit_predict())
+   4) `cluster labels` - array of cluster labels (as output of `DBSCAN -> fit_predict()`)
 
 
 **Clusters statistics:**
@@ -95,11 +95,11 @@ pip install clusterlogs
 
 **Usage:**
 ```
-from clusterlogs import pipeline
+from clusterlogs import pipeline, cluster_output
 ```
 
 Detailed usage of this library is described at
-[clusterlogs_notebook.ipynb](https://github.com/maria-grigorieva/ClusterLog/blob/master/test/clusterlogs_notebook.ipynb).
+[clusterlogs_notebook.ipynb](https://github.com/maria-grigorieva/ClusterLog/blob/master/clusterlogs_notebook.ipynb).
 
 
 **Author:**
