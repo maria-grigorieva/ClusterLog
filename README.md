@@ -53,12 +53,6 @@ Optional input:
     - Load word2vec model from file and train (update) this model with new error logs
     - Save updated model in file
 
-**Output:**
-The output is available in different views:
-   1) `ALL` - DataFrame grouped by cluster numbers
-   2) `INDEX` - dictionary of lists of indexes for all clusters
-   3) `TARGET` - dictionary of lists of error messages for all clusters
-   4) `cluster labels` - array of cluster labels (as output of DBSCAN -> fit_predict())
 
 **Clusterization of error log messages is implemented as a chain of methods:**
 
@@ -69,6 +63,28 @@ The output is available in different views:
 5. *kneighbors* - calculate k-neighbors
 6. *epsilon_search* - search epsilon for the DBSCAN algorithm
 7. *dbscan* - execute DBSCAN clusterization, returns cluster labels
+
+**Output:**
+
+The output is available in different views:
+   1) `ALL` - DataFrame grouped by cluster numbers
+   2) `INDEX` - dictionary of lists of indexes for all clusters
+   3) `TARGET` - dictionary of lists of error messages for all clusters
+   4) `cluster labels` - array of cluster labels (as output of DBSCAN -> fit_predict())
+
+
+**Clusters statistics:**
+
+Clusters Statistics returns DataFrame or dictionary with statistic for all clusters:
+- `cluster_name` - name of a cluster
+- `cluster_size` - number of log messages in cluster
+- `pattern` - all common substrings in messages in the cluster
+- `vocab` - all tokens in error messasges
+- `vocab_length` - the length of cluster's vocabulary
+- `mean_length` - average length of log messages in cluster
+- `std_length` - standard deviation of length of log messages in cluster
+- `mean_similarity` - average similarity of log messages in cluster
+- `std_similarity` - standard deviation of similarity of log messages in cluster
 
 
 **Installation:**
