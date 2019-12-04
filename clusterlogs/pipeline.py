@@ -35,7 +35,7 @@ CLUSTERING_DEFAULTS = {"tokenizer": "nltk",
                        "w2v_window": 7,
                        "min_samples": 1}
 
-STATISTICS = ["cluster_name", "cluster_size", "first_entry", "vocab", "vocab_length",
+STATISTICS = ["cluster_name", "cluster_size", "stems", "vocab", "vocab_length",
               "mean_length", "mean_similarity", "std_length", "std_similarity"]
 
 
@@ -244,7 +244,7 @@ class ml_clustering:
         Returns dictionary with statistic for all clusters
         "cluster_name" - name of a cluster
         "cluster_size" = number of log messages in cluster
-        "first_entry" - first log message in cluster
+        "stems" - Longest Common Substring in an Array of Strings
         "vocab" - vocabulary of all messages within the cluster (without punctuation and stop words)
         "vocab_length" - the length of vocabulary
         "mean_length" - average length of log messages in cluster
@@ -260,6 +260,7 @@ class ml_clustering:
         clustered_df = self.clustered_output(mode='TARGET')
         for item in clustered_df:
             row = clustered_df[item]
+            stems = row[0] if len(row) == 1 else self.findstem(row)
             lengths = [len(s) for s in row]
             similarity = self.levenshtein_similarity(row)
             tokens = Tokens(row, self.tokenizer)
@@ -269,7 +270,7 @@ class ml_clustering:
             vocab_length = len(vocab)
             clusters.append([item,
                              len(row),
-                             row[0],
+                             stems,
                              vocab,
                              vocab_length,
                              np.mean(lengths),
@@ -281,6 +282,47 @@ class ml_clustering:
             return df
         else:
             return df.to_dict(orient='records')
+
+    @staticmethod
+    def findstem(arr):
+        """
+        Find the stem of given list of words
+        function to find the stem (longest common substring) from the string array
+        :param arr:
+        :return:
+        """
+
+        # Determine size of the array
+        n = len(arr)
+
+        # Take first word from array
+        # as reference
+        s = arr[0]
+        l = len(s)
+
+        res = ""
+
+        for i in range(l):
+            for j in range(i + 1, l + 1):
+
+                # generating all possible substrings
+                # of our reference string arr[0] i.e s
+                stem = s[i:j]
+                k = 1
+                for k in range(1, n):
+
+                    # Check if the generated stem is
+                    # common to all words
+                    if stem not in arr[k]:
+                        break
+
+                # If current substring is present in
+                # all strings and its length is greater
+                # than current result
+                if (k + 1 == n and len(res) < len(stem)):
+                    res = stem
+
+        return res
 
     @staticmethod
     def distance_curve(distances, mode='show'):

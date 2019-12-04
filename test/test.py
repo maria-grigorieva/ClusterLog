@@ -28,7 +28,6 @@ def main():
     pprint.pprint(cluster.messages_cleaned)
     pprint.pprint(cluster.tokenized)
     pprint.pprint(cluster.epsilon)
-    pprint.pprint(cluster.get_w2v_vocabulary())
     pprint.pprint(cluster.timings)
     cluster.distance_curve(cluster.distances, 'save')
 
