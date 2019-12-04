@@ -19,17 +19,17 @@ def main():
     output = cluster.clustered_output(mode)
     stats = cluster.statistics(output_mode='dict')
 
-    pprint.pprint(cluster.cluster_labels)
-    pprint.pprint(output)
+    # pprint.pprint(cluster.cluster_labels)
+    # pprint.pprint(output)
     pprint.pprint(stats)
-
-    pprint.pprint(cluster.in_cluster(1))
-
-    pprint.pprint(cluster.messages_cleaned)
-    pprint.pprint(cluster.tokenized)
-    pprint.pprint(cluster.epsilon)
-    pprint.pprint(cluster.timings)
-    cluster.distance_curve(cluster.distances, 'save')
+    #
+    # pprint.pprint(cluster.in_cluster(1))
+    #
+    # pprint.pprint(cluster.messages_cleaned)
+    # pprint.pprint(cluster.tokenized)
+    # pprint.pprint(cluster.epsilon)
+    # pprint.pprint(cluster.timings)
+    # cluster.distance_curve(cluster.distances, 'save')
 
 if __name__ == "__main__":
     sys.exit(main())

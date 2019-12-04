@@ -6,6 +6,7 @@ from time import time
 import numpy as np
 import pandas as pd
 import editdistance
+import difflib
 from kneed import KneeLocator
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors import NearestNeighbors
@@ -35,7 +36,7 @@ CLUSTERING_DEFAULTS = {"tokenizer": "nltk",
                        "w2v_window": 7,
                        "min_samples": 1}
 
-STATISTICS = ["cluster_name", "cluster_size", "stems", "vocab", "vocab_length",
+STATISTICS = ["cluster_name", "cluster_size", "pattern", "vocab", "vocab_length",
               "mean_length", "mean_similarity", "std_length", "std_similarity"]
 
 
@@ -244,7 +245,7 @@ class ml_clustering:
         Returns dictionary with statistic for all clusters
         "cluster_name" - name of a cluster
         "cluster_size" = number of log messages in cluster
-        "stems" - Longest Common Substring in an Array of Strings
+        "pattern" - all common substrings in messages in the cluster
         "vocab" - vocabulary of all messages within the cluster (without punctuation and stop words)
         "vocab_length" - the length of vocabulary
         "mean_length" - average length of log messages in cluster
@@ -260,7 +261,8 @@ class ml_clustering:
         clustered_df = self.clustered_output(mode='TARGET')
         for item in clustered_df:
             row = clustered_df[item]
-            stems = row[0] if len(row) == 1 else self.findstem(row)
+            #stems = row[0] if len(row) == 1 else self.findstem(row)
+            common = row[0] if len(row) == 1 else self.matcher(row)
             lengths = [len(s) for s in row]
             similarity = self.levenshtein_similarity(row)
             tokens = Tokens(row, self.tokenizer)
@@ -270,7 +272,7 @@ class ml_clustering:
             vocab_length = len(vocab)
             clusters.append([item,
                              len(row),
-                             stems,
+                             common,
                              vocab,
                              vocab_length,
                              np.mean(lengths),
@@ -282,6 +284,7 @@ class ml_clustering:
             return df
         else:
             return df.to_dict(orient='records')
+
 
     @staticmethod
     def findstem(arr):
@@ -323,6 +326,29 @@ class ml_clustering:
                     res = stem
 
         return res
+
+
+    @staticmethod
+    def matcher(strings):
+        """
+        Find all matching blocks in a list of strings
+        :param strings:
+        :return:
+        """
+        curr = strings[0]
+        cnt = 1
+        for i in range(cnt, len(strings)-1):
+            matches = difflib.SequenceMatcher(None, curr, strings[i + 1]).get_matching_blocks()
+            common = []
+            for match in matches:
+                common.append(curr[match.a:match.a + match.size])
+            curr = ''.join(common)
+            cnt = cnt + 1
+            if cnt == len(strings) - 1:
+                break
+        if curr == '':
+            'NO COMMON PATTERNS HAVE BEEN FOUND'
+        return curr
 
     @staticmethod
     def distance_curve(distances, mode='show'):
