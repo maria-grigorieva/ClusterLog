@@ -82,9 +82,9 @@ class Output:
         clustered_df = self.clustered_output(mode='CLEANED')
         for item in clustered_df:
             row = clustered_df[item]
-            matcher = self.matcher(row)
+            matcher, similarity = self.matcher(row)
             lengths = [len(s) for s in row]
-            similarity = self.similarity(row)
+            #similarity = self.similarity(row)
             tokens = Tokens(row, self.tokenizer)
             tokens.process()
             # vocab = tokens.get_vocabulary()
@@ -112,13 +112,15 @@ class Output:
         :param strings:
         :return:
         """
+        similarity = []
         curr = strings[0]
         if len(strings) == 1:
-            return curr
+            return curr, 1
         else:
             cnt = 1
             for i in range(cnt, len(strings)):
                 matches = difflib.SequenceMatcher(None, curr, strings[i])
+                similarity.append(matches.ratio())
                 common = []
                 for match in matches.get_matching_blocks():
                     common.append(curr[match.a:match.a + match.size])
@@ -126,9 +128,7 @@ class Output:
                 cnt = cnt + 1
                 if cnt == len(strings):
                     break
-            if curr == '':
-                'NO COMMON PATTERNS HAVE BEEN FOUND'
-            return curr
+            return curr, similarity
 
 
     @staticmethod

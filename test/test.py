@@ -4,7 +4,7 @@ import pprint
 from clusterlogs import pipeline, cluster_output
 
 def main():
-    df = pd.read_csv('test_data.csv', index_col=0)
+    df = pd.read_csv('error_messages.csv', index_col=0)
     df.set_index('pandaid', inplace=True)
     # To specify clustering parameters, please use dictionary:
     # clustering_parameters = {'tokenizer':'nltk',
@@ -13,15 +13,16 @@ def main():
     #                          'min_samples': 1}
     target = 'exeerrordiag'
     mode = 'INDEX'
-    cluster = pipeline.ml_clustering(df, target, mode='process', model_name='word2vec.model')
+    cluster = pipeline.ml_clustering(df, target, mode='create', model_name='word2vec_test.model')
     cluster.process()
 
     # output
-    output = cluster_output.Output(df, target, cluster.tokenizer, cluster.messages, cluster.cluster_labels)
+    output = cluster_output.Output(df, target, cluster.tokenizer, cluster.cluster_labels)
     output.clustered_output(mode)
-    stats = output.statistics(output_mode='dict')
+    stats = output.statistics(output_mode='frame')
     pprint.pprint(stats)
     #
+    pprint.pprint(stats['pattern'].tolist())
     # output = cluster.clustered_output(mode)
     # stats = cluster.statistics(output_mode='dict')
 
