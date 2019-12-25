@@ -27,19 +27,21 @@ class Tokens:
             for line in self.messages:
                 tokens, features = tokenizer.tokenize(line)
                 tokenized.append(tokens)
-        self.tokenized = tokenized
+        self.tokenized = self.clean_tokens(tokenized)
         return self.tokenized
 
-    def clean_tokens(self):
+
+    def clean_tokens(self, tokenized):
         """
         Clean tokens from english stop words, numbers and punctuation
         :return:
         """
         stop = stopwords.words('english') + list(punctuation) + ["``", "''"]
         cleaned_tokens = []
-        for row in self.tokenized:
+        for row in tokenized:
             cleaned_tokens.append([i for i in row if i.lower() not in stop and not i.lower().isnumeric()])
-        self.tokenized = cleaned_tokens
+        return cleaned_tokens
+
 
     def get_vocabulary(self):
         flat_list = [item for row in self.tokenized for item in row]

@@ -4,7 +4,7 @@ from time import time
 
 import numpy as np
 from kneed import KneeLocator
-from sklearn.cluster import DBSCAN
+from sklearn.cluster import DBSCAN, AgglomerativeClustering
 from sklearn.neighbors import NearestNeighbors
 from .helper import *
 from .tokenization import Tokens
@@ -87,6 +87,9 @@ class ml_clustering:
             .epsilon_search() \
             .dbscan()
 
+    def reprocess(self, epsilon):
+        self.epsilon = epsilon
+        return self.dbscan()
 
     @safe_run
     def data_preparation(self):
@@ -95,6 +98,7 @@ class ml_clustering:
         :return:
         """
         self.messages_cleaned = cleaner(self.messages)
+        self.df['_cleaned'] = self.messages_cleaned
         return self
 
 
@@ -104,7 +108,7 @@ class ml_clustering:
         Tokenization of a list of error messages.
         :return:
         """
-        tokens = Tokens(self.messages, type=self.tokenizer)
+        tokens = Tokens(self.messages_cleaned, type=self.tokenizer)
         self.tokenized = tokens.process()
         if self.w2v_size == 'auto':
             self.w2v_size = self.detect_embedding_size(tokens)
@@ -188,5 +192,16 @@ class ml_clustering:
         self.cluster_labels = DBSCAN(eps=self.epsilon,
                                      min_samples=self.min_samples,
                                      n_jobs=self.cpu_number) \
+            .fit_predict(self.sent2vec)
+        return self
+
+
+    def hierarchical(self):
+        """
+        Agglomerative clusterization
+        :return:
+        """
+        self.cluster_labels = AgglomerativeClustering(n_clusters=None,
+                                                      distance_threshold=self.epsilon)\
             .fit_predict(self.sent2vec)
         return self

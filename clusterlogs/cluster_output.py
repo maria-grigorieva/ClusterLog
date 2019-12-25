@@ -4,17 +4,19 @@ import numpy as np
 import pandas as pd
 from .tokenization import Tokens
 
-STATISTICS = ["cluster_name", "cluster_size", "pattern", "vocab", "vocab_length",
+STATISTICS = ["cluster_name", "cluster_size", "pattern",
               "mean_length", "mean_similarity", "std_length", "std_similarity"]
 
 class Output:
 
-    def __init__(self, df, target, tokenizer, messages, cluster_labels):
+    def __init__(self, df, target, tokenizer, cluster_labels):
         self.cluster_labels = cluster_labels
         self.df = df
         self.target = target
-        self.messages = messages
+        # self.messages = messages
         self.tokenizer = tokenizer
+        # self.df[target] = self.messages
+        self.df['cluster'] = self.cluster_labels
 
 
     def clustered_output(self, mode='INDEX'):
@@ -23,7 +25,7 @@ class Output:
         :return:
         """
         groups = {}
-        self.df['cluster'] = self.cluster_labels
+        # self.df['cluster'] = self.cluster_labels
         for key, value in self.df.groupby(['cluster']):
             if mode == 'ALL':
                 groups[str(key)] = value.to_dict(orient='records')
@@ -31,6 +33,8 @@ class Output:
                 groups[str(key)] = value.index.values.tolist()
             elif mode == 'TARGET':
                 groups[str(key)] = value[self.target].values.tolist()
+            elif mode == 'CLEANED':
+                groups[str(key)] = value['_cleaned'].values.tolist()
         return groups
 
 
@@ -43,7 +47,7 @@ class Output:
         results = []
         for idx, l in enumerate(self.cluster_labels):
             if l == cluster_label:
-                results.append(self.messages[idx])
+                results.append(self.df[self.target].values[idx])
         return results
 
 
@@ -75,7 +79,7 @@ class Output:
         :return:
         """
         clusters = []
-        clustered_df = self.clustered_output(mode='TARGET')
+        clustered_df = self.clustered_output(mode='CLEANED')
         for item in clustered_df:
             row = clustered_df[item]
             matcher = self.matcher(row)
@@ -83,14 +87,13 @@ class Output:
             similarity = self.similarity(row)
             tokens = Tokens(row, self.tokenizer)
             tokens.process()
-            tokens.clean_tokens()
-            vocab = tokens.get_vocabulary()
-            vocab_length = len(vocab)
+            # vocab = tokens.get_vocabulary()
+            # vocab_length = len(vocab)
             clusters.append([item,
                              len(row),
                              matcher,
-                             vocab,
-                             vocab_length,
+                             # vocab,
+                             # vocab_length,
                              np.mean(lengths),
                              np.mean(similarity),
                              np.std(lengths) if len(row) > 1 else 0,

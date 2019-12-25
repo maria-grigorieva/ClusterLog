@@ -31,21 +31,21 @@ def cleaner(messages):
     """
 
     for idx, item in enumerate(messages):
-        item = re.sub(_line_number, "at line LINE_NUMBER", item)
-        item = re.sub(_uid, "UID", item)
-        item = re.sub(_uuid, "UUID", item)
-        item = re.sub(_url, "URL", item)
-        item = re.sub("\d+", "NUM", item)
+        item = re.sub(_line_number, "at line *", item)
+        item = re.sub(_uid, "*", item)
+        item = re.sub(_uuid, "*", item)
+        item = re.sub(_url, "*", item)
+        item = re.sub("\d+", "*", item)
         item = substitute_path(item)
         messages[idx] = remove_whitespaces(item)
     return messages
 
 
 def substitute_path(string):
-    string = path_regex.sub(r'\1<PATH>', string)
-    string = py_regex.sub(r'<FILE.py>', string)
-    string = file_regex.sub(r'\1<FILE>', string)
-    string = long_regex.sub(r'LONG', string)
+    string = path_regex.sub(r'\1*', string)
+    string = py_regex.sub(r'*.py', string)
+    string = file_regex.sub(r'\1*', string)
+    string = long_regex.sub(r'*', string)
     return string
 
 def distance_curve(distances, mode='show'):
