@@ -23,6 +23,8 @@ def main():
     pprint.pprint(stats)
     #
     pprint.pprint(stats['pattern'].tolist())
+
+    pprint.pprint(output.postprocessing())
     # output = cluster.clustered_output(mode)
     # stats = cluster.statistics(output_mode='dict')
 
