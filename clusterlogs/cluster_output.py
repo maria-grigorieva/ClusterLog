@@ -6,8 +6,7 @@ from .tokenization import Tokens
 import pprint
 
 STATISTICS = ["cluster_name", "cluster_size", "pattern",
-              "mean_length", "mean_similarity", "std_length", "std_similarity",
-              "internals"]
+              "mean_length", "mean_similarity", "std_length", "std_similarity"]
 
 class Output:
 
@@ -17,6 +16,7 @@ class Output:
         self.level = level
         self.stat_df = None
         self.stat_dict = None
+        self.hierarchy = None
 
 
     def clustered_output(self, mode='INDEX', level=1):
@@ -43,12 +43,7 @@ class Output:
         :param cluster_label:
         :return:
         """
-        results = []
-        for idx, l in enumerate(self.df['cluster_'+str(level)]):
-            if l == cluster_label:
-                results.append(self.df[self.target].values[idx])
-
-        return results
+        return self.df[self.df['cluster_'+str(level)] == cluster_label][self.target].values
 
 
     def levenshtein_similarity(self, rows):
@@ -78,7 +73,6 @@ class Output:
         """
         clusters = []
         clustered_df = self.clustered_output('cleaned', level)
-        clustered_idx = self.clustered_output('idx', level)
         for item in clustered_df:
             row = clustered_df[item]
             matcher, similarity = self.matcher(row)
@@ -89,8 +83,7 @@ class Output:
                              np.mean(lengths),
                              np.mean(similarity),
                              np.std(lengths) if len(row) > 1 else 0,
-                             np.std(similarity),
-                             clustered_idx[item]])
+                             np.std(similarity)])
         self.stat_df = pd.DataFrame(clusters, columns=STATISTICS)\
             .round(2)\
             .sort_values(by='cluster_size', ascending=False)
@@ -139,46 +132,47 @@ class Output:
         return s
 
 
-    def first_match(self, df, updated_clusters):
+    def first_match(self, df, result):
         """
 
         :param df:
         :param updated_clusters:
         :return:
         """
+        # select the first pattern
         start = df.head(1)['pattern'].values[0]
         matches = [difflib.SequenceMatcher(None, start, x) for x in df['pattern']]
-        similarity = []
-        is_first_sequence = []
+        ratio = []
+        is_first = []
         for item in matches:
-            similarity.append(item.ratio())
-            is_first_sequence.append(item.get_matching_blocks()[0].a == 0)
-        df['ratio'] = similarity
-        df['is_first'] = is_first_sequence
+            ratio.append(item.ratio())
+            is_first.append(item.get_matching_blocks()[0].a == 0)
+        df['ratio'] = ratio
+        df['is_first'] = is_first
         filtered = df[(df['ratio'] > 0.5) & (df['is_first']==True)]['cluster_name'].values
-        updated_clusters.append(filtered)
+        result.append(filtered)
         df.drop(df[df['cluster_name'].isin(filtered)].index, inplace=True)
         while df.shape[0] > 0:
-            self.first_match(df, updated_clusters)
+            self.first_match(df, result)
 
 
-    def postprocessing(self):
+    def postprocessing(self, level):
         """
         Clustering the results of the first clusterization
         :return:
         """
+        # sort statistics df by cluster size in ascending order
         sorted_df = self.stat_df.sort_values(by=['cluster_size'])[['cluster_size',
                                                                    'cluster_name',
-                                                                   'pattern',
-                                                                   'internals']]
-        updated_clusters = []
-        self.first_match(sorted_df, updated_clusters)
-        a = []
-        for i in updated_clusters:
-            x = self.df[self.df['cluster_'+str(self.level)].isin(i)].index
-            a.append({'cluster_name': i[-1], 'idx': x})
-        for i in a:
-            self.df.loc[i['idx'], 'cluster_'+str(self.level+1)] = i['cluster_name']
+                                                                   'pattern']]
+        result = []
+        self.first_match(sorted_df, result)
+        new_level = []
+        for k,v in enumerate(result):
+            x = self.df[self.df['cluster_'+str(level)].isin(v)].index
+            new_level.append({'cluster_name': k, 'idx': x})
+        for cluster in new_level:
+            self.df.loc[cluster['idx'], 'cluster_'+str(level+1)] = cluster['cluster_name']
 
-        return self.statistics(output_mode='frame', level=self.level+1)
+        return self.statistics(output_mode='frame', level=level+1)
 

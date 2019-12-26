@@ -24,7 +24,7 @@ def main():
     #
     pprint.pprint(stats['pattern'].tolist())
 
-    pprint.pprint(output.postprocessing())
+    pprint.pprint(output.postprocessing(1))
     # output = cluster.clustered_output(mode)
     # stats = cluster.statistics(output_mode='dict')
 
@@ -32,7 +32,7 @@ def main():
     # pprint.pprint(output)
     # pprint.pprint(stats)
     #
-    # pprint.pprint(cluster.in_cluster(1))
+    pprint.pprint(output.in_cluster(4))
     #
     # pprint.pprint(cluster.messages_cleaned)
     # pprint.pprint(cluster.tokenized)
