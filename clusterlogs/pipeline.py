@@ -6,8 +6,9 @@ import numpy as np
 from kneed import KneeLocator
 from sklearn.cluster import DBSCAN, AgglomerativeClustering
 from sklearn.neighbors import NearestNeighbors
-from .helper import *
+from .data_preparation import *
 from .tokenization import Tokens
+from .data_preparation import Regex
 
 
 def safe_run(method):
@@ -26,18 +27,28 @@ def safe_run(method):
     return func_wrapper
 
 
+REGEX = [r'[0-9a-zA-Z]{12,128}',
+          r'[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}',
+          r'(http[s]|root|srm|file|ftp[s]|hdf[s])*:(//|/)(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',
+          r'(/[a-zA-Z\./]*[\s]?)',
+          r'\d+',
+          r'(\b\w+://)\S+(?=\s)',
+          r'(\b[f|F]ile( exists)?:?\s?)/\S+(?=\s)',
+          r'[-./_a-zA-Z0-9]{25,}']
+
 CLUSTERING_DEFAULTS = {"tokenizer": "nltk",
                        "w2v_size": "auto",
                        "w2v_window": 7,
                        "min_samples": 1}
 
 
-class ml_clustering:
+class ml_clustering(object):
 
 
-    def __init__(self, df, target, cluster_settings=None, model_name='word2vec.model', mode='create'):
+    def __init__(self, df, target, cluster_settings=None, regex=REGEX, model_name='word2vec.model', mode='create'):
         self.df = df
         self.target = target
+        self.regex = regex
         self.set_cluster_settings(cluster_settings or CLUSTERING_DEFAULTS)
         self.cpu_number = self.get_cpu_number()
         self.messages = self.extract_messages()
@@ -97,7 +108,8 @@ class ml_clustering:
         Cleaning log messages from unnucessary substrings and tokenization
         :return:
         """
-        self.messages_cleaned = cleaner(self.messages)
+        regex = Regex(self.messages, self.regex)
+        self.messages_cleaned = regex.process()
         self.df['_cleaned'] = self.messages_cleaned
         return self
 
@@ -193,6 +205,7 @@ class ml_clustering:
                                      min_samples=self.min_samples,
                                      n_jobs=self.cpu_number) \
             .fit_predict(self.sent2vec)
+        self.df['cluster_1'] = self.cluster_labels
         return self
 
 
@@ -204,4 +217,5 @@ class ml_clustering:
         self.cluster_labels = AgglomerativeClustering(n_clusters=None,
                                                       distance_threshold=self.epsilon)\
             .fit_predict(self.sent2vec)
+        self.df['cluster_1'] = self.cluster_labels
         return self

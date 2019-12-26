@@ -17,7 +17,7 @@ def main():
     cluster.process()
 
     # output
-    output = cluster_output.Output(df, target, cluster.tokenizer, cluster.cluster_labels)
+    output = cluster_output.Output(df, target)
     output.clustered_output(mode)
     stats = output.statistics(output_mode='frame')
     pprint.pprint(stats)

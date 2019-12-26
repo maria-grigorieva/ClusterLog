@@ -3,11 +3,12 @@ from pyonmttok import Tokenizer
 from nltk.corpus import stopwords
 from string import punctuation
 
-class Tokens:
+class Tokens(object):
 
     def __init__(self, messages, type='nltk'):
         self.messages = messages
         self.type = type
+
 
     def process(self):
         """
