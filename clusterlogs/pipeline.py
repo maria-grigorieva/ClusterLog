@@ -6,9 +6,9 @@ import numpy as np
 from kneed import KneeLocator
 from sklearn.cluster import DBSCAN, AgglomerativeClustering
 from sklearn.neighbors import NearestNeighbors
-from .data_preparation import *
 from .tokenization import Tokens
 from .data_preparation import Regex
+from .cluster_output import Output
 
 
 def safe_run(method):
@@ -96,7 +96,9 @@ class ml_clustering(object):
             .sentence_vectorization() \
             .kneighbors() \
             .epsilon_search() \
-            .dbscan()
+            .dbscan() \
+            .extract_patterns() \
+            .reprocess()
 
     def reprocess(self, epsilon):
         self.epsilon = epsilon
@@ -218,4 +220,24 @@ class ml_clustering(object):
                                                       distance_threshold=self.epsilon)\
             .fit_predict(self.sent2vec)
         self.df['cluster_1'] = self.cluster_labels
+        return self
+
+
+    def extract_patterns(self):
+        """
+
+        :return:
+        """
+        self.output = Output(self.df, self.target)
+        self.output.clustered_output(self.mode)
+        self.output.statistics(output_mode='frame')
+        return self
+
+
+    def reprocess(self):
+        """
+
+        :return:
+        """
+        self.output.postprocessing()
         return self

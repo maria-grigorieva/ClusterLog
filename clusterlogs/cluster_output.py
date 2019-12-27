@@ -3,6 +3,7 @@ import difflib
 import numpy as np
 import pandas as pd
 from .tokenization import Tokens
+from nltk.tokenize import WhitespaceTokenizer
 import pprint
 
 STATISTICS = ["cluster_name", "cluster_size", "pattern",
@@ -75,7 +76,7 @@ class Output:
         clustered_df = self.clustered_output('cleaned', level)
         for item in clustered_df:
             row = clustered_df[item]
-            matcher, similarity = self.matcher(row)
+            matcher, similarity = self.tokenized_matcher(row)
             lengths = [len(s) for s in row]
             clusters.append([item,
                              len(row),
@@ -88,51 +89,34 @@ class Output:
             .round(2)\
             .sort_values(by='cluster_size', ascending=False)
         self.stat_dict = self.stat_df.to_dict(orient='records')
-        if output_mode == 'frame':
-            return self.stat_df
-        else:
-            return self.stat_dict
 
 
-    def matcher(self, strings):
+    def tokenized_matcher(self, strings):
         """
-        Find all matching blocks in a list of strings
+        Find all matching tokens in a list of strings
         :param strings:
         :return:
         """
         similarity = []
-        curr = strings[0]
+        sequences = [WhitespaceTokenizer().tokenize(line) for line in strings]
+        curr = sequences[0]
         if len(strings) == 1:
-            return curr, 1
+            return ' '.join(curr), 1
+            # return ' '.join([f for f in curr]), 1
         else:
             cnt = 1
             for i in range(cnt, len(strings)):
-                matches = difflib.SequenceMatcher(None, curr, strings[i])
+                matches = difflib.SequenceMatcher(None, curr, sequences[i])
                 similarity.append(matches.ratio())
-                common = []
-                for match in matches.get_matching_blocks():
-                    common.append(curr[match.a:match.a + match.size])
-                curr = ''.join(common)
-                cnt = cnt + 1
+                common = [curr[m.a:m.a + m.size] for m in matches.get_matching_blocks()]
+                curr = [val for sublist in common for val in sublist]
                 if cnt == len(strings):
                     break
-            return curr, similarity
+            return ' '.join(curr), similarity
+            # return ' '.join([f for f in curr]), similarity
 
 
-    @staticmethod
-    def similarity(rows):
-        """
-        Return a measure of the sequences’ similarity as a float in the range [0, 100] percent
-        :param strings:
-        :return:
-        """
-        s = []
-        for i in range(0, len(rows)):
-            s.append(difflib.SequenceMatcher(None, rows[0], rows[i]).ratio() * 100)
-        return s
-
-
-    def first_match(self, df, result):
+    def reclustering(self, df, result):
         """
 
         :param df:
@@ -140,23 +124,18 @@ class Output:
         :return:
         """
         # select the first pattern
-        start = df.head(1)['pattern'].values[0]
-        matches = [difflib.SequenceMatcher(None, start, x) for x in df['pattern']]
-        ratio = []
-        is_first = []
-        for item in matches:
-            ratio.append(item.ratio())
-            is_first.append(item.get_matching_blocks()[0].a == 0)
-        df['ratio'] = ratio
-        df['is_first'] = is_first
-        filtered = df[(df['ratio'] > 0.5) & (df['is_first']==True)]['cluster_name'].values
+        sequences = [WhitespaceTokenizer().tokenize(line) for line in df['pattern'].values]
+        matches = [difflib.SequenceMatcher(None, sequences[0], x) for x in sequences]
+        df['ratio'] = [item.ratio() for item in matches]
+        df['is_first'] = [(item.get_matching_blocks()[0].a == 0) for item in matches]
+        filtered = df[(df['ratio'] >= 0.5) & (df['is_first']==True)]['cluster_name'].values
         result.append(filtered)
         df.drop(df[df['cluster_name'].isin(filtered)].index, inplace=True)
         while df.shape[0] > 0:
-            self.first_match(df, result)
+            self.reclustering(df, result)
 
 
-    def postprocessing(self, level):
+    def postprocessing(self, level=1):
         """
         Clustering the results of the first clusterization
         :return:
@@ -166,13 +145,13 @@ class Output:
                                                                    'cluster_name',
                                                                    'pattern']]
         result = []
-        self.first_match(sorted_df, result)
+        self.reclustering(sorted_df, result)
         new_level = []
         for k,v in enumerate(result):
             x = self.df[self.df['cluster_'+str(level)].isin(v)].index
             new_level.append({'cluster_name': k, 'idx': x})
         for cluster in new_level:
-            self.df.loc[cluster['idx'], 'cluster_'+str(level+1)] = cluster['cluster_name']
+            self.df.loc[cluster['idx'], 'cluster_'+str(level+1)] = str(cluster['cluster_name'])
 
         return self.statistics(output_mode='frame', level=level+1)
 

@@ -16,15 +16,8 @@ def main():
     cluster = pipeline.ml_clustering(df, target, mode='create', model_name='word2vec_test.model')
     cluster.process()
 
-    # output
-    output = cluster_output.Output(df, target)
-    output.clustered_output(mode)
-    stats = output.statistics(output_mode='frame')
-    pprint.pprint(stats)
-    #
-    pprint.pprint(stats['pattern'].tolist())
+    pprint.pprint(cluster.output.stat_dict)
 
-    pprint.pprint(output.postprocessing(1))
     # output = cluster.clustered_output(mode)
     # stats = cluster.statistics(output_mode='dict')
 
@@ -32,7 +25,7 @@ def main():
     # pprint.pprint(output)
     # pprint.pprint(stats)
     #
-    pprint.pprint(output.in_cluster(4))
+
     #
     # pprint.pprint(cluster.messages_cleaned)
     # pprint.pprint(cluster.tokenized)
