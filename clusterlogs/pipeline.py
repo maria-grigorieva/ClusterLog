@@ -100,9 +100,11 @@ class ml_clustering(object):
             .extract_patterns() \
             .reprocess()
 
+
     def reprocess(self, epsilon):
         self.epsilon = epsilon
         return self.dbscan()
+
 
     @safe_run
     def data_preparation(self):
@@ -241,3 +243,7 @@ class ml_clustering(object):
         """
         self.output.postprocessing()
         return self
+
+
+    def in_cluster(self, cluster_number, level=1):
+        self.output.in_cluster(cluster_label=cluster_number, level=level)
