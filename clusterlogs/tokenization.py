@@ -3,7 +3,7 @@ from pyonmttok import Tokenizer
 from nltk.corpus import stopwords
 from string import punctuation
 from urllib.parse import urlparse
-
+import pprint
 
 class Tokens(object):
 
@@ -30,7 +30,9 @@ class Tokens(object):
             for line in self.messages:
                 tokens, features = tokenizer.tokenize(line)
                 tokenized.append(tokens)
-        self.tokenized = self.clean_tokens(tokenized)
+        self.tokenized = tokenized
+        # self.tokenized_cleaned = self.clean_tokens(tokenized)
+        # pprint.pprint(self.tokenized)
         return self.tokenized
 
 

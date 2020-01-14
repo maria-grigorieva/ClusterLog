@@ -10,6 +10,8 @@ from .tokenization import Tokens
 from .data_preparation import Regex
 from .cluster_output import Output
 
+import pprint
+
 
 def safe_run(method):
     def func_wrapper(self, *args, **kwargs):
@@ -31,13 +33,18 @@ REGEX = [r'[0-9a-zA-Z]{12,128}',
           r'[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}',
           r'(http[s]|root|srm|file|ftp[s]|hdf[s])*:(//|/)(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',
           r'(/[a-zA-Z\./]*[\s]?)',
-          r'\d+',
+          r'(\d+)',
           r'(\b\w+://)\S+(?=\s)',
           r'(\b[f|F]ile( exists)?:?\s?)/\S+(?=\s)',
           r'[-./_a-zA-Z0-9]{25,}']
 
+# REGEX = [r'\d+',
+#          r'[0-9a-zA-Z]{12,128}',
+#          r'[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}',
+#          ]
+
 CLUSTERING_DEFAULTS = {"tokenizer": "nltk",
-                       "w2v_size": "auto",
+                       "w2v_size": 300,
                        "w2v_window": 7,
                        "min_samples": 1}
 
@@ -61,6 +68,9 @@ class ml_clustering(object):
         self.cluster_labels = None
         self.model_name = model_name
         self.mode = mode
+        self.patterns_stats = None
+        self.results = None
+
 
 
     @staticmethod
@@ -98,12 +108,8 @@ class ml_clustering(object):
             .epsilon_search() \
             .dbscan() \
             .extract_patterns() \
-            .reprocess()
-
-
-    def reprocess(self, epsilon):
-        self.epsilon = epsilon
-        return self.dbscan()
+            .reprocess() \
+            .statistics()
 
 
     @safe_run
@@ -114,7 +120,7 @@ class ml_clustering(object):
         """
         regex = Regex(self.messages, self.regex)
         self.messages_cleaned = regex.process()
-        self.df['_cleaned'] = self.messages_cleaned
+        self.df['cleaned'] = self.messages_cleaned
         return self
 
 
@@ -126,6 +132,8 @@ class ml_clustering(object):
         """
         tokens = Tokens(self.messages_cleaned, type=self.tokenizer)
         self.tokenized = tokens.process()
+        # add tokenized messages to DataFrame
+        self.df['tokenized'] = self.tokenized
         if self.w2v_size == 'auto':
             self.w2v_size = self.detect_embedding_size(tokens)
         return self
@@ -213,6 +221,7 @@ class ml_clustering(object):
         return self
 
 
+    @safe_run
     def hierarchical(self):
         """
         Agglomerative clusterization
@@ -225,25 +234,32 @@ class ml_clustering(object):
         return self
 
 
+    @safe_run
     def extract_patterns(self):
         """
 
         :return:
         """
         self.output = Output(self.df, self.target)
-        self.output.clustered_output(self.mode)
-        self.output.statistics(output_mode='frame')
+        self.patterns_stats = self.output.statistics(output_mode='frame', level=1)
         return self
 
 
+    @safe_run
     def reprocess(self):
         """
 
         :return:
         """
-        self.output.postprocessing()
+        self.output.postprocessing(self.patterns_stats, level=1)
         return self
 
 
-    def in_cluster(self, cluster_number, level=1):
-        self.output.in_cluster(cluster_label=cluster_number, level=level)
+    @safe_run
+    def statistics(self):
+        self.results = self.output.statistics(output_mode='frame', level=2, restruct=False)
+        return self
+
+
+    def in_cluster(self, cluster_label, level=1):
+        return self.df[self.df['cluster_'+str(level)] == str(cluster_label)][self.target].values
