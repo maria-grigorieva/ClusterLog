@@ -44,7 +44,7 @@ REGEX = [r'[0-9a-zA-Z]{12,128}',
 #          ]
 
 CLUSTERING_DEFAULTS = {"tokenizer": "nltk",
-                       "w2v_size": 300,
+                       "w2v_size": "auto",
                        "w2v_window": 7,
                        "min_samples": 1}
 
@@ -131,9 +131,11 @@ class ml_clustering(object):
         :return:
         """
         tokens = Tokens(self.messages_cleaned, type=self.tokenizer)
-        self.tokenized = tokens.process()
+        tokens.process()
         # add tokenized messages to DataFrame
-        self.df['tokenized'] = self.tokenized
+        self.tokenized = tokens.tokenized_wordpunct
+        self.df['tokenized_wordpunct'] = tokens.tokenized_wordpunct
+        self.df['tokenized_treebank'] = tokens.tokenized_treebank
         if self.w2v_size == 'auto':
             self.w2v_size = self.detect_embedding_size(tokens)
         return self

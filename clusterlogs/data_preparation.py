@@ -28,10 +28,10 @@ class Regex(object):
         :return:
         """
 
-        for idx, item in enumerate(self.messages):
-            for r in self.regex:
-                item = re.sub(r, '*', item)
-            self.messages[idx] = self.remove_whitespaces(item)
+        # for idx, item in enumerate(self.messages):
+        #     for r in self.regex:
+        #         item = re.sub(r, '*', item)
+            # self.messages[idx] = self.remove_whitespaces(item)
         return self.messages
 
 def distance_curve(distances, mode='show'):
