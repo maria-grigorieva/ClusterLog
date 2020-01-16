@@ -42,7 +42,7 @@ class Tokens(object):
         stop = stopwords.words('english') + list(punctuation) + ["``", "''"]
         cleaned_tokens = []
         for row in tokenized:
-            cleaned_tokens.append([i for i in row if i.lower() not in stop and not i.lower().isnumeric()])
+            cleaned_tokens.append([i for i in row if i.lower() not in stop])
         return cleaned_tokens
 
 

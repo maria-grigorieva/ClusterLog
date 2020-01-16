@@ -108,19 +108,20 @@ class Output:
             results.append(value)
             return results
         else:
-            # curr = cluster.iloc[0]['tokenized_treebank']
-            curr = cluster.iloc[0][self.target]
+            curr = cluster.iloc[0]['tokenized_treebank']
+            # curr = cluster.iloc[0][self.target]
             outliers, commons, similarity = [],[],[]
-            # [self.matcher(curr, row, outliers, commons, similarity, restruct) for row in cluster.itertuples()]
-            [self.matcher_lines(curr, row, outliers, commons, similarity, restruct) for row in cluster.itertuples()]
+            [self.matcher(curr, row, outliers, commons, similarity, restruct) for row in cluster.itertuples()]
+            # [self.matcher_lines(curr, row, outliers, commons, similarity, restruct) for row in cluster.itertuples()]
             # self.rematch(commons)
             commons = [i[0] for i in sorted(set([val for sublist in commons for val in sublist]), key=lambda x: x[1])]
+            # pattern = self.rematch(commons)
             twd = TreebankWordDetokenizer()
 
             value = {'cluster_name': item,
                      'cluster_size': cluster.shape[0] - len(outliers),
-                     'pattern': commons,
-                     # 'pattern': twd.detokenize(commons),
+                     #'pattern': pattern,
+                     'pattern': twd.detokenize(commons),
                      'sequence': commons,
                      'mean_similarity': np.mean(similarity),
                      'std_similarity': np.std(similarity)}
@@ -143,14 +144,21 @@ class Output:
         :param commons:
         :return:
         """
-        pos = 0
+        common_sequence = []
+        lines = []
+        twd = TreebankWordDetokenizer()
         arr = {}
-        for i in set([val for sublist in commons for val in sublist]):
-            arr[pos] = []
-            if (i[1] == pos):
-                arr[pos].append(i[0])
-            self.multimatcher(arr[pos])
-            pos=pos+1
+        sorted_arr = [sorted(set([val for sublist in commons for val in sublist]), key=lambda x: x[1])]
+        for i in sorted_arr:
+            for k,v in i:
+                if arr.get(v):
+                    arr[v].append(k)
+                else:
+                    arr[v] = []
+                    arr[v].append(k)
+        print(arr)
+        # common_sequence.append(self.multimatcher(arr[pos]))
+        # lines.append(twd.detokenize(common_sequence))
 
 
 
@@ -162,6 +170,8 @@ class Output:
                 match = matches.find_longest_match(
                     0, len(i), 0, len(j))
                 common.append(i[match.a:match.size])
+        min_length = np.min([len(line) for line in common])
+        return [len(line) == min_length for line in common][0]
 
 
     def matcher(self, current, row, outliers, commons, similarity, restruct=True):
