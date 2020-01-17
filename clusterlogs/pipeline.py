@@ -190,7 +190,7 @@ class ml_clustering(object):
         :return:
         """
         k = round(sqrt(len(self.sent2vec)))
-        neigh = NearestNeighbors(n_neighbors=k)
+        neigh = NearestNeighbors(n_neighbors=k, n_jobs=-1)
         nbrs = neigh.fit(self.sent2vec)
         distances, indices = nbrs.kneighbors(self.sent2vec)
         self.distances = [np.mean(d) for d in np.sort(distances, axis=0)]

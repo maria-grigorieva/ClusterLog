@@ -78,5 +78,6 @@ class Vector(ml_clustering):
                     numw += 1
                 except Exception:
                     pass
-            sent2vec.append(np.asarray(sent_vec) / numw)
+            row = np.zeros((self.w2v_size,), dtype=np.float32) if len(sent_vec) == 0 else np.asarray(sent_vec) / numw
+            sent2vec.append(row)
         return np.array(sent2vec)
