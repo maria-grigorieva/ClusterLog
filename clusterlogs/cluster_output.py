@@ -147,7 +147,7 @@ class Output:
 
         matches = difflib.SequenceMatcher(None, current, row.tokenized_pyonmttok)
         if restruct == True:
-            if matches.ratio() <= 0.5:
+            if matches.ratio() < 0.4:
                 #twd = TreebankWordDetokenizer()
                 #print('Outliers detected with ratio {} for messages \n {} \n and \n {}'.format(matches.ratio(), twd.detokenize(current), twd.detokenize(row.tokenized_pyonmttok)))
                 outliers.append(row.Index)
@@ -177,7 +177,7 @@ class Output:
         sequences = df['sequence'].values
         matches = [difflib.SequenceMatcher(None, sequences[0], x) for x in sequences]
         df['ratio'] = [item.ratio() for item in matches]
-        filtered = df[(df['ratio'] >= 0.5)]['cluster_name'].values
+        filtered = df[(df['ratio'] >= 0.4)]['cluster_name'].values
         result.append(filtered)
         df.drop(df[df['cluster_name'].isin(filtered)].index, inplace=True)
         while df.shape[0] > 0:
