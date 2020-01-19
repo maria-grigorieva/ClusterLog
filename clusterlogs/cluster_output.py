@@ -45,15 +45,6 @@ class Output:
         return groups
 
 
-    # def in_cluster(self, cluster_label, level=1):
-    #     """
-    #     Returns all log messages in particular cluster
-    #     :param cluster_label:
-    #     :return:
-    #     """
-    #     return self.df[self.df['cluster_'+str(level)] == cluster_label][self.target].values
-
-
     def levenshtein_similarity(self, rows):
         """
         Takes a list of log messages and calculates similarity between
@@ -102,25 +93,20 @@ class Output:
             value = {'cluster_name': item,
                      'cluster_size': 1,
                      'pattern': cluster.iloc[0]['cleaned'],
-                     'sequence': cluster.iloc[0]['tokenized_treebank'],
+                     'sequence': cluster.iloc[0]['tokenized_pyonmttok'],
                      'mean_similarity': 1,
                      'std_similarity': 0}
             results.append(value)
             return results
         else:
-            curr = cluster.iloc[0]['tokenized_treebank']
-            # curr = cluster.iloc[0][self.target]
+            curr = cluster.iloc[0]['tokenized_pyonmttok']
             outliers, commons, similarity = [],[],[]
             [self.matcher(curr, row, outliers, commons, similarity, restruct) for row in cluster.itertuples()]
-            # [self.matcher_lines(curr, row, outliers, commons, similarity, restruct) for row in cluster.itertuples()]
-            # self.rematch(commons)
-            commons = [i[0] for i in sorted(set([val for sublist in commons for val in sublist]), key=lambda x: x[1])]
-            # pattern = self.rematch(commons)
+            commons = self.rematch(commons)
             twd = TreebankWordDetokenizer()
 
             value = {'cluster_name': item,
                      'cluster_size': cluster.shape[0] - len(outliers),
-                     #'pattern': pattern,
                      'pattern': twd.detokenize(commons),
                      'sequence': commons,
                      'mean_similarity': np.mean(similarity),
@@ -144,9 +130,6 @@ class Output:
         :param commons:
         :return:
         """
-        common_sequence = []
-        lines = []
-        twd = TreebankWordDetokenizer()
         arr = {}
         sorted_arr = [sorted(set([val for sublist in commons for val in sublist]), key=lambda x: x[1])]
         for i in sorted_arr:
@@ -156,31 +139,17 @@ class Output:
                 else:
                     arr[v] = []
                     arr[v].append(k)
-        print(arr)
-        # common_sequence.append(self.multimatcher(arr[pos]))
-        # lines.append(twd.detokenize(common_sequence))
 
-
-
-    def multimatcher(self, sequence):
-        common = []
-        for i in sequence:
-            for j in sequence:
-                matches = difflib.SequenceMatcher(None, i, j)
-                match = matches.find_longest_match(
-                    0, len(i), 0, len(j))
-                common.append(i[match.a:match.size])
-        min_length = np.min([len(line) for line in common])
-        return [len(line) == min_length for line in common][0]
+        return [arr[s][0] for s in arr]
 
 
     def matcher(self, current, row, outliers, commons, similarity, restruct=True):
 
-        matches = difflib.SequenceMatcher(None, current, row.tokenized_treebank)
+        matches = difflib.SequenceMatcher(None, current, row.tokenized_pyonmttok)
         if restruct == True:
-            if matches.ratio() <= 0.5:  # this line does not belong to this cluster - move to new cluster
-                twd = TreebankWordDetokenizer()
-                print('Outliers detected with ratio {} for messages \n {} \n and \n {}'.format(matches.ratio(), twd.detokenize(current), twd.detokenize(row.tokenized_treebank)))
+            if matches.ratio() <= 0.5:
+                #twd = TreebankWordDetokenizer()
+                #print('Outliers detected with ratio {} for messages \n {} \n and \n {}'.format(matches.ratio(), twd.detokenize(current), twd.detokenize(row.tokenized_pyonmttok)))
                 outliers.append(row.Index)
             else:
                 similarity.append(matches.ratio())
@@ -195,26 +164,6 @@ class Output:
             flat = [val for sublist in common for val in sublist]
             commons.append(self.positioning(flat))
 
-
-    def matcher_lines(self, current, row, outliers, commons, similarity, restruct=True):
-
-        matches = difflib.SequenceMatcher(None, current, row.cleaned)
-        if restruct == True:
-            if matches.ratio() <= 0.5:  # this line does not belong to this cluster - move to new cluster
-                print('Outliers detected with ratio {} for messages \n {} \n and \n {}'.format(matches.ratio(), current, row.cleaned))
-                outliers.append(row.Index)
-            else:
-                similarity.append(matches.ratio())
-                common = [current[m.a:m.a + m.size] for m
-                          in matches.get_matching_blocks() if m.size > 0]
-                #flat = [val for sublist in common for val in sublist]
-                commons.append(self.positioning(common))
-        else:
-            similarity.append(matches.ratio())
-            common = [current[m.a:m.a + m.size] for m
-                      in matches.get_matching_blocks() if m.size > 0]
-            #flat = [val for sublist in common for val in sublist]
-            commons.append(self.positioning(common))
 
 
     def reclustering(self, df, result):

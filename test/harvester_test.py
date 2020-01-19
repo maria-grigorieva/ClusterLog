@@ -4,7 +4,7 @@ import pprint
 from clusterlogs import pipeline, cluster_output
 
 def main():
-    df = pd.read_csv('samples/harvester_errors24.csv', sep=';')
+    df = pd.read_csv('../samples/harvester_errors24.csv', sep=';')
     target = 'message'
     mode = 'INDEX'
     cluster = pipeline.ml_clustering(df, target, mode='create', model_name='harvester_test.model')

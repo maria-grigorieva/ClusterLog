@@ -4,11 +4,12 @@ from time import time
 
 import numpy as np
 from kneed import KneeLocator
-from sklearn.cluster import DBSCAN, AgglomerativeClustering
+from sklearn.cluster import DBSCAN, AgglomerativeClustering, OPTICS
 from sklearn.neighbors import NearestNeighbors
 from .tokenization import Tokens
 from .data_preparation import Regex
 from .cluster_output import Output
+from sklearn.decomposition import PCA
 
 import pprint
 
@@ -43,8 +44,7 @@ REGEX = [r'[0-9a-zA-Z]{12,128}',
 #          r'[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}',
 #          ]
 
-CLUSTERING_DEFAULTS = {"tokenizer": "nltk",
-                       "w2v_size": "auto",
+CLUSTERING_DEFAULTS = {"w2v_size": "auto",
                        "w2v_window": 7,
                        "min_samples": 1}
 
@@ -61,7 +61,7 @@ class ml_clustering(object):
         self.messages = self.extract_messages()
         self.timings = {}
         self.messages_cleaned = None
-        self.tokenized = None
+        self.tokens = None
         self.sent2vec = None
         self.distances = None
         self.epsilon = None
@@ -104,13 +104,25 @@ class ml_clustering(object):
             .tokenization() \
             .tokens_vectorization() \
             .sentence_vectorization() \
-            .kneighbors() \
-            .epsilon_search() \
-            .dbscan() \
+            .dimensionality_reduction() \
+            .hdbscan() \
             .extract_patterns() \
             .reprocess() \
             .statistics()
+        # return self.data_preparation() \
+        #     .tokenization() \
+        #     .tokens_vectorization() \
+        #     .sentence_vectorization() \
+        #     .kneighbors() \
+        #     .epsilon_search() \
+        #     .dbscan() \
+        #     .extract_patterns() \
+        #     .reprocess() \
+        #     .statistics()
 
+    #.kneighbors() \
+        # .epsilon_search() \
+    # .dbscan() \
 
     @safe_run
     def data_preparation(self):
@@ -130,19 +142,17 @@ class ml_clustering(object):
         Tokenization of a list of error messages.
         :return:
         """
-        tokens = Tokens(self.messages_cleaned, type=self.tokenizer)
-        tokens.process()
-        # add tokenized messages to DataFrame
-        self.tokenized = tokens.tokenized_wordpunct
-        self.df['tokenized_wordpunct'] = tokens.tokenized_wordpunct
-        self.df['tokenized_treebank'] = tokens.tokenized_treebank
+        self.tokens = Tokens(self.messages_cleaned)
+        self.tokens.process()
+        self.df['tokenized_wordpunct'] = self.tokens.tokenized_wordpunct
+        self.df['tokenized_pyonmttok'] = self.tokens.tokenized_pyonmttok
         if self.w2v_size == 'auto':
-            self.w2v_size = self.detect_embedding_size(tokens)
+            self.w2v_size = self.detect_embedding_size()
         return self
 
 
-    def detect_embedding_size(self, tokens):
-        vocab = tokens.get_vocabulary()
+    def detect_embedding_size(self):
+        vocab = self.tokens.get_vocabulary(self.tokens.tokenized_wordpunct)
         embedding_size = round(len(vocab) ** (2/3))
         if embedding_size >= 400:
             embedding_size = 400
@@ -158,7 +168,7 @@ class ml_clustering(object):
         :return:
         """
         from .vectorization import Vector
-        self.word_vector = Vector(self.tokenized,
+        self.word_vector = Vector(self.tokens.tokenized_wordpunct,
                                   self.w2v_size,
                                   self.w2v_window,
                                   self.cpu_number,
@@ -184,15 +194,24 @@ class ml_clustering(object):
 
 
     @safe_run
+    def dimensionality_reduction(self):
+        pca = PCA(n_components=20, svd_solver='full')
+        pca.fit(self.sent2vec)
+        self.sent2vec_PCA = pca.transform(self.sent2vec)
+        return self
+
+
+
+    @safe_run
     def kneighbors(self):
         """
         Calculates average distances for k-nearest neighbors
         :return:
         """
-        k = round(sqrt(len(self.sent2vec)))
+        k = round(sqrt(len(self.sent2vec_PCA)))
         neigh = NearestNeighbors(n_neighbors=k, n_jobs=-1)
-        nbrs = neigh.fit(self.sent2vec)
-        distances, indices = nbrs.kneighbors(self.sent2vec)
+        nbrs = neigh.fit(self.sent2vec_PCA)
+        distances, indices = nbrs.kneighbors(self.sent2vec_PCA)
         self.distances = [np.mean(d) for d in np.sort(distances, axis=0)]
         return self
 
@@ -219,6 +238,22 @@ class ml_clustering(object):
                                      min_samples=self.min_samples,
                                      n_jobs=self.cpu_number) \
             .fit_predict(self.sent2vec)
+        self.df['cluster_1'] = self.cluster_labels
+        return self
+
+
+    def optics(self):
+        from pyclustering.cluster.optics import optics
+        optics_instance = optics(self.sent2vec)
+        optics_instance.process()
+        clusters = optics_instance.get_clusters()
+
+
+    @safe_run
+    def hdbscan(self):
+        import hdbscan
+        clusterer = hdbscan.HDBSCAN(min_cluster_size=100, min_samples=1)
+        self.cluster_labels = clusterer.fit_predict(self.sent2vec_PCA)
         self.df['cluster_1'] = self.cluster_labels
         return self
 

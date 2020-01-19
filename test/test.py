@@ -19,7 +19,7 @@ def main():
 
     pprint.pprint(cluster.timings)
 
-    pprint.pprint(cluster.results)
+    pprint.pprint(cluster.results[['pattern']].values)
 
     # pprint.pprint(cluster.in_cluster(0, 2))
 
