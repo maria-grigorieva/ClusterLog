@@ -70,14 +70,6 @@ class Vector(ml_clustering):
         """
         sent2vec = []
         for sent in self.tokenized:
-            sent_vec = []
-            numw = 0
-            for w in sent:
-                try:
-                    sent_vec = self.word2vec[w] if numw == 0 else np.add(sent_vec, self.word2vec[w])
-                    numw += 1
-                except Exception:
-                    pass
-            row = np.zeros((self.w2v_size,), dtype=np.float32) if len(sent_vec) == 0 else np.asarray(sent_vec) / numw
-            sent2vec.append(row)
+            sent_vec = np.sum([self.word2vec[w] for w in sent], 0) / len(sent)
+            sent2vec.append(np.zeros((self.w2v_size,), dtype=np.float32) if len(sent_vec) == 0 else sent_vec)
         return np.array(sent2vec)
