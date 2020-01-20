@@ -5,9 +5,8 @@ import matplotlib.pyplot as plt
 
 class Regex(object):
 
-    def __init__(self, messages, regex):
+    def __init__(self, messages):
         self.messages = messages
-        self.regex = regex
 
 
     def remove_whitespaces(self, sentence):
@@ -21,18 +20,11 @@ class Regex(object):
 
     def process(self):
         """
-        Clear error messages from unnecessary data:
-        - UID/UUID in file paths
-        - line numbers - as an example "error at line number ..."
-        Removed parts of text are substituted with titles
         :return:
         """
 
         for idx, item in enumerate(self.messages):
             item = re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '*', item)
-        #     for r in self.regex:
-        #         item = re.sub(r, '*', item)
-            # self.messages[idx] = self.remove_whitespaces(item)
             self.messages[idx] = item
         return self.messages
 

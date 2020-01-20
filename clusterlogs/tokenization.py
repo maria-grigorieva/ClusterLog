@@ -1,4 +1,4 @@
-from nltk.tokenize import TreebankWordTokenizer, TweetTokenizer, ToktokTokenizer, WordPunctTokenizer
+from nltk.tokenize import WordPunctTokenizer
 from pyonmttok import Tokenizer
 from nltk.corpus import stopwords
 from string import punctuation
@@ -11,19 +11,18 @@ class Tokens(object):
         self.type = type
         self.tokenized_wordpunct = []
         self.tokenized_pyonmttok = []
+        self.wordpunct_vocab = None
+        self.pyonmttok_vocab = None
 
 
     def process(self):
         """
-        The best tokenizer for error messages is TreebankWordTokenizer (nltk).
-        It's good at tokenizing file paths.
-        Alternative tokenizer. It performs much faster, but worse in tokenizing of paths.
-        It splits all paths by "/".
-        TODO: This method should be optimized to the same tokenization quality as TreebankWordTokenizer
         :return:
         """
         self.tokenized_wordpunct = self.wordpunct()
         self.tokenized_pyonmttok = self.pyonmttok()
+        self.wordpunct_vocab = self.get_vocabulary(self.tokenized_wordpunct)
+        self.pyonmttok_vocab = self.get_vocabulary(self.tokenized_pyonmttok)
 
 
     def wordpunct(self):

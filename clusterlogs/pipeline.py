@@ -11,8 +11,6 @@ from .data_preparation import Regex
 from .cluster_output import Output
 from sklearn.decomposition import PCA
 
-import pprint
-
 
 def safe_run(method):
     def func_wrapper(self, *args, **kwargs):
@@ -30,20 +28,6 @@ def safe_run(method):
     return func_wrapper
 
 
-REGEX = [r'[0-9a-zA-Z]{12,128}',
-          r'[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}',
-          r'(http[s]|root|srm|file|ftp[s]|hdf[s])*:(//|/)(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',
-          r'(/[a-zA-Z\./]*[\s]?)',
-          r'(\d+)',
-          r'(\b\w+://)\S+(?=\s)',
-          r'(\b[f|F]ile( exists)?:?\s?)/\S+(?=\s)',
-          r'[-./_a-zA-Z0-9]{25,}']
-
-# REGEX = [r'\d+',
-#          r'[0-9a-zA-Z]{12,128}',
-#          r'[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}',
-#          ]
-
 CLUSTERING_DEFAULTS = {"w2v_size": "auto",
                        "w2v_window": 7,
                        "min_samples": 1}
@@ -52,10 +36,9 @@ CLUSTERING_DEFAULTS = {"w2v_size": "auto",
 class ml_clustering(object):
 
 
-    def __init__(self, df, target, cluster_settings=None, regex=REGEX, model_name='word2vec.model', mode='create'):
+    def __init__(self, df, target, cluster_settings=None, model_name='word2vec.model', mode='create'):
         self.df = df
         self.target = target
-        self.regex = regex
         self.set_cluster_settings(cluster_settings or CLUSTERING_DEFAULTS)
         self.cpu_number = self.get_cpu_number()
         self.messages = self.extract_messages()
@@ -109,10 +92,12 @@ class ml_clustering(object):
             .extract_patterns() \
             .reprocess() \
             .statistics()
+        #
         # return self.data_preparation() \
         #     .tokenization() \
         #     .tokens_vectorization() \
         #     .sentence_vectorization() \
+        #     .dimensionality_reduction() \
         #     .kneighbors() \
         #     .epsilon_search() \
         #     .dbscan() \
@@ -120,9 +105,6 @@ class ml_clustering(object):
         #     .reprocess() \
         #     .statistics()
 
-    #.kneighbors() \
-        # .epsilon_search() \
-    # .dbscan() \
 
     @safe_run
     def data_preparation(self):
@@ -130,7 +112,7 @@ class ml_clustering(object):
         Cleaning log messages from unnucessary substrings and tokenization
         :return:
         """
-        regex = Regex(self.messages, self.regex)
+        regex = Regex(self.messages)
         self.messages_cleaned = regex.process()
         self.df['cleaned'] = self.messages_cleaned
         return self
@@ -152,10 +134,16 @@ class ml_clustering(object):
 
 
     def detect_embedding_size(self):
+        """
+        Automatic detection of word2vec embedding vector size,
+        based on the length of vocabulary.
+        Max embedding size = 300
+        :return:
+        """
         vocab = self.tokens.get_vocabulary(self.tokens.tokenized_wordpunct)
         embedding_size = round(len(vocab) ** (2/3))
-        if embedding_size >= 400:
-            embedding_size = 400
+        if embedding_size >= 300:
+            embedding_size = 300
         return embedding_size
 
 
@@ -195,7 +183,7 @@ class ml_clustering(object):
 
     @safe_run
     def dimensionality_reduction(self):
-        pca = PCA(n_components=20, svd_solver='full')
+        pca = PCA(n_components=10, svd_solver='full')
         pca.fit(self.sent2vec)
         self.sent2vec_PCA = pca.transform(self.sent2vec)
         return self

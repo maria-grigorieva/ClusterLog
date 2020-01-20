@@ -20,10 +20,6 @@ class Output:
         self.df = df
         self.target = target
         self.level = level
-        self.stat_df = None
-        self.stat_dict = None
-        self.hierarchy = None
-
 
 
     def clustered_output(self, type='idx', level=1):
@@ -148,22 +144,19 @@ class Output:
         matches = difflib.SequenceMatcher(None, current, row.tokenized_pyonmttok)
         if restruct == True:
             if matches.ratio() < 0.4:
-                #twd = TreebankWordDetokenizer()
-                #print('Outliers detected with ratio {} for messages \n {} \n and \n {}'.format(matches.ratio(), twd.detokenize(current), twd.detokenize(row.tokenized_pyonmttok)))
                 outliers.append(row.Index)
             else:
-                similarity.append(matches.ratio())
-                common = [current[m.a:m.a + m.size] for m
-                          in matches.get_matching_blocks() if m.size > 0]
-                flat = [val for sublist in common for val in sublist]
-                commons.append(self.positioning(flat))
+                self.common_sequence(current, matches, similarity, commons)
         else:
-            similarity.append(matches.ratio())
-            common = [current[m.a:m.a + m.size] for m
-                      in matches.get_matching_blocks() if m.size > 0]
-            flat = [val for sublist in common for val in sublist]
-            commons.append(self.positioning(flat))
+            self.common_sequence(current, matches, similarity, commons)
 
+
+    def common_sequence(self, current, matches, similarity, commons):
+        similarity.append(matches.ratio())
+        common = [current[m.a:m.a + m.size] for m
+                  in matches.get_matching_blocks() if m.size > 0]
+        flat = [val for sublist in common for val in sublist]
+        commons.append(self.positioning(flat))
 
 
     def reclustering(self, df, result):
@@ -173,7 +166,6 @@ class Output:
         :param updated_clusters:
         :return:
         """
-        # select the first pattern
         sequences = df['sequence'].values
         matches = [difflib.SequenceMatcher(None, sequences[0], x) for x in sequences]
         df['ratio'] = [item.ratio() for item in matches]
