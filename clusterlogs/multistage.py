@@ -5,7 +5,7 @@ class exec():
 
     def __init__(self, df, target, model):
 
-        self. df = df
+        self.df = df
         self.target = target
         self.model = model
 
@@ -24,3 +24,9 @@ class exec():
 
         self.common = ml_clustering(self.common_df, 'pattern', mode='update', model_name=model, finished=True)
         self.common.process()
+
+
+    def in_cluster(self, cluster_label):
+        df = self.common.patterns_stats
+        indices = df[df['cluster_name'] == str(cluster_label)]['indices'].values.tolist()[0]
+        return self.df.loc[indices][self.target].values.tolist()
