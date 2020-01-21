@@ -36,11 +36,8 @@ class Vector(ml_clustering):
         :return:
         """
         self.word2vec = Word2Vec.load(self.model_name)
-        self.word2vec.train(self.tokenized,
-                            total_examples=self.word2vec.corpus_count,
-                            epochs=30,
-                            report_delay=1)
-        self.word2vec.save(self.model_name)
+        self.word2vec.build_vocab(self.tokenized, update=True)
+        self.word2vec.train(self.tokenized, total_examples=self.word2vec.corpus_count, epochs=30,report_delay=1)
 
 
     def load_word2vec_model(self):

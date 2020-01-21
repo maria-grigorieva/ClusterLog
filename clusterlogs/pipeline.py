@@ -36,7 +36,7 @@ CLUSTERING_DEFAULTS = {"w2v_size": "auto",
 class ml_clustering(object):
 
 
-    def __init__(self, df, target, cluster_settings=None, model_name='word2vec.model', mode='create'):
+    def __init__(self, df, target, cluster_settings=None, model_name='word2vec.model', mode='create', finished=False):
         self.df = df
         self.target = target
         self.set_cluster_settings(cluster_settings or CLUSTERING_DEFAULTS)
@@ -53,6 +53,7 @@ class ml_clustering(object):
         self.mode = mode
         self.patterns_stats = None
         self.results = None
+        self.finished = finished
 
 
 
@@ -83,27 +84,26 @@ class ml_clustering(object):
         Chain of methods, providing data preparation, vectorization and clusterization
         :return:
         """
-        return self.data_preparation() \
-            .tokenization() \
-            .tokens_vectorization() \
-            .sentence_vectorization() \
-            .dimensionality_reduction() \
-            .hdbscan() \
-            .extract_patterns() \
-            .reprocess() \
-            .statistics()
-        #
-        # return self.data_preparation() \
-        #     .tokenization() \
-        #     .tokens_vectorization() \
-        #     .sentence_vectorization() \
-        #     .dimensionality_reduction() \
-        #     .kneighbors() \
-        #     .epsilon_search() \
-        #     .dbscan() \
-        #     .extract_patterns() \
-        #     .reprocess() \
-        #     .statistics()
+        if self.finished:
+            return self.data_preparation() \
+                .tokenization() \
+                .tokens_vectorization() \
+                .sentence_vectorization() \
+                .dimensionality_reduction() \
+                .kneighbors() \
+                .epsilon_search() \
+                .dbscan() \
+                .finishing()
+        else:
+            return self.data_preparation() \
+                .tokenization() \
+                .tokens_vectorization() \
+                .sentence_vectorization() \
+                .dimensionality_reduction() \
+                .kneighbors() \
+                .epsilon_search() \
+                .dbscan() \
+                .extract_patterns()
 
 
     @safe_run
@@ -183,7 +183,7 @@ class ml_clustering(object):
 
     @safe_run
     def dimensionality_reduction(self):
-        pca = PCA(n_components=10, svd_solver='full')
+        pca = PCA(n_components=20, svd_solver='full')
         pca.fit(self.sent2vec)
         self.sent2vec_PCA = pca.transform(self.sent2vec)
         return self
@@ -226,7 +226,7 @@ class ml_clustering(object):
                                      min_samples=self.min_samples,
                                      n_jobs=self.cpu_number) \
             .fit_predict(self.sent2vec)
-        self.df['cluster_1'] = self.cluster_labels
+        self.df['cluster'] = self.cluster_labels
         return self
 
 
@@ -242,7 +242,7 @@ class ml_clustering(object):
         import hdbscan
         clusterer = hdbscan.HDBSCAN(min_cluster_size=100, min_samples=1)
         self.cluster_labels = clusterer.fit_predict(self.sent2vec_PCA)
-        self.df['cluster_1'] = self.cluster_labels
+        self.df['cluster'] = self.cluster_labels
         return self
 
 
@@ -255,7 +255,7 @@ class ml_clustering(object):
         self.cluster_labels = AgglomerativeClustering(n_clusters=None,
                                                       distance_threshold=self.epsilon)\
             .fit_predict(self.sent2vec)
-        self.df['cluster_1'] = self.cluster_labels
+        self.df['cluster'] = self.cluster_labels
         return self
 
 
@@ -266,25 +266,21 @@ class ml_clustering(object):
         :return:
         """
         self.output = Output(self.df, self.target)
-        self.patterns_stats = self.output.statistics(output_mode='frame', level=1)
-        return self
-
-
-    @safe_run
-    def reprocess(self):
-        """
-
-        :return:
-        """
-        self.output.postprocessing(self.patterns_stats, level=1)
+        self.patterns_stats = self.output.statistics()
         return self
 
 
     @safe_run
     def statistics(self):
-        self.results = self.output.statistics(output_mode='frame', level=2, restruct=False)
+        self.results = self.output.statistics()
         return self
 
 
-    def in_cluster(self, cluster_label, level=1):
-        return self.df[self.df['cluster_'+str(level)] == str(cluster_label)][self.target].values
+    def in_cluster(self, cluster_label):
+        return self.df[self.df['cluster'] == cluster_label][self.target].values
+
+
+    def finishing(self):
+        self.output = Output(self.df, self.target)
+        self.patterns_stats = self.output.result_statistics()
+        return self

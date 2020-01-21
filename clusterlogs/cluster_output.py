@@ -12,25 +12,24 @@ STATISTICS = ["cluster_name",
               #"mean_length",
               "mean_similarity",
               #"std_length",
-              "std_similarity"]
+              "std_similarity",
+              "indices"]
 
 class Output:
 
-    def __init__(self, df, target, level=1):
+    def __init__(self, df, target):
         self.df = df
         self.target = target
-        self.level = level
 
 
-    def clustered_output(self, type='idx', level=1):
+    def clustered_output(self, type='idx'):
         """
         Returns dictionary of clusters with the arrays of elements
         :return:
         """
         groups = {}
-        for key, value in self.df.groupby(['cluster_'+str(level)]):
+        for key, value in self.df.groupby(['cluster']):
             if type == 'all':
-                # groups[str(key)] = value.to_dict(orient='records')
                 groups[str(key)] = value
             elif type == 'idx':
                 groups[str(key)] = value.index.values.tolist()
@@ -51,7 +50,7 @@ class Output:
         return ([100 - (editdistance.eval(rows[0], rows[i]) * 100) / len(rows[0]) for i in range(0, len(rows))])
 
 
-    def statistics(self, output_mode='frame', level=1, restruct=True):
+    def statistics(self):
         """
         Returns dictionary with statistic for all clusters
         "cluster_name" - name of a cluster
@@ -67,11 +66,11 @@ class Output:
         :return:
         """
         clusters = []
-        clustered_df = self.clustered_output('all', level)
+        clustered_df = self.clustered_output('all')
         for item in clustered_df:
             cluster = clustered_df[item]
             patterns = []
-            self.tokenized_patterns(item, cluster, patterns, level, restruct)
+            self.tokenized_patterns(item, cluster, patterns)
             clusters.extend(patterns)
         return pd.DataFrame(clusters, columns=STATISTICS)\
             .round(2)\
@@ -79,11 +78,36 @@ class Output:
 
 
 
+    def result_statistics(self):
+        clusters = []
+        clustered_df = self.clustered_output('all')
+        for item in clustered_df:
+            cluster = clustered_df[item]
+            similarity = self.get_cluster_similarity(cluster['pattern'].values)
+            indices = [item for sublist in cluster['indices'].values for item in sublist]
+            clusters.append({'cluster_name': item,
+                             'cluster_size': len(indices),
+                             'pattern': cluster['pattern'].values[0],
+                             'sequence': cluster['tokenized_pyonmttok'].values[0],
+                             'mean_similarity': np.mean(similarity),
+                             'std_similarity': np.std(similarity),
+                             'indices': indices})
+        return pd.DataFrame(clusters, columns=STATISTICS) \
+            .round(2) \
+            .sort_values(by='cluster_size', ascending=False)
+
+
+
+    def get_cluster_similarity(self, patterns):
+        return [1] if len(patterns) == 1 else \
+            [difflib.SequenceMatcher(None, patterns[0], patterns[i]).ratio() for i in range(1,len(patterns))]
+
+
     def positioning(self, tokens):
         return [(v, k) for k, v in enumerate(tokens)]
 
 
-    def tokenized_patterns(self, item, cluster, results, level=1, restruct=True):
+    def tokenized_patterns(self, item, cluster, results):
 
         if cluster.shape[0] == 1:
             value = {'cluster_name': item,
@@ -91,13 +115,14 @@ class Output:
                      'pattern': cluster.iloc[0]['cleaned'],
                      'sequence': cluster.iloc[0]['tokenized_pyonmttok'],
                      'mean_similarity': 1,
-                     'std_similarity': 0}
+                     'std_similarity': 0,
+                     'indices': cluster.index.values}
             results.append(value)
             return results
         else:
             curr = cluster.iloc[0]['tokenized_pyonmttok']
             outliers, commons, similarity = [],[],[]
-            [self.matcher(curr, row, outliers, commons, similarity, restruct) for row in cluster.itertuples()]
+            [self.matcher(curr, row, commons, similarity) for row in cluster.itertuples()]
             commons = self.rematch(commons)
             twd = TreebankWordDetokenizer()
 
@@ -106,16 +131,10 @@ class Output:
                      'pattern': twd.detokenize(commons),
                      'sequence': commons,
                      'mean_similarity': np.mean(similarity),
-                     'std_similarity': np.std(similarity)}
+                     'std_similarity': np.std(similarity),
+                     'indices': cluster.index.values}
 
             results.append(value)
-
-            if len(outliers) == 0:
-                return results
-            else:
-                new_item = int(self.df['cluster_'+str(level)].max()) + 1
-                self.df.loc[outliers, 'cluster_'+str(level)] = new_item
-                self.tokenized_patterns(new_item, self.df.loc[outliers], results, level)
 
 
     #TODO
@@ -139,19 +158,9 @@ class Output:
         return [arr[s][0] for s in arr]
 
 
-    def matcher(self, current, row, outliers, commons, similarity, restruct=True):
+    def matcher(self, current, row, commons, similarity):
 
         matches = difflib.SequenceMatcher(None, current, row.tokenized_pyonmttok)
-        if restruct == True:
-            if matches.ratio() < 0.4:
-                outliers.append(row.Index)
-            else:
-                self.common_sequence(current, matches, similarity, commons)
-        else:
-            self.common_sequence(current, matches, similarity, commons)
-
-
-    def common_sequence(self, current, matches, similarity, commons):
         similarity.append(matches.ratio())
         common = [current[m.a:m.a + m.size] for m
                   in matches.get_matching_blocks() if m.size > 0]
@@ -159,39 +168,5 @@ class Output:
         commons.append(self.positioning(flat))
 
 
-    def reclustering(self, df, result):
-        """
 
-        :param df:
-        :param updated_clusters:
-        :return:
-        """
-        sequences = df['sequence'].values
-        matches = [difflib.SequenceMatcher(None, sequences[0], x) for x in sequences]
-        df['ratio'] = [item.ratio() for item in matches]
-        filtered = df[(df['ratio'] >= 0.4)]['cluster_name'].values
-        result.append(filtered)
-        df.drop(df[df['cluster_name'].isin(filtered)].index, inplace=True)
-        while df.shape[0] > 0:
-            self.reclustering(df, result)
-
-
-    def postprocessing(self, stat_df, level=1):
-        """
-        Clustering the results of the first clusterization
-        :return:
-        """
-        # sort statistics df by cluster size in ascending order
-        sorted_df = stat_df.sort_values(by=['cluster_size'])[['cluster_size',
-                                                                   'cluster_name',
-                                                                   'pattern',
-                                                                   'sequence']]
-        result = []
-        self.reclustering(sorted_df, result)
-        new_level = []
-        for k,v in enumerate(result):
-            x = self.df[self.df['cluster_'+str(level)].isin(v)].index
-            new_level.append({'cluster_name': k, 'idx': x})
-        for cluster in new_level:
-            self.df.loc[cluster['idx'], 'cluster_'+str(level+1)] = str(cluster['cluster_name'])
 
