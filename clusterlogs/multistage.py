@@ -1,5 +1,6 @@
 import sys
 from .pipeline import ml_clustering
+from .cluster_output import Output
 
 class exec():
 
@@ -26,10 +27,12 @@ class exec():
 
             self.common_df = self.main_df.append(self.outliers_df)
 
-            self.common = ml_clustering(self.common_df, 'pattern', mode='update', model_name=model, finished=True)
-            self.common.process()
+            self.results = self.reclusterization(self.common_df)
 
-            self.results = self.common.patterns_stats
+            # self.common = ml_clustering(self.common_df, 'pattern', mode='update', model_name=model, finished=True)
+            # self.common.process()
+            #
+            # self.results = self.common.patterns_stats
 
         else:
 
@@ -40,3 +43,8 @@ class exec():
         df = self.results
         indices = df[df['cluster_name'] == str(cluster_label)]['indices'].values.tolist()[0]
         return self.df.loc[indices][self.target].values.tolist()
+
+
+    def reclusterization(self, stat_df):
+        self.output = Output(self.df, self.target)
+        self.patterns_stats = self.output.postprocessing(stat_df)

@@ -168,5 +168,72 @@ class Output:
         commons.append(self.positioning(flat))
 
 
+    def reclustering(self, df, result, counter=0):
+        """
+        :param df:
+        :param updated_clusters:
+        :return:
+        """
+        sequences = df['sequence'].values
+        matches = [difflib.SequenceMatcher(None, sequences[0], x) for x in sequences]
+        df['ratio'] = [item.ratio() for item in matches]
+        filtered = df[(df['ratio'] >= 0.5)]
+        # indices = [item for sublist in filtered['indices'].values for item in sublist] if filtered.shape[0]>0 else
+        new_cluster = {}
+        new_cluster['cluster_name'] = counter
+        new_cluster['indices'] = [item for sublist in filtered['indices'].values for item in sublist]
+        result.append(new_cluster)
+        df.drop(df[df['cluster_name'].isin(filtered['cluster_name'].values)].index, inplace=True)
+        counter += 1
+        while df.shape[0] > 0:
+            self.reclustering(df, result, counter)
+
+
+    def get_common_pattern(self, sequences):
+        curr = sequences[0]
+
+        for i in range(1, len(sequences)):
+            matches = difflib.SequenceMatcher(None, curr, sequences[i])
+            common = [curr[m.a:m.a + m.size] for m
+                      in matches.get_matching_blocks() if m.size > 0]
+            curr = [val for sublist in common for val in sublist]
+
+        return curr
+
+
+    def postprocessing(self, stat_df):
+        """
+        Clustering the results of the first clusterization
+        :return:
+        """
+        # sort statistics df by cluster size in ascending order
+        sorted_df = stat_df.sort_values(by=['cluster_size'])[['cluster_size',
+                                                              'cluster_name',
+                                                              'pattern',
+                                                              'sequence',
+                                                              'indices']]
+        result = []
+        print("total number of clusters is " + str(stat_df.shape[0]))
+        self.reclustering(sorted_df, result)
+        print("new number of clusters is " + str(len(result)))
+
+        total = 0
+        for item in result:
+            self.df.loc[item['indices'], 'cluster'] = item['cluster_name']
+            total += len(item['indices'])
+        print('total = ' + str(total))
+        print('df size = ' +str(self.df.shape[0]))
+
+        print("result in df is " + str(len(self.df.groupby('cluster'))))
+
+        return self.statistics()
+
+
+
+
+
+
+
+
 
 

@@ -283,3 +283,4 @@ class ml_clustering(object):
         self.output = Output(self.df, self.target)
         self.patterns_stats = self.output.result_statistics()
         return self
+
