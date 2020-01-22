@@ -65,14 +65,12 @@ class Output:
         :param output_mode: frame | dict
         :return:
         """
-        clusters = []
+        patterns = []
         clustered_df = self.clustered_output('all')
         for item in clustered_df:
             cluster = clustered_df[item]
-            patterns = []
             self.tokenized_patterns(item, cluster, patterns)
-            clusters.extend(patterns)
-        return pd.DataFrame(clusters, columns=STATISTICS)\
+        return pd.DataFrame(patterns, columns=STATISTICS)\
             .round(2)\
             .sort_values(by='cluster_size', ascending=False)
 
@@ -118,16 +116,15 @@ class Output:
                      'std_similarity': 0,
                      'indices': cluster.index.values}
             results.append(value)
-            return results
         else:
             curr = cluster.iloc[0]['tokenized_pyonmttok']
-            outliers, commons, similarity = [],[],[]
+            commons, similarity = [],[]
             [self.matcher(curr, row, commons, similarity) for row in cluster.itertuples()]
             commons = self.rematch(commons)
             twd = TreebankWordDetokenizer()
 
             value = {'cluster_name': item,
-                     'cluster_size': cluster.shape[0] - len(outliers),
+                     'cluster_size': cluster.shape[0],
                      'pattern': twd.detokenize(commons),
                      'sequence': commons,
                      'mean_similarity': np.mean(similarity),
@@ -168,7 +165,7 @@ class Output:
         commons.append(self.positioning(flat))
 
 
-    def reclustering(self, df, result, counter=0):
+    def reclustering(self, df, result):
         """
         :param df:
         :param updated_clusters:
@@ -177,16 +174,16 @@ class Output:
         sequences = df['sequence'].values
         matches = [difflib.SequenceMatcher(None, sequences[0], x) for x in sequences]
         df['ratio'] = [item.ratio() for item in matches]
-        filtered = df[(df['ratio'] >= 0.5)]
-        # indices = [item for sublist in filtered['indices'].values for item in sublist] if filtered.shape[0]>0 else
-        new_cluster = {}
-        new_cluster['cluster_name'] = counter
-        new_cluster['indices'] = [item for sublist in filtered['indices'].values for item in sublist]
-        result.append(new_cluster)
-        df.drop(df[df['cluster_name'].isin(filtered['cluster_name'].values)].index, inplace=True)
-        counter += 1
+        filtered = df[(df['ratio'] >= 0.6)]
+        if filtered.shape[0] == 0:
+            indices = filtered['indices'].values
+        else:
+            indices = [item for sublist in filtered['indices'].values for item in sublist]
+        result.append(indices)
+        df.drop(filtered.index, axis=0, inplace=True)
+        #df.drop(df[df['cluster_name'].isin(filtered['cluster_name'].values)].index, inplace=True)
         while df.shape[0] > 0:
-            self.reclustering(df, result, counter)
+            self.reclustering(df, result)
 
 
     def get_common_pattern(self, sequences):
@@ -206,25 +203,12 @@ class Output:
         Clustering the results of the first clusterization
         :return:
         """
-        # sort statistics df by cluster size in ascending order
-        sorted_df = stat_df.sort_values(by=['cluster_size'])[['cluster_size',
-                                                              'cluster_name',
-                                                              'pattern',
-                                                              'sequence',
-                                                              'indices']]
         result = []
-        print("total number of clusters is " + str(stat_df.shape[0]))
-        self.reclustering(sorted_df, result)
-        print("new number of clusters is " + str(len(result)))
+        print(len([item for sublist in stat_df['indices'].values for item in sublist]))
+        self.reclustering(stat_df, result)
 
-        total = 0
-        for item in result:
-            self.df.loc[item['indices'], 'cluster'] = item['cluster_name']
-            total += len(item['indices'])
-        print('total = ' + str(total))
-        print('df size = ' +str(self.df.shape[0]))
-
-        print("result in df is " + str(len(self.df.groupby('cluster'))))
+        for i in range(0, len(result)):
+            self.df.loc[result[i], 'cluster'] = i
 
         return self.statistics()
 
