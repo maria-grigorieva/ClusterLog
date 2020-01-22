@@ -89,7 +89,6 @@ class ml_clustering(object):
                 .tokenization() \
                 .tokens_vectorization() \
                 .sentence_vectorization() \
-                .dimensionality_reduction() \
                 .kneighbors() \
                 .epsilon_search() \
                 .dbscan() \
@@ -99,7 +98,6 @@ class ml_clustering(object):
                 .tokenization() \
                 .tokens_vectorization() \
                 .sentence_vectorization() \
-                .dimensionality_reduction() \
                 .kneighbors() \
                 .epsilon_search() \
                 .dbscan() \
@@ -185,8 +183,7 @@ class ml_clustering(object):
     def dimensionality_reduction(self):
         pca = PCA(n_components=20, svd_solver='full')
         pca.fit(self.sent2vec)
-        self.sent2vec_PCA = pca.transform(self.sent2vec)
-        return self
+        return pca.transform(self.sent2vec)
 
 
 
@@ -196,10 +193,11 @@ class ml_clustering(object):
         Calculates average distances for k-nearest neighbors
         :return:
         """
-        k = round(sqrt(len(self.sent2vec_PCA)))
+        X = self.sent2vec if self.w2v_size <= 20 else self.dimensionality_reduction()
+        k = round(sqrt(len(X)))
         neigh = NearestNeighbors(n_neighbors=k, n_jobs=-1)
-        nbrs = neigh.fit(self.sent2vec_PCA)
-        distances, indices = nbrs.kneighbors(self.sent2vec_PCA)
+        nbrs = neigh.fit(X)
+        distances, indices = nbrs.kneighbors(X)
         self.distances = [np.mean(d) for d in np.sort(distances, axis=0)]
         return self
 
@@ -234,14 +232,15 @@ class ml_clustering(object):
         from pyclustering.cluster.optics import optics
         optics_instance = optics(self.sent2vec)
         optics_instance.process()
-        clusters = optics_instance.get_clusters()
+        self.df['cluster'] = optics_instance.get_clusters()
+        return self
 
 
     @safe_run
     def hdbscan(self):
         import hdbscan
         clusterer = hdbscan.HDBSCAN(min_cluster_size=100, min_samples=1)
-        self.cluster_labels = clusterer.fit_predict(self.sent2vec_PCA)
+        self.cluster_labels = clusterer.fit_predict(self.sent2vec)
         self.df['cluster'] = self.cluster_labels
         return self
 
@@ -253,7 +252,7 @@ class ml_clustering(object):
         :return:
         """
         self.cluster_labels = AgglomerativeClustering(n_clusters=None,
-                                                      distance_threshold=self.epsilon)\
+                                                      distance_threshold=0.0)\
             .fit_predict(self.sent2vec)
         self.df['cluster'] = self.cluster_labels
         return self
