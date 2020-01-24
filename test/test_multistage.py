@@ -10,8 +10,8 @@ index = 'pandaid'
 df = pd.read_csv(filename)
 df.set_index(index, inplace=True)
 
-result = multistage.exec(df, target, 'exeerror.model')
+result = multistage.exec(df, target, 'exe.model', threshold=500, max_clusters=10)
 
-pprint.pprint(result.results.to_dict('rows'))
+pprint.pprint(result.clusters.to_dict('rows'))
 
-pprint.pprint(result.in_cluster(0))
+#pprint.pprint(result.in_cluster(0))

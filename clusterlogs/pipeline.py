@@ -5,6 +5,7 @@ from time import time
 import numpy as np
 from kneed import KneeLocator
 from sklearn.cluster import DBSCAN, AgglomerativeClustering, OPTICS
+from sklearn import mixture
 from sklearn.neighbors import NearestNeighbors
 from .tokenization import Tokens
 from .data_preparation import Regex
@@ -84,24 +85,14 @@ class ml_clustering(object):
         Chain of methods, providing data preparation, vectorization and clusterization
         :return:
         """
-        if self.finished:
-            return self.data_preparation() \
-                .tokenization() \
-                .tokens_vectorization() \
-                .sentence_vectorization() \
-                .kneighbors() \
-                .epsilon_search() \
-                .dbscan() \
-                .finishing()
-        else:
-            return self.data_preparation() \
-                .tokenization() \
-                .tokens_vectorization() \
-                .sentence_vectorization() \
-                .kneighbors() \
-                .epsilon_search() \
-                .dbscan() \
-                .extract_patterns()
+        return self.data_preparation() \
+            .tokenization() \
+            .tokens_vectorization() \
+            .sentence_vectorization() \
+            .kneighbors() \
+            .epsilon_search() \
+            .dbscan() \
+            .extract_patterns()
 
 
     @safe_run
@@ -258,6 +249,14 @@ class ml_clustering(object):
         return self
 
 
+    def gmm(self):
+        g = mixture.GaussianMixture(n_components=10)
+        g.fit(self.sent2vec)
+        self.cluster_labels = g.predict(self.sent2vec)
+        self.df['cluster'] = self.cluster_labels
+        return self
+
+
     @safe_run
     def extract_patterns(self):
         """
@@ -265,7 +264,7 @@ class ml_clustering(object):
         :return:
         """
         self.output = Output(self.df, self.target)
-        self.patterns_stats = self.output.statistics()
+        self.patterns = self.output.statistics()
         return self
 
 
@@ -277,10 +276,4 @@ class ml_clustering(object):
 
     def in_cluster(self, cluster_label):
         return self.df[self.df['cluster'] == cluster_label][self.target].values
-
-
-    def finishing(self):
-        self.output = Output(self.df, self.target)
-        self.patterns_stats = self.output.result_statistics()
-        return self
 

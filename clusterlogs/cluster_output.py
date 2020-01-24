@@ -9,9 +9,7 @@ STATISTICS = ["cluster_name",
               "cluster_size",
               "pattern",
               "sequence",
-              #"mean_length",
               "mean_similarity",
-              #"std_length",
               "std_similarity",
               "indices"]
 
@@ -56,13 +54,11 @@ class Output:
         "cluster_name" - name of a cluster
         "cluster_size" = number of log messages in cluster
         "pattern" - all common substrings in messages in the cluster
-        "mean_length" - average length of log messages in cluster
-        "std_length" - standard deviation of length of log messages in cluster
         "mean_similarity" - average similarity of log messages in cluster
         "std_similarity" - standard deviation of similarity of log messages in cluster
-        "interbals" - internal indexes of the cluster
+        "indices" - internal indexes of the cluster
         :param clustered_df:
-        :param output_mode: frame | dict
+        :param output_mode: data frame
         :return:
         """
         patterns = []
@@ -73,36 +69,6 @@ class Output:
         return pd.DataFrame(patterns, columns=STATISTICS)\
             .round(2)\
             .sort_values(by='cluster_size', ascending=False)
-
-
-
-    def result_statistics(self):
-        clusters = []
-        clustered_df = self.clustered_output('all')
-        for item in clustered_df:
-            cluster = clustered_df[item]
-            similarity = self.get_cluster_similarity(cluster['pattern'].values)
-            indices = [item for sublist in cluster['indices'].values for item in sublist]
-            clusters.append({'cluster_name': item,
-                             'cluster_size': len(indices),
-                             'pattern': cluster['pattern'].values[0],
-                             'sequence': cluster['tokenized_pyonmttok'].values[0],
-                             'mean_similarity': np.mean(similarity),
-                             'std_similarity': np.std(similarity),
-                             'indices': indices})
-        return pd.DataFrame(clusters, columns=STATISTICS) \
-            .round(2) \
-            .sort_values(by='cluster_size', ascending=False)
-
-
-
-    def get_cluster_similarity(self, patterns):
-        return [1] if len(patterns) == 1 else \
-            [difflib.SequenceMatcher(None, patterns[0], patterns[i]).ratio() for i in range(1,len(patterns))]
-
-
-    def positioning(self, tokens):
-        return [(v, k) for k, v in enumerate(tokens)]
 
 
     def tokenized_patterns(self, item, cluster, results):
@@ -117,10 +83,7 @@ class Output:
                      'indices': cluster.index.values}
             results.append(value)
         else:
-            curr = cluster.iloc[0]['tokenized_pyonmttok']
-            commons, similarity = [],[]
-            [self.matcher(curr, row, commons, similarity) for row in cluster.itertuples()]
-            commons = self.rematch(commons)
+            commons, similarity = self.matcher(cluster)
             twd = TreebankWordDetokenizer()
 
             value = {'cluster_name': item,
@@ -134,83 +97,16 @@ class Output:
             results.append(value)
 
 
-    #TODO
-    def rematch(self, commons):
-        """
-        First we found matches in strings.
-        Next we find matches in matches.
-        :param commons:
-        :return:
-        """
-        arr = {}
-        sorted_arr = [sorted(set([val for sublist in commons for val in sublist]), key=lambda x: x[1])]
-        for i in sorted_arr:
-            for k,v in i:
-                if arr.get(v):
-                    arr[v].append(k)
-                else:
-                    arr[v] = []
-                    arr[v].append(k)
-
-        return [arr[s][0] for s in arr]
-
-
-    def matcher(self, current, row, commons, similarity):
-
-        matches = difflib.SequenceMatcher(None, current, row.tokenized_pyonmttok)
-        similarity.append(matches.ratio())
-        common = [current[m.a:m.a + m.size] for m
-                  in matches.get_matching_blocks() if m.size > 0]
-        flat = [val for sublist in common for val in sublist]
-        commons.append(self.positioning(flat))
-
-
-    def reclustering(self, df, result):
-        """
-        :param df:
-        :param updated_clusters:
-        :return:
-        """
-        sequences = df['sequence'].values
-        matches = [difflib.SequenceMatcher(None, sequences[0], x) for x in sequences]
-        df['ratio'] = [item.ratio() for item in matches]
-        filtered = df[(df['ratio'] >= 0.6)]
-        if filtered.shape[0] == 0:
-            indices = filtered['indices'].values
-        else:
-            indices = [item for sublist in filtered['indices'].values for item in sublist]
-        result.append(indices)
-        df.drop(filtered.index, axis=0, inplace=True)
-        #df.drop(df[df['cluster_name'].isin(filtered['cluster_name'].values)].index, inplace=True)
-        while df.shape[0] > 0:
-            self.reclustering(df, result)
-
-
-    def get_common_pattern(self, sequences):
-        curr = sequences[0]
-
-        for i in range(1, len(sequences)):
-            matches = difflib.SequenceMatcher(None, curr, sequences[i])
-            common = [curr[m.a:m.a + m.size] for m
+    def matcher(self, cluster):
+        similarity = []
+        current = cluster.iloc[0]['tokenized_pyonmttok']
+        for i in range(1, cluster.shape[0]):
+            matches = difflib.SequenceMatcher(None, current, cluster.iloc[i]['tokenized_pyonmttok'])
+            common = [current[m.a:m.a + m.size] for m
                       in matches.get_matching_blocks() if m.size > 0]
-            curr = [val for sublist in common for val in sublist]
-
-        return curr
-
-
-    def postprocessing(self, stat_df):
-        """
-        Clustering the results of the first clusterization
-        :return:
-        """
-        result = []
-        print(len([item for sublist in stat_df['indices'].values for item in sublist]))
-        self.reclustering(stat_df, result)
-
-        for i in range(0, len(result)):
-            self.df.loc[result[i], 'cluster'] = i
-
-        return self.statistics()
+            similarity.append(matches.ratio())
+            current = [val for sublist in common for val in sublist]
+        return current, similarity
 
 
 

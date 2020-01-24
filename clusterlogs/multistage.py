@@ -6,39 +6,33 @@ import pprint
 
 class exec():
 
-    def __init__(self, df, target, model):
+    def __init__(self, df, target, model, threshold=100):
 
         self.df = df
         self.target = target
         self.model = model
+        self.threshold = threshold
 
-        self.cluster = ml_clustering(df, target, mode='create', model_name=model)
-        self.cluster.process()
+        self._1 = ml_clustering(df, target, mode='create', model_name=model).process()
 
-        all_clusters_df = self.cluster.patterns_stats
+        all_clusters = self._1.patterns
 
+        if all_clusters.shape[0] > 100:
+            self.big_clusters = self._1.patterns[self._1.patterns['cluster_size'] >= self.threshold]
+            outliers_indices = [i for sublist in self._1.patterns[self._1.patterns['cluster_size'] < self.threshold]['indices'].values for i in sublist]
+            self.df_outliers = self.df.loc[outliers_indices]
 
-        if all_clusters_df.shape[0] > 40:
-            self.main_clusters_df = self.cluster.patterns_stats[self.cluster.patterns_stats['cluster_size'] >= 100]
-            outliers = [i for sublist in self.cluster.patterns_stats[self.cluster.patterns_stats['cluster_size'] < 100]['indices'].values for i in sublist]
-            self.outliers_df = self.df.loc[outliers]
+            self._2 = ml_clustering(self.df_outliers, target, mode='process', model_name=model).process()
+            self.small_clusters = self._2.patterns
 
-            self.cluster_outliers = ml_clustering(self.outliers_df, target, mode='process', model_name=model)
-            self.cluster_outliers.process()
-            self.outliers_clusters_df = self.cluster_outliers.patterns_stats
+            self.clusters = self.big_clusters.append(self.small_clusters, ignore_index = True, sort = False)
 
-            self.common_clusters_df = self.main_clusters_df.append(self.outliers_clusters_df, ignore_index = True, sort = False)
-
-            self.results = self.reclusterization(self.common_clusters_df)
-
-            # self.common = ml_clustering(self.common_df, 'pattern', mode='update', model_name=model, finished=True)
-            # self.common.process()
-            #
-            # self.results = self.common.patterns_stats
+            self.outliers = self.clusters[self.clusters['cluster_size']<self.threshold]
+            self.clusters.drop(self.outliers.index, axis=0, inplace=True)
 
         else:
 
-            self.results = all_clusters_df
+            self.clusters = all_clusters
 
 
     def in_cluster(self, cluster_label):
@@ -46,8 +40,3 @@ class exec():
         indices = df[df['cluster_name'] == str(cluster_label)]['indices'].values.tolist()[0]
         return self.df.loc[indices][self.target].values.tolist()
 
-
-    def reclusterization(self, stat_df):
-        self.output = Output(self.df, self.target)
-        self.patterns_stats = self.output.postprocessing(stat_df)
-        return self.patterns_stats
