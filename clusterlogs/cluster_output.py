@@ -18,6 +18,7 @@ class Output:
     def __init__(self, df, target):
         self.df = df
         self.target = target
+        self.patterns = None
 
 
     def clustered_output(self, type='idx'):
@@ -66,9 +67,10 @@ class Output:
         for item in clustered_df:
             cluster = clustered_df[item]
             self.tokenized_patterns(item, cluster, patterns)
-        return pd.DataFrame(patterns, columns=STATISTICS)\
+        self.patterns = pd.DataFrame(patterns, columns=STATISTICS)\
             .round(2)\
             .sort_values(by='cluster_size', ascending=False)
+        return self.patterns
 
 
     def tokenized_patterns(self, item, cluster, results):
@@ -108,6 +110,29 @@ class Output:
             current = [val for sublist in common for val in sublist]
         return current, similarity
 
+
+
+    def reclustering(self, df, result):
+        curr = df['sequence'].values[0]
+        matches = [difflib.SequenceMatcher(None, curr, x) for x in df['sequence'].values]
+        df['ratio'] = [item.ratio() for item in matches]
+        filtered = df[(df['ratio'] >= 0.8)]
+        indices = [item for sublist in filtered['indices'].values for item in sublist]
+        result.append(indices)
+        df.drop(filtered.index, axis=0, inplace=True)
+        while df.shape[0] > 0:
+            self.reclustering(df, result)
+
+
+    def postprocessing(self, clusters):
+
+        result = []
+        self.reclustering(clusters.copy(deep=True), result)
+
+        for i in range(0, len(result)):
+            self.df.loc[result[i], 'cluster'] = i
+
+        self.statistics()
 
 
 

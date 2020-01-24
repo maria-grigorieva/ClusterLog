@@ -12,6 +12,6 @@ df.set_index(index, inplace=True)
 
 result = multistage.exec(df, target, 'exe.model')
 
-pprint.pprint(result.clusters.to_dict('rows'))
+pprint.pprint(result.out.patterns.to_dict('rows'))
 
 #pprint.pprint(result.in_cluster(0))

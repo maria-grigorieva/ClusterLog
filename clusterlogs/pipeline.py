@@ -264,7 +264,7 @@ class ml_clustering(object):
         :return:
         """
         self.output = Output(self.df, self.target)
-        self.patterns = self.output.statistics()
+        self.output.statistics()
         return self
 
 

@@ -7,6 +7,17 @@ import pprint
 class exec():
 
     def __init__(self, df, target, model, threshold=100):
+        """
+        Levels of clusterization:
+        1) clusterize the initial dataframe
+        2) clusterize outliers dataframe
+        3) reclusterize patterns
+
+        :param df:
+        :param target:
+        :param model:
+        :param threshold:
+        """
 
         self.df = df
         self.target = target
@@ -15,28 +26,36 @@ class exec():
 
         self._1 = ml_clustering(df, target, mode='create', model_name=model).process()
 
-        all_clusters = self._1.patterns
+        all_clusters = self._1.output.patterns
 
         if all_clusters.shape[0] > 100:
-            self.big_clusters = self._1.patterns[self._1.patterns['cluster_size'] >= self.threshold]
-            outliers_indices = [i for sublist in self._1.patterns[self._1.patterns['cluster_size'] < self.threshold]['indices'].values for i in sublist]
+            self.big_clusters_1 = all_clusters[all_clusters['cluster_size'] >= self.threshold]
+            self.small_clusters_1 = all_clusters[all_clusters['cluster_size'] < self.threshold]
+            outliers_indices = [i for sublist in all_clusters[all_clusters['cluster_size'] < self.threshold]['indices'].values for i in sublist]
             self.df_outliers = self.df.loc[outliers_indices]
 
             self._2 = ml_clustering(self.df_outliers, target, mode='process', model_name=model).process()
-            self.small_clusters = self._2.patterns
 
-            self.clusters = self.big_clusters.append(self.small_clusters, ignore_index = True, sort = False)
+            self.reclustered = self.big_clusters_1.append(self._2.output.patterns, ignore_index = True, sort = False)
 
-            self.outliers = self.clusters[self.clusters['cluster_size']<self.threshold]
-            self.clusters.drop(self.outliers.index, axis=0, inplace=True)
+            self.small_clusters_2 = self.reclustered[self.reclustered['cluster_size']<self.threshold]
+            self.big_clusters_2 = self.reclustered.drop(self.small_clusters_2.index, axis=0)
+
+            self.out = Output(self.df, self.target)
+            self.out.postprocessing(self.reclustered)
+            self.result = self.out.patterns
+            self.outliers = self.result[self.result['cluster_size']<self.threshold]
+            self.big_clusters = self.result.drop(self.outliers.index, axis=0)
 
         else:
 
-            self.clusters = all_clusters
+            self.result = all_clusters
 
 
     def in_cluster(self, cluster_label):
-        df = self.clusters
+        df = self.result
         indices = df[df['cluster_name'] == str(cluster_label)]['indices'].values.tolist()[0]
         return self.df.loc[indices][self.target].values.tolist()
+
+
 
