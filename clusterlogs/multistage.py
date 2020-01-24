@@ -36,7 +36,7 @@ class exec():
 
 
     def in_cluster(self, cluster_label):
-        df = self.results
+        df = self.clusters
         indices = df[df['cluster_name'] == str(cluster_label)]['indices'].values.tolist()[0]
         return self.df.loc[indices][self.target].values.tolist()
 

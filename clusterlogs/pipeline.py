@@ -172,7 +172,7 @@ class ml_clustering(object):
 
     @safe_run
     def dimensionality_reduction(self):
-        pca = PCA(n_components=20, svd_solver='full')
+        pca = PCA(n_components=10, svd_solver='full')
         pca.fit(self.sent2vec)
         return pca.transform(self.sent2vec)
 
@@ -184,7 +184,7 @@ class ml_clustering(object):
         Calculates average distances for k-nearest neighbors
         :return:
         """
-        X = self.sent2vec if self.w2v_size <= 20 else self.dimensionality_reduction()
+        X = self.sent2vec if self.w2v_size <= 10 else self.dimensionality_reduction()
         k = round(sqrt(len(X)))
         neigh = NearestNeighbors(n_neighbors=k, n_jobs=-1)
         nbrs = neigh.fit(X)

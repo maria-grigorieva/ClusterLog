@@ -10,7 +10,7 @@ index = 'pandaid'
 df = pd.read_csv(filename)
 df.set_index(index, inplace=True)
 
-result = multistage.exec(df, target, 'exe.model', threshold=500, max_clusters=10)
+result = multistage.exec(df, target, 'exe.model')
 
 pprint.pprint(result.clusters.to_dict('rows'))
 
