@@ -24,8 +24,11 @@ class Regex(object):
         """
 
         for idx, item in enumerate(self.messages):
-            item = re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '*', item)
-            self.messages[idx] = item
+            try:
+                item = re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '*', item)
+                self.messages[idx] = item
+            except Exception as e:
+                print(item)
         return self.messages
 
 def distance_curve(distances, mode='show'):

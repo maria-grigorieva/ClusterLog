@@ -6,7 +6,8 @@ import pprint
 
 class Tokens(object):
 
-    def __init__(self, messages):
+    def __init__(self, cleaned, messages):
+        self.cleaned = cleaned
         self.messages = messages
         self.type = type
         self.tokenized_wordpunct = []
@@ -27,7 +28,7 @@ class Tokens(object):
 
     def wordpunct(self):
 
-        return [WordPunctTokenizer().tokenize(line) for line in self.messages]
+        return [WordPunctTokenizer().tokenize(line) for line in self.cleaned]
 
 
     def pyonmttok(self):

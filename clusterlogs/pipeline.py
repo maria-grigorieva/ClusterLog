@@ -103,6 +103,7 @@ class ml_clustering(object):
         """
         regex = Regex(self.messages)
         self.messages_cleaned = regex.process()
+        #self.messages_cleaned = self.messages
         self.df['cleaned'] = self.messages_cleaned
         return self
 
@@ -113,7 +114,7 @@ class ml_clustering(object):
         Tokenization of a list of error messages.
         :return:
         """
-        self.tokens = Tokens(self.messages_cleaned)
+        self.tokens = Tokens(self.messages_cleaned, self.df[self.target].values)
         self.tokens.process()
         self.df['tokenized_wordpunct'] = self.tokens.tokenized_wordpunct
         self.df['tokenized_pyonmttok'] = self.tokens.tokenized_pyonmttok
