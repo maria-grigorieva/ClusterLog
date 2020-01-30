@@ -3,6 +3,8 @@ from .pipeline import ml_clustering
 from .cluster_output import Output
 import pandas as pd
 import pprint
+from time import time
+
 
 class exec():
 
@@ -43,7 +45,10 @@ class exec():
 
             self.out = Output(self.df, self.target)
             #self.out.postprocessing(self.reclustered)
+            time0 = time()
             self.out.postprocessing(all_clusters)
+            time1 = time()
+            self._1.timings['postprocessing'] = time1 - time0
             self.result = self.out.patterns
             self.outliers = self.result[self.result['cluster_size']<self.threshold]
             self.big_clusters = self.result.drop(self.outliers.index, axis=0)

@@ -3,6 +3,7 @@ import difflib
 import numpy as np
 import pandas as pd
 from nltk.tokenize.treebank import TreebankWordDetokenizer
+import random
 
 
 STATISTICS = ["cluster_name",
@@ -100,15 +101,25 @@ class Output:
 
 
     def matcher(self, cluster):
-        similarity = []
-        current = cluster.iloc[0]['tokenized_pyonmttok']
-        for i in range(1, cluster.shape[0]):
-            matches = difflib.SequenceMatcher(None, current, cluster.iloc[i]['tokenized_pyonmttok'])
-            common = [current[m.a:m.a + m.size] for m
-                      in matches.get_matching_blocks() if m.size > 0]
-            similarity.append(matches.ratio())
-            current = [val for sublist in common for val in sublist]
-        return current, similarity
+        lines = cluster['tokenized_pyonmttok'].values
+        x = random.choice(lines)
+        y = random.choice(lines)
+        matches = difflib.SequenceMatcher(None, x, y)
+        similarity = matches.ratio()
+        common = [x[m.a:m.a + m.size] for m
+                  in matches.get_matching_blocks() if m.size > 0]
+        return [val for sublist in common for val in sublist], similarity
+        #
+        #
+        # similarity = []
+        # current = cluster.iloc[0]['tokenized_pyonmttok']
+        # for i in range(1, cluster.shape[0]):
+        #     matches = difflib.SequenceMatcher(None, current, cluster.iloc[i]['tokenized_pyonmttok'])
+        #     common = [current[m.a:m.a + m.size] for m
+        #               in matches.get_matching_blocks() if m.size > 0]
+        #     similarity.append(matches.ratio())
+        #     current = [val for sublist in common for val in sublist]
+        # return current, similarity
 
 
 

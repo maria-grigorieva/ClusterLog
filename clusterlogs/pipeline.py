@@ -93,6 +93,13 @@ class ml_clustering(object):
             .epsilon_search() \
             .dbscan() \
             .extract_patterns()
+        # return self.data_preparation() \
+        #     .tokenization() \
+        #     .tokens_vectorization() \
+        #     .sentence_vectorization() \
+        #     .hdbscan() \
+        #     .extract_patterns()
+
 
 
     @safe_run
