@@ -78,7 +78,7 @@ class Output:
         if cluster.shape[0] == 1:
             value = {'cluster_name': item,
                      'cluster_size': 1,
-                     'pattern': cluster.iloc[0]['cleaned'],
+                     'pattern': cluster.iloc[0][self.target],
                      'sequence': cluster.iloc[0]['tokenized_pyonmttok'],
                      'mean_similarity': 1,
                      'std_similarity': 0,
