@@ -2,8 +2,9 @@ import editdistance
 import difflib
 import numpy as np
 import pandas as pd
-from nltk.tokenize.treebank import TreebankWordDetokenizer
-import random
+from pyonmttok import Tokenizer
+import nltk
+from itertools import groupby
 
 
 STATISTICS = ["cluster_name",
@@ -14,12 +15,16 @@ STATISTICS = ["cluster_name",
               "std_similarity",
               "indices"]
 
+
+CLUSTERING_ACCURACY = 0.8
+
 class Output:
 
     def __init__(self, df, target):
         self.df = df
         self.target = target
         self.patterns = None
+        self.tokenizer = Tokenizer("conservative", spacer_annotate=True)
 
 
     def clustered_output(self, type='idx'):
@@ -47,7 +52,10 @@ class Output:
         :param rows:
         :return:
         """
-        return ([100 - (editdistance.eval(rows[0], rows[i]) * 100) / len(rows[0]) for i in range(0, len(rows))])
+        if len(rows) > 1:
+            return ([100 - (editdistance.eval(rows[0], rows[i]) * 100) / len(rows[0]) for i in range(0, len(rows))])
+        else:
+            return 100
 
 
     def statistics(self):
@@ -67,69 +75,40 @@ class Output:
         clustered_df = self.clustered_output('all')
         for item in clustered_df:
             cluster = clustered_df[item]
-            self.tokenized_patterns(item, cluster, patterns)
+            self.patterns_extraction(item, cluster, patterns)
         self.patterns = pd.DataFrame(patterns, columns=STATISTICS)\
             .round(2)\
             .sort_values(by='cluster_size', ascending=False)
         return self.patterns
 
 
-    def tokenized_patterns(self, item, cluster, results):
+    def patterns_extraction(self, item, cluster, results):
+        commons = self.matcher(cluster['tokenized'].values)
+        similarity = self.levenshtein_similarity(cluster['cleaned'].values)
+        results.append({'cluster_name': item,
+                         'cluster_size': cluster.shape[0],
+                         'pattern': self.tokenizer.detokenize(commons),
+                         'sequence': commons,
+                         'mean_similarity': np.mean(similarity),
+                         'std_similarity': np.std(similarity),
+                         'indices': cluster.index.values})
 
-        if cluster.shape[0] == 1:
-            value = {'cluster_name': item,
-                     'cluster_size': 1,
-                     'pattern': cluster.iloc[0][self.target],
-                     'sequence': cluster.iloc[0]['tokenized_pyonmttok'],
-                     'mean_similarity': 1,
-                     'std_similarity': 0,
-                     'indices': cluster.index.values}
-            results.append(value)
+
+    def matcher(self, lines):
+        if len(lines) > 1:
+            fdist = nltk.FreqDist([i for l in lines for i in l])
+            x = [token if (fdist[token]/len(lines) >= 1) else '{*}' for token in lines[0]]
+            return [i[0] for i in groupby(x)]
         else:
-            commons, similarity = self.matcher(cluster)
-            twd = TreebankWordDetokenizer()
-
-            value = {'cluster_name': item,
-                     'cluster_size': cluster.shape[0],
-                     'pattern': twd.detokenize(commons),
-                     'sequence': commons,
-                     'mean_similarity': np.mean(similarity),
-                     'std_similarity': np.std(similarity),
-                     'indices': cluster.index.values}
-
-            results.append(value)
-
-
-    def matcher(self, cluster):
-        lines = cluster['tokenized_pyonmttok'].values
-        x = random.choice(lines)
-        y = random.choice(lines)
-        matches = difflib.SequenceMatcher(None, x, y)
-        similarity = matches.ratio()
-        common = [x[m.a:m.a + m.size] for m
-                  in matches.get_matching_blocks() if m.size > 0]
-        return [val for sublist in common for val in sublist], similarity
-        #
-        #
-        # similarity = []
-        # current = cluster.iloc[0]['tokenized_pyonmttok']
-        # for i in range(1, cluster.shape[0]):
-        #     matches = difflib.SequenceMatcher(None, current, cluster.iloc[i]['tokenized_pyonmttok'])
-        #     common = [current[m.a:m.a + m.size] for m
-        #               in matches.get_matching_blocks() if m.size > 0]
-        #     similarity.append(matches.ratio())
-        #     current = [val for sublist in common for val in sublist]
-        # return current, similarity
-
+            return lines[0]
 
 
     def reclustering(self, df, result):
+
         curr = df['sequence'].values[0]
-        matches = [difflib.SequenceMatcher(None, curr, x) for x in df['sequence'].values]
-        df['ratio'] = [item.ratio() for item in matches]
-        filtered = df[(df['ratio'] >= 0.8)]
-        indices = [item for sublist in filtered['indices'].values for item in sublist]
-        result.append(indices)
+        df['ratio'] = [difflib.SequenceMatcher(None, curr, x).ratio() for x in df['sequence'].values]
+        filtered = df[(df['ratio'] >= CLUSTERING_ACCURACY)]
+        result.append([item for sublist in filtered['indices'].values for item in sublist])
         df.drop(filtered.index, axis=0, inplace=True)
         while df.shape[0] > 0:
             self.reclustering(df, result)

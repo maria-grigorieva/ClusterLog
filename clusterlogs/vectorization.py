@@ -1,4 +1,5 @@
 from gensim.models import Word2Vec
+from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 import numpy as np
 from .pipeline import ml_clustering
 
@@ -11,6 +12,14 @@ class Vector(ml_clustering):
         self.w2v_window = w2v_window
         self.cpu_number = cpu_number
         self.model_name = model_name
+        self.doc2vec = None
+
+
+
+    def create_doc2vec_model(self):
+        tagged_docs = [TaggedDocument(doc, [str(i)]) for i, doc in enumerate(self.tokenized)]
+        self.doc2vec = Doc2Vec(tagged_docs, vector_size=self.w2v_size, window=self.w2v_window, workers=self.cpu_number)
+        return self.doc2vec.docvecs.vectors_docs
 
 
     def create_word2vec_model(self, min_count=1, iterations=10):
@@ -67,7 +76,6 @@ class Vector(ml_clustering):
         """
         sent2vec = []
         for sent in self.tokenized:
-            #sent_vec = np.sum([self.word2vec[w] for w in sent], 0) / len(sent)
             sent_vec = np.average([self.word2vec[w] for w in sent], 0)
             sent2vec.append(np.zeros((self.w2v_size,), dtype=np.float32) if len(sent_vec) == 0 else sent_vec)
         return np.array(sent2vec)

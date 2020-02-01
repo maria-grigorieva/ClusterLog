@@ -11,7 +11,10 @@ from .tokenization import Tokens
 from .data_preparation import Regex
 from .cluster_output import Output
 from sklearn.decomposition import PCA
+import difflib
 
+
+CLUSTERING_ACCURACY = 0.8
 
 def safe_run(method):
     def func_wrapper(self, *args, **kwargs):
@@ -29,7 +32,7 @@ def safe_run(method):
     return func_wrapper
 
 
-CLUSTERING_DEFAULTS = {"w2v_size": "auto",
+CLUSTERING_DEFAULTS = {"w2v_size": 300,
                        "w2v_window": 7,
                        "min_samples": 1}
 
@@ -89,16 +92,12 @@ class ml_clustering(object):
             .tokenization() \
             .tokens_vectorization() \
             .sentence_vectorization() \
-            .kneighbors() \
-            .epsilon_search() \
             .dbscan() \
             .extract_patterns()
         # return self.data_preparation() \
         #     .tokenization() \
-        #     .tokens_vectorization() \
-        #     .sentence_vectorization() \
-        #     .hdbscan() \
-        #     .extract_patterns()
+        #     .clustered_data() \
+        #     .split_clusters()
 
 
 
@@ -110,7 +109,6 @@ class ml_clustering(object):
         """
         regex = Regex(self.messages)
         self.messages_cleaned = regex.process()
-        #self.messages_cleaned = self.messages
         self.df['cleaned'] = self.messages_cleaned
         return self
 
@@ -121,12 +119,24 @@ class ml_clustering(object):
         Tokenization of a list of error messages.
         :return:
         """
-        self.tokens = Tokens(self.messages_cleaned, self.df[self.target].values)
+        self.tokens = Tokens(self.messages_cleaned, self.messages)
         self.tokens.process()
-        self.df['tokenized_wordpunct'] = self.tokens.tokenized_wordpunct
-        self.df['tokenized_pyonmttok'] = self.tokens.tokenized_pyonmttok
-        if self.w2v_size == 'auto':
-            self.w2v_size = self.detect_embedding_size()
+        self.df['tokenized'] = self.tokens.tokenized
+        self.df['tokenized_cleaned'] = self.tokens.tokenized_cleaned
+        # if self.w2v_size == 'auto':
+        #     self.w2v_size = self.detect_embedding_size()
+        return self
+
+
+    @safe_run
+    def messages_vector(self):
+        from .vectorization import Vector
+        self.vectors = Vector(self.tokens.tokenized_cleaned,
+                                  self.w2v_size,
+                                  self.w2v_window,
+                                  self.cpu_number,
+                                  self.model_name)
+        self.sent2vec = self.vectors.create_doc2vec_model()
         return self
 
 
@@ -137,7 +147,7 @@ class ml_clustering(object):
         Max embedding size = 300
         :return:
         """
-        vocab = self.tokens.get_vocabulary(self.tokens.tokenized_wordpunct)
+        vocab = self.tokens.get_vocabulary(self.tokens.tokenized_cleaned)
         embedding_size = round(len(vocab) ** (2/3))
         if embedding_size >= 300:
             embedding_size = 300
@@ -153,7 +163,7 @@ class ml_clustering(object):
         :return:
         """
         from .vectorization import Vector
-        self.word_vector = Vector(self.tokens.tokenized_wordpunct,
+        self.word_vector = Vector(self.tokens.tokenized_cleaned,
                                   self.w2v_size,
                                   self.w2v_window,
                                   self.cpu_number,
@@ -219,6 +229,9 @@ class ml_clustering(object):
         Returns cluster labels
         :return:
         """
+        self.sent2vec = self.sent2vec if self.w2v_size <= 10 else self.dimensionality_reduction()
+        self.kneighbors()
+        self.epsilon_search()
         self.cluster_labels = DBSCAN(eps=self.epsilon,
                                      min_samples=self.min_samples,
                                      n_jobs=self.cpu_number) \
@@ -285,3 +298,35 @@ class ml_clustering(object):
     def in_cluster(self, cluster_label):
         return self.df[self.df['cluster'] == cluster_label][self.target].values
 
+
+    @safe_run
+    def clustering(self, df, result):
+        curr = df['tokenized_cleaned'].values[0]
+        df['ratio'] = [difflib.SequenceMatcher(None, curr, x).ratio() for x in df['tokenized_cleaned'].values]
+        filtered = df[(df['ratio'] >= CLUSTERING_ACCURACY)].index.values
+        result.append(filtered)
+        df.drop(filtered, axis=0, inplace=True)
+        while df.shape[0] > 0:
+            self.clustering(df, result)
+
+    @safe_run
+    def clustered_data(self):
+
+        self.df['cluster'] = 0
+
+        result = []
+        self.clustering(self.df.copy(deep=True), result)
+
+        for i in range(0, len(result)):
+            self.df.loc[result[i], 'cluster'] = i
+
+        self.output = Output(self.df, self.target)
+        self.output.statistics()
+        self.results = self.output.patterns
+        return self
+
+
+    def split_clusters(self):
+        self.clusters = self.results[self.results['cluster_size'] >= 100]
+        self.outliers = self.results[self.results['cluster_size'] < 100]
+        return self
