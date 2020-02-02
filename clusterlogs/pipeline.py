@@ -85,6 +85,23 @@ class ml_clustering(object):
         self.df['cleaned'] = self.messages_cleaned
         return self
 
+    #
+    #
+    # @safe_run
+    # def group_equals(self):
+    #
+    #     gp = self.df.groupby('cleaned')
+    #     self.messages = [i for i in gp.groups]
+    #     groups = []
+    #     for key, value in gp:
+    #         indices = value.index.values.tolist()
+    #         pattern = value['cleaned'].values[0]
+    #         groups.append({'pattern': pattern,
+    #                        'sequence': self.tokenize_string(pattern),
+    #                        'indices': indices})
+    #     self.groups = pd.DataFrame(groups)
+    #     return self
+
 
     @safe_run
     def tokenization(self):
@@ -94,10 +111,8 @@ class ml_clustering(object):
         """
         self.df['tokenized'] = self.pyonmttok(self.messages)
         self.df['tokenized_cleaned'] = self.pyonmttok(self.messages_cleaned)
-        #self.df['hash'] = [int(hashlib.md5(i.encode('utf-8')).hexdigest()[:16], 16) for i in self.df['cleaned'].values]
         self.vocabulary = self.get_vocabulary(self.df['tokenized'].values)
         self.vocabulary_cleaned = self.get_vocabulary(self.df['tokenized_cleaned'].values)
-        #self.df['hash'] = self.strings_encoding()
 
         return self
     #
@@ -244,6 +259,11 @@ class ml_clustering(object):
             tokens, features = self.tokenizer.tokenize(line)
             tokenized.append(tokens)
         return tokenized
+
+
+    def tokenize_string(self, line):
+        tokens, features = self.tokenizer.tokenize(line)
+        return tokens
 
 
     def get_vocabulary(self, tokens):
