@@ -32,6 +32,8 @@ class Regex(object):
         return self.messages_cleaned
 
 
+
+
 def distance_curve(distances, mode='show'):
     """
     Save distance curve with knee candidates in file.

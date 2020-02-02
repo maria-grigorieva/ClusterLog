@@ -1,5 +1,5 @@
 from time import time
-from pyonmttok import Tokenizer
+import multiprocessing
 import editdistance
 import nltk
 import numpy as np
@@ -10,9 +10,16 @@ import re
 from collections import OrderedDict
 import pprint
 import math
-import edlib
 import hashlib
-from scipy.spatial.distance import cosine
+from kneed import KneeLocator
+from sklearn.cluster import DBSCAN, AgglomerativeClustering, OPTICS
+from sklearn import mixture
+from sklearn.neighbors import NearestNeighbors
+from .tokenization import Tokens
+from .data_preparation import Regex
+from .cluster_output import Output
+from sklearn.decomposition import PCA
+import editdistance
 
 
 CLUSTERING_ACCURACY = 0.8
@@ -41,19 +48,48 @@ def safe_run(method):
     return func_wrapper
 
 
+CLUSTERING_DEFAULTS = {"w2v_size": 100,
+                       "w2v_window": 7,
+                       "min_samples": 1}
+
+
 class ml_clustering(object):
 
 
-    def __init__(self, df, target):
+    def __init__(self, df, target, cluster_settings=None, model_name='word2vec.model', mode='create'):
         self.df = df
-        self.df['cluster'] = 0
+        # self.df['cluster'] = 0
         self.target = target
-        self.messages = df[self.target].values
+        #self.messages = df[self.target].values
+        self.set_cluster_settings(cluster_settings or CLUSTERING_DEFAULTS)
+        self.cpu_number = self.get_cpu_number()
+        self.messages = None
         self.timings = {}
         self.messages_cleaned = None
+        self.indices = None
         self.tokens = None
+        self.sent2vec = None
+        self.distances = None
+        self.epsilon = None
+        self.cluster_labels = None
+        self.model_name = model_name
+        self.mode = mode
+        self.patterns_stats = None
         self.results = None
-        self.tokenizer = Tokenizer("conservative", spacer_annotate=True)
+        self.groups = None
+
+
+    @staticmethod
+    def get_cpu_number():
+        return multiprocessing.cpu_count()
+
+
+    def set_cluster_settings(self, params):
+        for key,value in CLUSTERING_DEFAULTS.items():
+            if params.get(key) is not None:
+                setattr(self, key, params.get(key))
+            else:
+                setattr(self, key, value)
 
 
     @safe_run
@@ -63,10 +99,15 @@ class ml_clustering(object):
         :return:
         """
         return self.data_preparation() \
-            .tokenization() \
             .group_equals() \
-            .split_clusters()
-
+            .tokenization() \
+            .tokens_vectorization() \
+            .sentence_vectorization() \
+            .dbscan() \
+            .regroup() \
+            .postprocessing()
+            # .group_equals() \
+            # .split_clusters()
 
 
     @safe_run
@@ -75,14 +116,27 @@ class ml_clustering(object):
         Cleaning log messages from unnucessary substrings and tokenization
         :return:
         """
-        self.messages_cleaned = [0] * len(self.messages)
-        for idx, item in enumerate(self.messages):
-            try:
-                item = re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '*', item)
-                self.messages_cleaned[idx] = item
-            except Exception as e:
-                print(item)
-        self.df['cleaned'] = self.messages_cleaned
+        self.preprocessed = Regex(self.df[self.target].values)
+        self.df['cleaned'] = self.preprocessed.process()
+        return self
+
+
+    @safe_run
+    def group_equals(self):
+
+        gp = self.df.groupby('cleaned')
+        self.messages = [i for i in gp.groups]
+        groups = []
+        for key, value in gp:
+            indices = value.index.values.tolist()
+            pattern = value['cleaned'].values[0]
+            groups.append({'pattern':pattern, 'indices':indices})
+        # arr_slice = np.array(self.df[['cleaned']].values)
+        # unq, unqtags, counts = np.unique(arr_slice, return_inverse=True, return_counts=True)
+        #self.indices = self.df.index.values
+        #self.messages_cleaned = unq
+        self.groups = pd.DataFrame(groups)
+
         return self
 
 
@@ -92,81 +146,169 @@ class ml_clustering(object):
         Tokenization of a list of error messages.
         :return:
         """
-        self.df['tokenized'] = self.pyonmttok(self.messages)
-        self.df['tokenized_cleaned'] = self.pyonmttok(self.messages_cleaned)
-        #self.df['hash'] = [int(hashlib.md5(i.encode('utf-8')).hexdigest()[:16], 16) for i in self.df['cleaned'].values]
-        self.vocabulary = self.get_vocabulary(self.df['tokenized'].values)
-        self.vocabulary_cleaned = self.get_vocabulary(self.df['tokenized_cleaned'].values)
-        #self.df['hash'] = self.strings_encoding()
-
-        return self
-    #
-    #
-    #
-    # def strings_encoding(self):
-    #     max_length = max([len(sequence) for sequence in self.df['tokenized_cleaned'].values])
-    #     result = []
-    #     for sequence in self.df['tokenized_cleaned'].values:
-    #         curr_length = len(sequence)
-    #         addition = [-1] * (max_length - curr_length)
-    #         result.append([self.vocabulary_cleaned.index(token) for token in sequence] + addition)
-    #     return result
-
-
-
-    def in_cluster(self, cluster_label):
-        return self.df[self.df['cluster'] == cluster_label][self.target].values
-
-
-    @safe_run
-    def group_equals(self):
-
-        arr_slice = np.array(self.df[['cleaned']].values)
-        unq, unqtags, counts = np.unique(arr_slice, return_inverse=True, return_counts=True)
-        self.df["cluster"] = unqtags
-
-        groups = self.statistics()
-
-        result = []
-        self.sequence_matcher(groups, result)
-        for i,row in enumerate(result):
-            self.df.loc[row, 'cluster'] = i
-
-        self.results = self.statistics()
+        self.tokens = Tokens(self.groups['pattern'].values)
+        self.tokens.process()
+        self.groups['tokenized'] = self.tokens.tokenized
+        #self.df['tokenized'] = self.tokens.tokenized
+        # self.df['tokenized_cleaned'] = self.tokens.tokenized_cleaned
         return self
 
 
-    # @safe_run
-    # def sequence_matcher(self, groups, result):
-    #     sequences = [i[0] for i in groups]
-    #     matched_ids = [idx for idx,score in enumerate(self.levenshtein_similarity(sequences, 10)) if score >= CLUSTERING_ACCURACY]
-    #     #matched_ids = [i for i,x in enumerate(sequences) if difflib.SequenceMatcher(None, sequences[0], x).ratio() >= CLUSTERING_ACCURACY]
-    #     result.append([item for i,x in enumerate(groups) for item in x[1] if i in matched_ids])
-    #     groups = [row for i,row in enumerate(groups) if i not in matched_ids]
-    #
-    #     if len(groups) > 0:
-    #         self.sequence_matcher(groups, result)
+
+    def detect_embedding_size(self, vocab):
+        """
+        Automatic detection of word2vec embedding vector size,
+        based on the length of vocabulary.
+        Max embedding size = 300
+        :return:
+        """
+        embedding_size = round(len(vocab) ** (2/3))
+        if embedding_size >= 300:
+            embedding_size = 300
+        return embedding_size
 
 
     @safe_run
-    def sequence_matcher(self, groups, result):
-        sequences = np.array(groups['sequence'].values)
-        matched_ids = [idx for idx,score in enumerate(self.levenshtein_similarity(sequences, 10)) if score >= CLUSTERING_ACCURACY]
-        result.append([item for i,x in enumerate(groups['indices'].values) for item in x if i in matched_ids])
-        #groups = [row for i,row in enumerate(groups) if i not in matched_ids]
-        groups.drop(matched_ids, inplace=True)
+    def tokens_vectorization(self):
+        """
+        Training word2vec model
+        :param iterations:
+        :param min_count: minimium frequency count of words (recommended value is 1)
+        :return:
+        """
+        from .vectorization import Vector
+        self.w2v_size = self.detect_embedding_size(self.tokens.vocabulary)
+        #tokens = self.tokens.clean_tokens(self.tokens.tokenized)
+        self.word_vector = Vector(self.tokens.tokenized,
+                                  self.w2v_size,
+                                  self.w2v_window,
+                                  self.cpu_number,
+                                  self.model_name)
+        if self.mode == 'create':
+            self.word_vector.create_word2vec_model(min_count=1, iterations=10)
+        if self.mode == 'update':
+            self.word_vector.update_word2vec_model()
+        if self.mode == 'process':
+            self.word_vector.load_word2vec_model()
+        return self
 
-        if groups.shape[0] > 0:
-            self.sequence_matcher(groups, result)
+
+    @safe_run
+    def sentence_vectorization(self):
+        """
+        Calculates mathematical average of the word vector representations
+        of all the words in each sentence
+        :return:
+        """
+        self.sent2vec = self.word_vector.sent2vec()
+        return self
 
 
-    def split_clusters(self):
-        if max(self.results['cluster_size'].values) < 100:
-            self.clusters = self.results
+    @safe_run
+    def dimensionality_reduction(self):
+        pca = PCA(n_components=10, svd_solver='full')
+        pca.fit(self.sent2vec)
+        return pca.transform(self.sent2vec)
+
+
+
+    @safe_run
+    def kneighbors(self):
+        """
+        Calculates average distances for k-nearest neighbors
+        :return:
+        """
+        X = self.sent2vec if self.w2v_size <= 10 else self.dimensionality_reduction()
+        k = round(math.sqrt(len(X)))
+        neigh = NearestNeighbors(n_neighbors=k, n_jobs=-1)
+        nbrs = neigh.fit(X)
+        distances, indices = nbrs.kneighbors(X)
+        self.distances = [np.mean(d) for d in np.sort(distances, axis=0)]
+        return self
+
+
+    @safe_run
+    def epsilon_search(self):
+        """
+        Search epsilon for the DBSCAN clusterization
+        :return:
+        """
+        kneedle = KneeLocator(self.distances, list(range(len(self.distances))))
+        self.epsilon = max(kneedle.all_elbows) if (len(kneedle.all_elbows) > 0) else 1
+        return self
+
+
+    @safe_run
+    def dbscan(self):
+        """
+        Execution of the DBSCAN clusterization algorithm.
+        Returns cluster labels
+        :return:
+        """
+        self.sent2vec = self.sent2vec if self.w2v_size <= 10 else self.dimensionality_reduction()
+        self.kneighbors()
+        self.epsilon_search()
+        self.cluster_labels = DBSCAN(eps=self.epsilon,
+                                     min_samples=self.min_samples,
+                                     n_jobs=self.cpu_number) \
+            .fit_predict(self.sent2vec)
+        # self.df['cluster'] = self.cluster_labels
+        self.groups['cluster'] = self.cluster_labels
+        return self
+
+
+    @safe_run
+    def regroup(self):
+        gb = self.groups.groupby('cluster')
+        groups = []
+        for key,value in gb:
+            patterns = value['tokenized'].values
+            common_pattern = self.matcher(patterns)
+            indices = [i for sublist in value['indices'].values for i in sublist]
+            groups.append({'pattern': common_pattern,
+                           'sequence': self.tokens.tokenize_string(common_pattern),
+                            'indices': indices})
+        self.groups = pd.DataFrame(groups)
+        return self
+
+
+    def postprocessing(self):
+
+        result = {}
+        self.reclustering(self.groups.copy(deep=True), result)
+
+        self.df['cluster'] = -1
+        self.df['pattern'] = ''
+        start = 0
+        for key,value in result.items():
+            self.df.loc[value, 'cluster'] = start
+            self.df.loc[value, 'pattern'] = key
+            start += 1
+
+        self.output = Output(self.df, self.target)
+        self.result = self.output.statistics()
+        self.output.split_clusters(self.result)
+        #self.statistics()
+
+
+    def reclustering(self, df, result):
+
+        df['ratio'] = self.levenshtein_similarity(df['sequence'].values, 0)
+        filtered = df[(df['ratio'] >= CLUSTERING_ACCURACY)]
+        pattern = self.matcher(filtered['sequence'].values)
+        result[pattern] = [item for sublist in filtered['indices'].values for item in sublist]
+        df.drop(filtered.index, axis=0, inplace=True)
+        while df.shape[0] > 0:
+            self.reclustering(df, result)
+
+
+    def matcher(self, lines):
+        if len(lines) > 1:
+            fdist = nltk.FreqDist([i for l in lines for i in l])
+            x = [token if (fdist[token] / len(lines) >= 1) else '{*}' for token in lines[0]]
+            return self.tokens.tokenizer.detokenize([i[0] for i in groupby(x)])
         else:
-            self.clusters = self.results[self.results['cluster_size'] >= 100]
-            self.outliers = self.results[self.results['cluster_size'] < 100]
-        return self
+            return self.tokens.tokenizer.detokenize(lines[0])
 
 
 
@@ -189,82 +331,17 @@ class ml_clustering(object):
             return 1
 
 
-
-    def cosine_similarity(self, rows):
-        if len(rows) > 1:
-            return ([cosine(rows[0], rows[i]) for i in range(0, len(rows))])
-        else:
-            return 1
-
-
-    @safe_run
-    def statistics(self):
-        """
-        :param clustered_df:
-        :param output_mode: data frame
-        :return:
-        """
-        patterns = []
-        clustered_df = self.clustered_output('all','cluster')
-        for item in clustered_df:
-            cluster = clustered_df[item]
-            self.patterns_extraction(item, cluster, patterns)
-        return pd.DataFrame(patterns, columns=STATISTICS)\
-            .round(2)\
-            .sort_values(by='cluster_size', ascending=False)
+    def output(self):
+        self.df['cluster'] = -1
+        start = 0
+        for key,value in self.groups:
+            indices = value.index.values.tolist()
+            self.df.loc[indices, 'cluster'] = start
+            start += 1
 
 
-    def patterns_extraction(self, item, cluster, results):
-        commons = self.matcher(cluster['tokenized'].values)
-        similarity = self.levenshtein_similarity(cluster['cleaned'].values, 0)
-        results.append({'cluster_name': item,
-                         'cluster_size': cluster.shape[0],
-                         'pattern': self.tokenizer.detokenize(commons),
-                         'sequence': commons,
-                         'mean_similarity': np.mean(similarity),
-                         'std_similarity': np.std(similarity),
-                         'indices': cluster.index.values})
+
+    def in_cluster(self, cluster_label):
+        return self.df[self.df['cluster'] == cluster_label][self.target].values
 
 
-    def matcher(self, lines):
-        if len(lines) > 1:
-            fdist = nltk.FreqDist([i for l in lines for i in l])
-            # print(len(lines))
-            # print(fdist.keys())
-            # print(fdist.values())
-            x = [token if (fdist[token]/len(lines) >= 1) else '{*}' for token in lines[0]]
-            return [i[0] for i in groupby(x)]
-        else:
-            return lines[0]
-
-
-    def pyonmttok(self, strings):
-        tokenized = []
-        for line in strings:
-            tokens, features = self.tokenizer.tokenize(line)
-            tokenized.append(tokens)
-        return tokenized
-
-
-    def get_vocabulary(self, tokens):
-        flat_list = [item for row in tokens for item in row]
-        return list(set(flat_list))
-
-
-    def clustered_output(self, type='idx', column='cluster'):
-        """
-        Returns dictionary of clusters with the arrays of elements
-        :return:
-        """
-        if type != 'idx':
-            groups = {}
-            for key, value in self.df.groupby([column]):
-                if type == 'all':
-                    groups[str(key)] = value
-                elif type == 'target':
-                    groups[str(key)] = value[self.target].values.tolist()
-                elif type == 'cleaned':
-                    groups[str(key)] = value['cleaned'].values.tolist()
-            return groups
-        else:
-            return [[value['tokenized_cleaned'].values.tolist()[0], value.index.values.tolist()] for key, value in self.df.groupby([column])]

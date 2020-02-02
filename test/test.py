@@ -5,20 +5,22 @@ from clusterlogs import pipeline, cluster_output
 
 def main():
     # df = pd.read_csv('../samples/fts_mess_panda.csv', index_col=0)
-    df = pd.read_csv('error_messages.csv', index_col=0)
-    df.set_index('pandaid', inplace=True)
+    df = pd.read_csv('../samples/fts_mess_panda.csv', index_col=0)
+    #df.set_index('pandaid', inplace=True)
     # To specify clustering parameters, please use dictionary:
     # clustering_parameters = {'tokenizer':'nltk',
     #                          'w2v_size': 300,
     #                          'w2v_window': 10,
     #                          'min_samples': 1}
-    target = 'exeerrordiag'
+    target = 'message'
     cluster = pipeline.ml_clustering(df, target)
     cluster.process()
 
     pprint.pprint(cluster.timings)
+    # pprint.pprint(cluster.groups['pattern'].values)
+    pprint.pprint(cluster.output.clusters['pattern'].values)
 
-    pprint.pprint(cluster.clusters[['pattern']].values)
+    #pprint.pprint(cluster.clusters[['pattern']].values)
 
 
     # pprint.pprint(cluster.in_cluster(0, 2))

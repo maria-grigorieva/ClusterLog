@@ -27,59 +27,70 @@ class Output:
         self.tokenizer = Tokenizer("conservative", spacer_annotate=True)
 
 
-    def clustered_output(self, type='idx'):
+
+
+
+
+    def clustered_output(self, type='idx', column='cluster'):
         """
         Returns dictionary of clusters with the arrays of elements
         :return:
         """
-        groups = {}
-        for key, value in self.df.groupby(['cluster']):
-            if type == 'all':
-                groups[str(key)] = value
-            elif type == 'idx':
-                groups[str(key)] = value.index.values.tolist()
-            elif type == 'target':
-                groups[str(key)] = value[self.target].values.tolist()
-            elif type == 'cleaned':
-                groups[str(key)] = value['cleaned'].values.tolist()
-        return groups
+        if type != 'idx':
+            groups = {}
+            for key, value in self.df.groupby([column]):
+                if type == 'all':
+                    groups[str(key)] = value
+                elif type == 'target':
+                    groups[str(key)] = value[self.target].values.tolist()
+                elif type == 'cleaned':
+                    groups[str(key)] = value['cleaned'].values.tolist()
+            return groups
+        else:
+            return [[value['tokenized_cleaned'].values.tolist()[0], value.index.values.tolist()] for key, value in self.df.groupby([column])]
 
 
-    def levenshtein_similarity(self, rows):
+
+    def levenshtein_similarity(self, rows, N):
         """
-        Takes a list of log messages and calculates similarity between
-        first and all other messages.
         :param rows:
         :return:
         """
         if len(rows) > 1:
-            return ([100 - (editdistance.eval(rows[0], rows[i]) * 100) / len(rows[0]) for i in range(0, len(rows))])
+            if N != 0:
+                return (
+                [(1 - editdistance.eval(rows[0][:N], rows[i][:N]) / max(len(rows[0][:N]), len(rows[i][:N]))) for i in
+                 range(0, len(rows))])
+            else:
+                return (
+                    [(1 - editdistance.eval(rows[0], rows[i]) / max(len(rows[0]), len(rows[i]))) for i
+                     in
+                     range(0, len(rows))])
         else:
-            return 100
+            return 1
 
 
     def statistics(self):
         """
-        Returns dictionary with statistic for all clusters
-        "cluster_name" - name of a cluster
-        "cluster_size" = number of log messages in cluster
-        "pattern" - all common substrings in messages in the cluster
-        "mean_similarity" - average similarity of log messages in cluster
-        "std_similarity" - standard deviation of similarity of log messages in cluster
-        "indices" - internal indexes of the cluster
         :param clustered_df:
         :param output_mode: data frame
         :return:
         """
         patterns = []
-        clustered_df = self.clustered_output('all')
+        clustered_df = self.clustered_output('all','cluster')
         for item in clustered_df:
             cluster = clustered_df[item]
-            self.patterns_extraction(item, cluster, patterns)
-        self.patterns = pd.DataFrame(patterns, columns=STATISTICS)\
+            patterns.append({'cluster_name': item,
+                            'cluster_size': cluster.shape[0],
+                            'pattern': cluster['pattern'].values[0],
+                            'sequence': cluster['pattern'].values[0],
+                            'mean_similarity': 1,
+                            'std_similarity': 0,
+                            'indices': cluster.index.values})
+            #self.patterns_extraction(item, cluster, patterns)
+        return pd.DataFrame(patterns, columns=STATISTICS)\
             .round(2)\
             .sort_values(by='cluster_size', ascending=False)
-        return self.patterns
 
 
     def patterns_extraction(self, item, cluster, results):
@@ -101,6 +112,19 @@ class Output:
             return [i[0] for i in groupby(x)]
         else:
             return lines[0]
+
+
+    def patterns_extraction(self, item, cluster, results):
+        commons = self.matcher(cluster['tokenized'].values)
+        similarity = self.levenshtein_similarity(cluster['cleaned'].values, 0)
+        results.append({'cluster_name': item,
+                         'cluster_size': cluster.shape[0],
+                         'pattern': self.tokenizer.detokenize(commons),
+                         'sequence': commons,
+                         'mean_similarity': np.mean(similarity),
+                         'std_similarity': np.std(similarity),
+                         'indices': cluster.index.values})
+
 
 
     def reclustering(self, df, result):
@@ -125,6 +149,26 @@ class Output:
         self.statistics()
 
 
+
+    def split_clusters(self, df):
+        if max(df['cluster_size'].values) < 100:
+            self.clusters = df
+        else:
+            self.clusters = df[df['cluster_size'] >= 100]
+            self.outliers = df[df['cluster_size'] < 100]
+        return self
+
+
+
+    def sequence_matcher(self, groups, result):
+        sequences = np.array(groups['sequence'].values)
+        matched_ids = [idx for idx,score in enumerate(self.levenshtein_similarity(sequences, 10)) if score >= CLUSTERING_ACCURACY]
+        result.append([item for i,x in enumerate(groups['indices'].values) for item in x if i in matched_ids])
+        #groups = [row for i,row in enumerate(groups) if i not in matched_ids]
+        groups.drop(matched_ids, inplace=True)
+
+        if groups.shape[0] > 0:
+            self.sequence_matcher(groups, result)
 
 
 
