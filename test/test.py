@@ -6,15 +6,14 @@ from clusterlogs import pipeline, cluster_output
 def main():
     # df = pd.read_csv('../samples/fts_mess_panda.csv', index_col=0)
     df = pd.read_csv('error_messages.csv', index_col=0)
-    # df.set_index('pandaid', inplace=True)
+    df.set_index('pandaid', inplace=True)
     # To specify clustering parameters, please use dictionary:
     # clustering_parameters = {'tokenizer':'nltk',
     #                          'w2v_size': 300,
     #                          'w2v_window': 10,
     #                          'min_samples': 1}
     target = 'exeerrordiag'
-    mode = 'INDEX'
-    cluster = pipeline.ml_clustering(df, target, mode='create', model_name='word2vec_test.model')
+    cluster = pipeline.ml_clustering(df, target)
     cluster.process()
 
     pprint.pprint(cluster.timings)
