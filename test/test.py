@@ -4,8 +4,8 @@ import pprint
 from clusterlogs import pipeline
 
 def main():
+    df = pd.read_csv('../samples/harvester_errors24.csv', delimiter=';', index_col=0)
     # df = pd.read_csv('../samples/fts_mess_panda.csv', index_col=0)
-    df = pd.read_csv('../samples/fts_mess_panda.csv', index_col=0)
     #df.set_index('pandaid', inplace=True)
     # To specify clustering parameters, please use dictionary:
     # clustering_parameters = {'tokenizer':'nltk',

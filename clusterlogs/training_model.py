@@ -1,25 +1,58 @@
+#!/usr/bin/python
+import sys, getopt
+import re
 from gensim.models import Word2Vec
-from gensim.models.doc2vec import Doc2Vec, TaggedDocument
-import pandas as pd
-from clusterlogs import Tokens, Regex
-import sys
+from pyonmttok import Tokenizer
 
-def main():
-    # df = pd.read_csv('../samples/fts_mess_panda.csv', index_col=0)
-    df = pd.read_csv('../test/error_messages.csv', index_col=0)
-    df.set_index('pandaid', inplace=True)
-    cleaned_messages = Regex(df['exeerrordiag'].values).process()
-    tok = Tokens(cleaned_messages)
-    tok.process()
 
-    word2vec = Word2Vec(tok.tokenized,
-                         size=300,
-                         window=7,
-                         min_count=1,
-                         workers=4,
-                         iter=10)
+def main(argv):
 
-    word2vec.save('../test/word2vec.model')
+    inputfile = ''
+    outputfile = ''
+    try:
+        opts, args = getopt.getopt(argv, "hi:o:", ["ifile=", "ofile="])
+    except getopt.GetoptError:
+        print
+        'training_model.py -i <inputfile> -o <outputfile>'
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            print
+            'test.py -i <inputfile> -o <outputfile>'
+            sys.exit()
+        elif opt in ("-i", "--ifile"):
+            inputfile = arg
+        elif opt in ("-o", "--ofile"):
+            outputfile = arg
+
+    # Read messages from log file
+    messages = [line.rstrip('\n') for line in open(inputfile)]
+
+    # Clean messages
+    messages_cleaned = [re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '*', item) for item in messages]
+
+    # Tokenized cleaned messages
+    tokenized = tokenization(messages_cleaned)
+
+    try:
+        word2vec = Word2Vec(tokenized,
+                             size=300,
+                             window=7,
+                             min_count=1,
+                             workers=4,
+                             iter=10)
+
+        word2vec.save(outputfile)
+    except Exception as e:
+        print('Training model error')
+
+
+def tokenization(messages):
+    tokenized = []
+    for line in messages:
+        tokens, features = Tokenizer("conservative", spacer_annotate=True).tokenize(line)
+        tokenized.append(tokens)
+    return tokenized
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main(sys.argv[1:])
