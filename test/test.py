@@ -8,12 +8,12 @@ def main():
     df = pd.read_csv('../samples/error_messages.csv', index_col=0)
     df.set_index('pandaid', inplace=True)
     target = 'exeerrordiag'
-    cluster = pipeline.ml_clustering(df, target)
+    cluster = pipeline.exec(df, target)
     cluster.process()
 
     pprint.pprint(cluster.timings)
-
-    pprint.pprint(cluster.clusters[['pattern','cluster_size','mean_similarity']].to_dict('records'))
+    pprint.pprint(cluster.clusters)
+    #pprint.pprint(cluster.clusters[['pattern','cluster_size','mean_similarity']].to_dict('records'))
 
 
 if __name__ == "__main__":

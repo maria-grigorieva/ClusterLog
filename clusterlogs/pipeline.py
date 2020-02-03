@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 from itertools import groupby
 import re
+import difflib
+from gensim.models import Word2Vec
 
 
 CLUSTERING_ACCURACY = 0.8
@@ -33,7 +35,7 @@ def safe_run(method):
     return func_wrapper
 
 
-class ml_clustering(object):
+class exec(object):
 
 
     def __init__(self, df, target):
@@ -58,7 +60,7 @@ class ml_clustering(object):
             .tokenization() \
             .group_equals() \
             .grouped_sequences() \
-            .split_clusters()
+            .split_clusters(self.clustered, 'size')
 
 
 
@@ -93,6 +95,17 @@ class ml_clustering(object):
         return self
 
 
+    def vectorization(self):
+        self.word2vec = Word2Vec(self.df['tokenized_cleaned'].values,
+                                 size=100,
+                                 window=7,
+                                 min_count=1,
+                                 workers=6,
+                                 iter=10)
+        self.word2vec.save(self.model_name)
+
+
+
     def in_cluster(self, cluster_label):
         return self.df[self.df['cluster'] == cluster_label][self.target].values
 
@@ -109,27 +122,39 @@ class ml_clustering(object):
             sequence = value['tokenized_cleaned'].values[0]
             groups.append({'pattern':pattern, 'sequence': sequence, 'indices':indices})
         self.groups = pd.DataFrame(groups)
+        print("Number of equal groups: {}".format(self.groups.shape[0]))
 
         return self
 
 
+    @safe_run
     def grouped_sequences(self):
 
         result = []
         self.sequence_matcher(self.groups, result)
-        for i,row in enumerate(result):
-            self.df.loc[row, 'cluster'] = i
-
-        self.results = self.statistics()
+        self.clustered = pd.DataFrame(result)
+        self.clustered['size'] = self.clustered['indices'].str.len()
+        self.clustered.sort_values(by=['size'], ascending=False, inplace=True)
 
         return self
+
+    @safe_run
+    def validation(self):
+        start = 0
+        for key,value in self.result.items():
+            self.df.loc[value, 'cluster'] = start
+            start+=1
+
+        self.results = self.statistics()
 
 
     @safe_run
     def sequence_matcher(self, groups, result):
         sequences = np.array(groups['sequence'].values)
         matched_ids = [idx for idx,score in enumerate(self.levenshtein_similarity(sequences, 0)) if score >= CLUSTERING_ACCURACY]
-        result.append([item for i,x in enumerate(groups['indices'].values) for item in x if i in matched_ids])
+        pattern = self.tokenizer.detokenize(self.matcher(groups.loc[matched_ids, 'sequence'].values))
+        result.append({'pattern':pattern,
+                       'indices':[item for i,x in enumerate(groups['indices'].values) for item in x if i in matched_ids]})
         groups.drop(matched_ids, inplace=True)
         groups.reset_index(inplace=True, drop=True)
 
@@ -137,12 +162,13 @@ class ml_clustering(object):
             self.sequence_matcher(groups, result)
 
 
-    def split_clusters(self):
-        if max(self.results['cluster_size'].values) < 100:
-            self.clusters = self.results
+    @safe_run
+    def split_clusters(self, df, column):
+        if max(df[column].values) < 100:
+            return df
         else:
-            self.clusters = self.results[self.results['cluster_size'] >= 100]
-            self.outliers = self.results[self.results['cluster_size'] < 100]
+            self.clusters = df[df[column] >= 100]
+            self.outliers = df[df[column] < 100]
         return self
 
 
