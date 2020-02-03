@@ -3,16 +3,9 @@ from pyonmttok import Tokenizer
 import editdistance
 import nltk
 import numpy as np
-import difflib
 import pandas as pd
 from itertools import groupby
 import re
-from collections import OrderedDict
-import pprint
-import math
-import edlib
-import hashlib
-from scipy.spatial.distance import cosine
 
 
 CLUSTERING_ACCURACY = 0.8
@@ -20,7 +13,6 @@ CLUSTERING_ACCURACY = 0.8
 STATISTICS = ["cluster_name",
               "cluster_size",
               "pattern",
-              "sequence",
               "mean_similarity",
               "std_similarity",
               "indices"]
@@ -65,6 +57,7 @@ class ml_clustering(object):
         return self.data_preparation() \
             .tokenization() \
             .group_equals() \
+            .grouped_sequences() \
             .split_clusters()
 
 
@@ -85,23 +78,6 @@ class ml_clustering(object):
         self.df['cleaned'] = self.messages_cleaned
         return self
 
-    #
-    #
-    # @safe_run
-    # def group_equals(self):
-    #
-    #     gp = self.df.groupby('cleaned')
-    #     self.messages = [i for i in gp.groups]
-    #     groups = []
-    #     for key, value in gp:
-    #         indices = value.index.values.tolist()
-    #         pattern = value['cleaned'].values[0]
-    #         groups.append({'pattern': pattern,
-    #                        'sequence': self.tokenize_string(pattern),
-    #                        'indices': indices})
-    #     self.groups = pd.DataFrame(groups)
-    #     return self
-
 
     @safe_run
     def tokenization(self):
@@ -115,18 +91,6 @@ class ml_clustering(object):
         self.vocabulary_cleaned = self.get_vocabulary(self.df['tokenized_cleaned'].values)
 
         return self
-    #
-    #
-    #
-    # def strings_encoding(self):
-    #     max_length = max([len(sequence) for sequence in self.df['tokenized_cleaned'].values])
-    #     result = []
-    #     for sequence in self.df['tokenized_cleaned'].values:
-    #         curr_length = len(sequence)
-    #         addition = [-1] * (max_length - curr_length)
-    #         result.append([self.vocabulary_cleaned.index(token) for token in sequence] + addition)
-    #     return result
-
 
 
     def in_cluster(self, cluster_label):
@@ -136,40 +100,38 @@ class ml_clustering(object):
     @safe_run
     def group_equals(self):
 
-        arr_slice = np.array(self.df[['cleaned']].values)
-        unq, unqtags, counts = np.unique(arr_slice, return_inverse=True, return_counts=True)
-        self.df["cluster"] = unqtags
+        gp = self.df.groupby('cleaned')
+        self.messages = [i for i in gp.groups]
+        groups = []
+        for key, value in gp:
+            indices = value.index.values.tolist()
+            pattern = value['cleaned'].values[0]
+            sequence = value['tokenized_cleaned'].values[0]
+            groups.append({'pattern':pattern, 'sequence': sequence, 'indices':indices})
+        self.groups = pd.DataFrame(groups)
 
-        groups = self.statistics()
+        return self
+
+
+    def grouped_sequences(self):
 
         result = []
-        self.sequence_matcher(groups, result)
+        self.sequence_matcher(self.groups, result)
         for i,row in enumerate(result):
             self.df.loc[row, 'cluster'] = i
 
         self.results = self.statistics()
+
         return self
-
-
-    # @safe_run
-    # def sequence_matcher(self, groups, result):
-    #     sequences = [i[0] for i in groups]
-    #     matched_ids = [idx for idx,score in enumerate(self.levenshtein_similarity(sequences, 10)) if score >= CLUSTERING_ACCURACY]
-    #     #matched_ids = [i for i,x in enumerate(sequences) if difflib.SequenceMatcher(None, sequences[0], x).ratio() >= CLUSTERING_ACCURACY]
-    #     result.append([item for i,x in enumerate(groups) for item in x[1] if i in matched_ids])
-    #     groups = [row for i,row in enumerate(groups) if i not in matched_ids]
-    #
-    #     if len(groups) > 0:
-    #         self.sequence_matcher(groups, result)
 
 
     @safe_run
     def sequence_matcher(self, groups, result):
         sequences = np.array(groups['sequence'].values)
-        matched_ids = [idx for idx,score in enumerate(self.levenshtein_similarity(sequences, 10)) if score >= CLUSTERING_ACCURACY]
+        matched_ids = [idx for idx,score in enumerate(self.levenshtein_similarity(sequences, 0)) if score >= CLUSTERING_ACCURACY]
         result.append([item for i,x in enumerate(groups['indices'].values) for item in x if i in matched_ids])
-        #groups = [row for i,row in enumerate(groups) if i not in matched_ids]
         groups.drop(matched_ids, inplace=True)
+        groups.reset_index(inplace=True, drop=True)
 
         if groups.shape[0] > 0:
             self.sequence_matcher(groups, result)
@@ -204,14 +166,6 @@ class ml_clustering(object):
             return 1
 
 
-
-    def cosine_similarity(self, rows):
-        if len(rows) > 1:
-            return ([cosine(rows[0], rows[i]) for i in range(0, len(rows))])
-        else:
-            return 1
-
-
     @safe_run
     def statistics(self):
         """
@@ -235,7 +189,6 @@ class ml_clustering(object):
         results.append({'cluster_name': item,
                          'cluster_size': cluster.shape[0],
                          'pattern': self.tokenizer.detokenize(commons),
-                         'sequence': commons,
                          'mean_similarity': np.mean(similarity),
                          'std_similarity': np.std(similarity),
                          'indices': cluster.index.values})
@@ -244,9 +197,6 @@ class ml_clustering(object):
     def matcher(self, lines):
         if len(lines) > 1:
             fdist = nltk.FreqDist([i for l in lines for i in l])
-            # print(len(lines))
-            # print(fdist.keys())
-            # print(fdist.values())
             x = [token if (fdist[token]/len(lines) >= 1) else '{*}' for token in lines[0]]
             return [i[0] for i in groupby(x)]
         else:
