@@ -106,8 +106,6 @@ class ml_clustering(object):
             .dbscan() \
             .regroup() \
             .postprocessing()
-            # .group_equals() \
-            # .split_clusters()
 
 
     @safe_run
@@ -272,7 +270,7 @@ class ml_clustering(object):
             indices = [i for sublist in value['indices'].values for i in sublist]
             groups.append({'pattern': common_pattern,
                            'sequence': self.tokens.tokenize_string(common_pattern),
-                            'indices': indices})
+                           'indices': indices})
         self.groups = pd.DataFrame(groups)
         print('regroup finished')
         return self
@@ -280,23 +278,28 @@ class ml_clustering(object):
 
     def postprocessing(self):
 
-        result = {}
+        result = []
         self.reclustering(self.groups.copy(deep=True), result)
 
+        self.result = pd.DataFrame(result)
+        self.result.sort_values(by=['size'], ascending=False, inplace=True)
+
+        print('postprocessed')
+        return self
+
+
+    def validation(self):
         self.df['cluster'] = -1
         self.df['pattern'] = ''
         start = 0
-        for key,value in result.items():
-            self.df.loc[value, 'cluster'] = start
-            self.df.loc[value, 'pattern'] = key
+        for key,value in enumerate(self.result):
+            self.df.loc[value, 'cluster'] = key
+            self.df.loc[value, 'pattern'] = value['pattern']
             start += 1
 
         self.output = Output(self.df, self.target)
         self.result = self.output.statistics()
         self.output.split_clusters(self.result)
-        print('postprocessed')
-        #self.statistics()
-        return self
 
 
     def reclustering(self, df, result):
@@ -304,7 +307,11 @@ class ml_clustering(object):
         df['ratio'] = self.levenshtein_similarity(df['sequence'].values, 0)
         filtered = df[(df['ratio'] >= CLUSTERING_ACCURACY)]
         pattern = self.matcher(filtered['sequence'].values)
-        result[pattern] = [item for sublist in filtered['indices'].values for item in sublist]
+        indices = [item for sublist in filtered['indices'].values for item in sublist]
+        result.append({'pattern':pattern,
+                       'indices': indices,
+                       'size': len(indices)})
+        #result[pattern] = [item for sublist in filtered['indices'].values for item in sublist]
         df.drop(filtered.index, axis=0, inplace=True)
         while df.shape[0] > 0:
             self.reclustering(df, result)
