@@ -1,7 +1,7 @@
 import pandas as pd
 import sys
 import pprint
-from clusterlogs import pipeline, cluster_output
+from clusterlogs import pipeline
 
 def main():
     # df = pd.read_csv('../samples/fts_mess_panda.csv', index_col=0)
@@ -19,6 +19,9 @@ def main():
     pprint.pprint(cluster.timings)
     # pprint.pprint(cluster.groups['pattern'].values)
     pprint.pprint(cluster.result)
+
+    stat = cluster.validation()
+    pprint.pprint(cluster.stat)
 
     #pprint.pprint(cluster.clusters[['pattern']].values)
 

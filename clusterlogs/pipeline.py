@@ -1,25 +1,19 @@
 from time import time
 import multiprocessing
-import editdistance
 import nltk
 import numpy as np
-import difflib
 import pandas as pd
 from itertools import groupby
-import re
-from collections import OrderedDict
 import pprint
 import math
-import hashlib
 from kneed import KneeLocator
-from sklearn.cluster import DBSCAN, AgglomerativeClustering, OPTICS
-from sklearn import mixture
+from sklearn.cluster import DBSCAN
 from sklearn.neighbors import NearestNeighbors
 from .tokenization import Tokens
 from .data_preparation import Regex
-from .cluster_output import Output
 from sklearn.decomposition import PCA
 import editdistance
+from .validation import Output
 
 
 CLUSTERING_ACCURACY = 0.8
@@ -58,9 +52,7 @@ class ml_clustering(object):
 
     def __init__(self, df, target, cluster_settings=None, model_name='word2vec.model', mode='create'):
         self.df = df
-        # self.df['cluster'] = 0
         self.target = target
-        #self.messages = df[self.target].values
         self.set_cluster_settings(cluster_settings or CLUSTERING_DEFAULTS)
         self.cpu_number = self.get_cpu_number()
         self.messages = None
@@ -74,7 +66,6 @@ class ml_clustering(object):
         self.cluster_labels = None
         self.model_name = model_name
         self.mode = mode
-        self.patterns_stats = None
         self.results = None
         self.groups = None
 
@@ -213,11 +204,9 @@ class ml_clustering(object):
         Calculates average distances for k-nearest neighbors
         :return:
         """
-        X = self.sent2vec
-        k = round(math.sqrt(len(X)))
-        neigh = NearestNeighbors(n_neighbors=k, n_jobs=-1)
-        nbrs = neigh.fit(X)
-        distances, indices = nbrs.kneighbors(X)
+        k = round(math.sqrt(len(self.sent2vec)))
+        nbrs = NearestNeighbors(n_neighbors=k, n_jobs=-1).fit(self.sent2vec)
+        distances, indices = nbrs.kneighbors(self.sent2vec)
         self.distances = [np.mean(d) for d in np.sort(distances, axis=0)]
         return self
 
@@ -271,30 +260,17 @@ class ml_clustering(object):
         return self
 
 
+    @safe_run
     def postprocessing(self):
 
         result = []
         self.reclustering(self.groups.copy(deep=True), result)
 
         self.result = pd.DataFrame(result)
-        self.result.sort_values(by=['size'], ascending=False, inplace=True)
+        self.result.sort_values(by=['cluster_size'], ascending=False, inplace=True)
 
         print('postprocessed')
         return self
-
-
-    def validation(self):
-        self.df['cluster'] = -1
-        self.df['pattern'] = ''
-        start = 0
-        for key,value in enumerate(self.result):
-            self.df.loc[value, 'cluster'] = key
-            self.df.loc[value, 'pattern'] = value['pattern']
-            start += 1
-
-        self.output = Output(self.df, self.target)
-        self.result = self.output.statistics()
-        self.output.split_clusters(self.result)
 
 
     def reclustering(self, df, result):
@@ -305,8 +281,7 @@ class ml_clustering(object):
         indices = [item for sublist in filtered['indices'].values for item in sublist]
         result.append({'pattern':pattern,
                        'indices': indices,
-                       'size': len(indices)})
-        #result[pattern] = [item for sublist in filtered['indices'].values for item in sublist]
+                       'cluster_size': len(indices)})
         df.drop(filtered.index, axis=0, inplace=True)
         while df.shape[0] > 0:
             self.reclustering(df, result)
@@ -319,7 +294,6 @@ class ml_clustering(object):
             return self.tokens.tokenizer.detokenize([i[0] for i in groupby(x)])
         else:
             return self.tokens.tokenizer.detokenize(lines[0])
-
 
 
     def levenshtein_similarity(self, rows, N):
@@ -341,17 +315,15 @@ class ml_clustering(object):
             return 1
 
 
-    def output(self):
-        self.df['cluster'] = -1
-        start = 0
-        for key,value in self.groups:
-            indices = value.index.values.tolist()
-            self.df.loc[indices, 'cluster'] = start
-            start += 1
-
-
 
     def in_cluster(self, cluster_label):
         return self.df[self.df['cluster'] == cluster_label][self.target].values
+
+
+
+    def validation(self):
+        valid = Output()
+        self.stat = valid.statistics(self.df, self.target, self.result)
+
 
 
