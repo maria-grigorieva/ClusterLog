@@ -255,18 +255,21 @@ class ml_clustering(object):
         return self
 
 
+
+    def gb_regroup(self, gb):
+        common_pattern = self.matcher(gb['tokenized'].values)
+        sequence = self.tokens.tokenize_string(common_pattern)
+        indices = [i for sublist in gb['indices'].values for i in sublist]
+        return pd.DataFrame([{'pattern': common_pattern,
+                 'sequence': sequence,
+                 'indices': indices}])
+
+
     @safe_run
     def regroup(self):
-        gb = self.groups.groupby('cluster')
-        groups = []
-        for key,value in gb:
-            patterns = value['tokenized'].values
-            common_pattern = self.matcher(patterns)
-            indices = [i for sublist in value['indices'].values for i in sublist]
-            groups.append({'pattern': common_pattern,
-                           'sequence': self.tokens.tokenize_string(common_pattern),
-                           'indices': indices})
-        self.groups = pd.DataFrame(groups)
+
+        self.groups = self.groups.groupby('cluster').apply(func=self.gb_regroup)
+
         print('regroup finished')
         return self
 
