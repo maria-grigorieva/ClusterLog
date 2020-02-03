@@ -1,25 +1,36 @@
 import pandas as pd
 import sys
 import pprint
-from clusterlogs import pipeline, cluster_output
+from clusterlogs import pipeline
 
 def main():
+    df = pd.read_csv('../samples/harvester_errors24.csv', delimiter=';', index_col=0)
+    #df = pd.read_csv('../samples/harvester_errors24.csv', delimiter=';', index_col=0)
     # df = pd.read_csv('../samples/fts_mess_panda.csv', index_col=0)
-    df = pd.read_csv('error_messages.csv', index_col=0)
-    # df.set_index('pandaid', inplace=True)
+    #df.set_index('pandaid', inplace=True)
     # To specify clustering parameters, please use dictionary:
     # clustering_parameters = {'tokenizer':'nltk',
     #                          'w2v_size': 300,
     #                          'w2v_window': 10,
     #                          'min_samples': 1}
-    target = 'exeerrordiag'
-    mode = 'INDEX'
-    cluster = pipeline.ml_clustering(df, target, mode='create', model_name='word2vec_test.model')
+    target = 'message'
+    cluster = pipeline.ml_clustering(df, target)
     cluster.process()
 
     pprint.pprint(cluster.timings)
+    # pprint.pprint(cluster.groups['pattern'].values)
+    pprint.pprint(cluster.result)
 
-    pprint.pprint(cluster.results[['pattern']].values)
+    stat = cluster.validation()
+    pprint.pprint(cluster.stat)
+
+    cluster.split_clusters(cluster.stat, 'cluster_size')
+
+    pprint.pprint(cluster.clusters.shape)
+    pprint.pprint(cluster.outliers.shape)
+
+    #pprint.pprint(cluster.clusters[['pattern']].values)
+
 
     # pprint.pprint(cluster.in_cluster(0, 2))
 
