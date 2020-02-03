@@ -24,6 +24,11 @@ def main():
     stat = cluster.validation()
     pprint.pprint(cluster.stat)
 
+    cluster.split_clusters(cluster.stat, 'cluster_size')
+
+    pprint.pprint(cluster.clusters.shape)
+    pprint.pprint(cluster.outliers.shape)
+
     #pprint.pprint(cluster.clusters[['pattern']].values)
 
 

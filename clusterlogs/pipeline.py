@@ -237,7 +237,7 @@ class ml_clustering(object):
                                      n_jobs=self.cpu_number) \
             .fit_predict(self.sent2vec)
         self.groups['cluster'] = self.cluster_labels
-        print('DBSCAN finished')
+        print('DBSCAN finished with {} clusters'.format(len(set(self.cluster_labels))))
         return self
 
 
@@ -324,6 +324,15 @@ class ml_clustering(object):
     def validation(self):
         valid = Output()
         self.stat = valid.statistics(self.df, self.target, self.result)
+
+
+    def split_clusters(self, df, column):
+        if np.max(df[column].values) < 100:
+            self.clusters = df
+        else:
+            self.clusters = df[df[column] >= 100]
+            self.outliers = df[df[column] < 100]
+
 
 
 
