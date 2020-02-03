@@ -118,6 +118,7 @@ class ml_clustering(object):
         """
         self.preprocessed = Regex(self.df[self.target].values)
         self.df['cleaned'] = self.preprocessed.process()
+        print('Data Preparation finished')
         return self
 
 
@@ -136,6 +137,7 @@ class ml_clustering(object):
         #self.indices = self.df.index.values
         #self.messages_cleaned = unq
         self.groups = pd.DataFrame(groups)
+        print('group_equals finished')
 
         return self
 
@@ -151,6 +153,7 @@ class ml_clustering(object):
         self.groups['tokenized'] = self.tokens.tokenized
         #self.df['tokenized'] = self.tokens.tokenized
         # self.df['tokenized_cleaned'] = self.tokens.tokenized_cleaned
+        print('Tokenization finished')
         return self
 
 
@@ -190,6 +193,7 @@ class ml_clustering(object):
             self.word_vector.update_word2vec_model()
         if self.mode == 'process':
             self.word_vector.load_word2vec_model()
+        print('Vectorization of tokens finished')
         return self
 
 
@@ -201,6 +205,7 @@ class ml_clustering(object):
         :return:
         """
         self.sent2vec = self.word_vector.sent2vec()
+        print('Vectorization of sentences is finished')
         return self
 
 
@@ -218,7 +223,7 @@ class ml_clustering(object):
         Calculates average distances for k-nearest neighbors
         :return:
         """
-        X = self.sent2vec if self.w2v_size <= 10 else self.dimensionality_reduction()
+        X = self.sent2vec
         k = round(math.sqrt(len(X)))
         neigh = NearestNeighbors(n_neighbors=k, n_jobs=-1)
         nbrs = neigh.fit(X)
@@ -252,8 +257,8 @@ class ml_clustering(object):
                                      min_samples=self.min_samples,
                                      n_jobs=self.cpu_number) \
             .fit_predict(self.sent2vec)
-        # self.df['cluster'] = self.cluster_labels
         self.groups['cluster'] = self.cluster_labels
+        print('DBSCAN finished')
         return self
 
 
@@ -269,6 +274,7 @@ class ml_clustering(object):
                            'sequence': self.tokens.tokenize_string(common_pattern),
                             'indices': indices})
         self.groups = pd.DataFrame(groups)
+        print('regroup finished')
         return self
 
 
@@ -288,7 +294,9 @@ class ml_clustering(object):
         self.output = Output(self.df, self.target)
         self.result = self.output.statistics()
         self.output.split_clusters(self.result)
+        print('postprocessed')
         #self.statistics()
+        return self
 
 
     def reclustering(self, df, result):
