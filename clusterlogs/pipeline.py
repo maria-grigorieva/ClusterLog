@@ -120,15 +120,12 @@ class ml_clustering(object):
         return self
 
 
-
-    def group(self, gr):
-        return pd.DataFrame([{'pattern': gr['cleaned'].values[0], 'indices': gr.index.values.tolist()}])
-
-
     @safe_run
     def group_equals(self):
 
-        self.groups = self.df.groupby('cleaned').apply(func=self.group)
+        self.groups = self.df.groupby('cleaned').apply(lambda gr:
+                                                       pd.DataFrame([{'pattern': gr['cleaned'].values[0],
+                                                                      'indices': gr.index.values.tolist()}]))
 
         print('group_equals finished')
 
