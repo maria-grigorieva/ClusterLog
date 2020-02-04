@@ -42,7 +42,7 @@ def safe_run(method):
     return func_wrapper
 
 
-CLUSTERING_DEFAULTS = {"w2v_size": 100,
+CLUSTERING_DEFAULTS = {"w2v_size": 300,
                        "w2v_window": 7,
                        "min_samples": 1}
 
@@ -94,9 +94,9 @@ class ml_clustering(object):
             .tokenization() \
             .tokens_vectorization() \
             .sentence_vectorization() \
-            .dbscan() \
-            .regroup() \
-            .postprocessing()
+            .dbscan()
+            # .regroup() \
+            # .postprocessing()
 
 
     @safe_run
@@ -237,6 +237,7 @@ class ml_clustering(object):
                                      n_jobs=self.cpu_number) \
             .fit_predict(self.sent2vec)
         self.groups['cluster'] = self.cluster_labels
+        self.result = self.groups.groupby('cluster').apply(func=self.gb_regroup)
         print('DBSCAN finished with {} clusters'.format(len(set(self.cluster_labels))))
         return self
 
@@ -246,37 +247,39 @@ class ml_clustering(object):
         common_pattern = self.matcher(gb['tokenized'].values)
         sequence = self.tokens.tokenize_string(common_pattern)
         indices = [i for sublist in gb['indices'].values for i in sublist]
+        size = len(indices)
         return pd.DataFrame([{'pattern': common_pattern,
                  'sequence': sequence,
-                 'indices': indices}])
+                 'indices': indices,
+                 'cluster_size': size}])
 
 
     @safe_run
     def regroup(self):
 
-        self.groups = self.groups.groupby('cluster').apply(func=self.gb_regroup)
+        self.groups_ = self.groups.groupby('cluster').apply(func=self.gb_regroup)
 
         print('regroup finished')
-        return self
 
 
     @safe_run
-    def postprocessing(self):
+    def postprocessing(self, accuracy=CLUSTERING_ACCURACY):
+
+        self.regroup()
 
         result = []
-        self.reclustering(self.groups.copy(deep=True), result)
+        self.reclustering(self.groups_.copy(deep=True), result, accuracy)
 
-        self.result = pd.DataFrame(result)
-        self.result.sort_values(by=['cluster_size'], ascending=False, inplace=True)
+        self.result_pp = pd.DataFrame(result)
+        self.result_pp.sort_values(by=['cluster_size'], ascending=False, inplace=True)
 
         print('postprocessed')
-        return self
 
 
-    def reclustering(self, df, result):
+    def reclustering(self, df, result, accuracy):
 
         df['ratio'] = self.levenshtein_similarity(df['sequence'].values, 0)
-        filtered = df[(df['ratio'] >= CLUSTERING_ACCURACY)]
+        filtered = df[(df['ratio'] >= accuracy)]
         pattern = self.matcher(filtered['sequence'].values)
         indices = [item for sublist in filtered['indices'].values for item in sublist]
         result.append({'pattern':pattern,
@@ -284,7 +287,7 @@ class ml_clustering(object):
                        'cluster_size': len(indices)})
         df.drop(filtered.index, axis=0, inplace=True)
         while df.shape[0] > 0:
-            self.reclustering(df, result)
+            self.reclustering(df, result, accuracy)
 
 
     def matcher(self, lines):
@@ -321,17 +324,15 @@ class ml_clustering(object):
 
 
 
-    def validation(self):
-        valid = Output()
-        self.stat = valid.statistics(self.df, self.target, self.result)
+    def validation(self, groups):
+        return Output().statistics(self.df, self.target, groups)
 
 
     def split_clusters(self, df, column):
         if np.max(df[column].values) < 100:
-            self.clusters = df
+            return df, None
         else:
-            self.clusters = df[df[column] >= 100]
-            self.outliers = df[df[column] < 100]
+            return df[df[column] >= 100], df[df[column] < 100]
 
 
 
