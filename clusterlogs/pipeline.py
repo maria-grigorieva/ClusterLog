@@ -237,7 +237,9 @@ class ml_clustering(object):
                                      n_jobs=self.cpu_number) \
             .fit_predict(self.sent2vec)
         self.groups['cluster'] = self.cluster_labels
-        self.result = self.groups.groupby('cluster').apply(func=self.gb_regroup)
+        #self.result = self.groups.groupby('cluster').apply(func=self.gb_regroup)
+        self.result = pd.DataFrame.from_dict([item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)],
+                               orient='columns')
         print('DBSCAN finished with {} clusters'.format(len(set(self.cluster_labels))))
         return self
 
@@ -248,10 +250,15 @@ class ml_clustering(object):
         sequence = self.tokens.tokenize_string(common_pattern)
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
-        return pd.DataFrame([{'pattern': common_pattern,
-                 'sequence': sequence,
-                 'indices': indices,
-                 'cluster_size': size}])
+        return {'pattern': common_pattern,
+                'sequence': sequence,
+                'indices': indices,
+                'cluster_size': size}
+
+        # return pd.DataFrame([{'pattern': common_pattern,
+        #          'sequence': sequence,
+        #          'indices': indices,
+        #          'cluster_size': size}], index=None)
 
 
     @safe_run
@@ -317,10 +324,16 @@ class ml_clustering(object):
         else:
             return 1
 
+    #
+    #
+    # def in_cluster(self, cluster_label):
+    #     return self.df[self.df['cluster'] == cluster_label][self.target].values
 
 
-    def in_cluster(self, cluster_label):
-        return self.df[self.df['cluster'] == cluster_label][self.target].values
+
+    def in_cluster(self, groups, cluster_label):
+        indices = groups.loc[cluster_label, 'indices']
+        return self.df.loc[indices][self.target].values
 
 
 

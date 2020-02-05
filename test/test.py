@@ -21,13 +21,14 @@ def main():
     # pprint.pprint(cluster.groups['pattern'].values)
     pprint.pprint(cluster.result)
 
-    stat = cluster.validation()
-    pprint.pprint(cluster.stat)
+    stat = cluster.validation(cluster.result)
+    pprint.pprint(stat)
 
-    cluster.split_clusters(cluster.stat, 'cluster_size')
-
-    pprint.pprint(cluster.clusters.shape)
-    pprint.pprint(cluster.outliers.shape)
+    # cluster.split_clusters(stat, 'cluster_size')
+    #
+    # pprint.pprint(cluster.clusters.shape)
+    # pprint.pprint(cluster.outliers.shape)
+    pprint.pprint(cluster.in_cluster(cluster.result, 0))
 
     #pprint.pprint(cluster.clusters[['pattern']].values)
 
