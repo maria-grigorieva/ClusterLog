@@ -12,13 +12,13 @@ def main():
     pprint.pprint(cluster.timings)
     pprint.pprint(cluster.result)
 
-    stat = cluster.validation()
-    pprint.pprint(cluster.stat)
+    stat = cluster.validation(cluster.result)
+    pprint.pprint(stat)
 
-    cluster.split_clusters(cluster.stat, 'cluster_size')
+    clusters, outliers = cluster.split_clusters(stat, 'cluster_size')
 
-    pprint.pprint(cluster.clusters.shape)
-    pprint.pprint(cluster.outliers.shape)
+    pprint.pprint(clusters.shape)
+    pprint.pprint(outliers.shape)
 
 
 

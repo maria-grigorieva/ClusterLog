@@ -115,10 +115,11 @@ class ml_clustering(object):
     def group_equals(self):
 
         self.groups = self.df.groupby('cleaned').apply(lambda gr:
-                                                       pd.DataFrame([{'pattern': gr['cleaned'].values[0],
-                                                                      'indices': gr.index.values.tolist()}]))
+                                                pd.DataFrame([{'indices': gr.index.values.tolist(),
+                                                              'pattern': gr['cleaned'].values[0]}]))
+        self.groups.reset_index(drop=True, inplace=True)
 
-        print('group_equals finished')
+        print('Found {} equal groups'.format(self.groups.shape[0]))
 
         return self
 
@@ -146,7 +147,9 @@ class ml_clustering(object):
         Max embedding size = 300
         :return:
         """
-        embedding_size = round(len(vocab) ** (2/3))
+        print('Vocabulary size = {}'.format(len(vocab)))
+        #embedding_size = round(len(vocab) ** (2/3))
+        embedding_size = round(math.sqrt(len(vocab)))
         if embedding_size >= 300:
             embedding_size = 300
         return embedding_size
@@ -161,7 +164,7 @@ class ml_clustering(object):
         :return:
         """
         from .vectorization import Vector
-        self.w2v_size = self.detect_embedding_size(self.tokens.vocabulary)
+        # self.w2v_size = self.detect_embedding_size(self.tokens.vocabulary)
         #tokens = self.tokens.clean_tokens(self.tokens.tokenized)
         self.word_vector = Vector(self.tokens.tokenized,
                                   self.w2v_size,
@@ -192,7 +195,9 @@ class ml_clustering(object):
 
     @safe_run
     def dimensionality_reduction(self):
-        pca = PCA(n_components=10, svd_solver='full')
+        n = self.detect_embedding_size(self.tokens.vocabulary)
+        print('Number of dimensions is {}'.format(n))
+        pca = PCA(n_components=n, svd_solver='full')
         pca.fit(self.sent2vec)
         return pca.transform(self.sent2vec)
 
@@ -264,7 +269,7 @@ class ml_clustering(object):
     @safe_run
     def regroup(self):
 
-        self.groups_ = self.groups.groupby('cluster').apply(func=self.gb_regroup)
+        self.groups_ = pd.DataFrame.from_dict([item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)])
 
         print('regroup finished')
 
@@ -272,10 +277,10 @@ class ml_clustering(object):
     @safe_run
     def postprocessing(self, accuracy=CLUSTERING_ACCURACY):
 
-        self.regroup()
+        #self.regroup()
 
         result = []
-        self.reclustering(self.groups_.copy(deep=True), result, accuracy)
+        self.reclustering(self.result.copy(deep=True), result, accuracy)
 
         self.result_pp = pd.DataFrame(result)
         self.result_pp.sort_values(by=['cluster_size'], ascending=False, inplace=True)
@@ -318,7 +323,7 @@ class ml_clustering(object):
                  range(0, len(rows))])
             else:
                 return (
-                    [(1 - editdistance.eval(rows[0], rows[i]) / max(len(rows[0]), len(rows[i]))) for i
+                    [(1 - editdistance.eval(rows[0], rows[i]) / (max(len(rows[0]), len(rows[i])) | 1)) for i
                      in
                      range(0, len(rows))])
         else:

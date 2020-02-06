@@ -76,6 +76,6 @@ class Vector(ml_clustering):
         """
         sent2vec = []
         for sent in self.tokenized:
-            sent_vec = np.average([self.word2vec[w] for w in sent], 0)
-            sent2vec.append(np.zeros((self.w2v_size,), dtype=np.float32) if len(sent_vec) == 0 else sent_vec)
+            sent_vec = np.average([self.word2vec[w] if w in self.word2vec else 0 for w in sent], 0)
+            sent2vec.append(np.zeros((self.w2v_size,), dtype=np.float32) if np.isnan(np.sum(sent_vec)) else sent_vec)
         return np.array(sent2vec)

@@ -29,7 +29,8 @@ def main(argv):
     messages = [line.rstrip('\n') for line in open(inputfile)]
 
     # Clean messages
-    messages_cleaned = [re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '*', item) for item in messages]
+   # messages_cleaned = [re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '*', item) for item in messages]
+    messages_cleaned = cleaning(messages)
 
     # Tokenized cleaned messages
     tokenized = tokenization(messages_cleaned)
@@ -53,6 +54,17 @@ def tokenization(messages):
         tokens, features = Tokenizer("conservative", spacer_annotate=True).tokenize(line)
         tokenized.append(tokens)
     return tokenized
+
+
+def cleaning(messages):
+    messages_cleaned = [0] * len(messages)
+    for idx, item in enumerate(messages):
+        item = re.sub(r'([* ])\1+', r'\1', item)
+        item = re.sub(r'((=)+( )*[0-9a-zA-Z_.|:;-]+)', '= {*}', item)
+        item = re.sub(r'((: )[0-9a-zA-Z_.|:;-]+)', ': {*}', item)
+        item = re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '{*}', item)
+        messages_cleaned[idx] = item
+    return messages_cleaned
 
 if __name__ == "__main__":
     main(sys.argv[1:])
