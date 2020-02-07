@@ -1,4 +1,5 @@
 import re
+from collections import OrderedDict
 
 class Regex(object):
 
@@ -13,8 +14,6 @@ class Regex(object):
         self.messages_cleaned = [0] * len(self.messages)
         for idx, item in enumerate(self.messages):
             item = re.sub(r'([* ])\1+', r'\1', item)
-            item = re.sub(r'((=)+( )*[0-9a-zA-Z_.|:;-]+)', '= {*}', item)
-            item = re.sub(r'((: )[0-9a-zA-Z_.|:;-]+)', ': {*}', item)
             item = re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '{*}', item)
-            self.messages_cleaned[idx] = item
+            self.messages_cleaned[idx] =  item
         return self.messages_cleaned

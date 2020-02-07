@@ -132,9 +132,9 @@ class ml_clustering(object):
         """
         self.tokens = Tokens(self.groups['pattern'].values)
         self.tokens.process()
-        self.groups['tokenized'] = self.tokens.tokenized
-        #self.df['tokenized'] = self.tokens.tokenized
-        # self.df['tokenized_cleaned'] = self.tokens.tokenized_cleaned
+        self.groups['tokenized_dbscan'] = self.tokens.tokenized_dbscan
+        self.groups['hashed'] = self.tokens.hashed
+        self.groups['tokenized_pattern'] = self.tokens.tokenized_pattern
         print('Tokenization finished')
         return self
 
@@ -166,7 +166,7 @@ class ml_clustering(object):
         from .vectorization import Vector
         # self.w2v_size = self.detect_embedding_size(self.tokens.vocabulary)
         #tokens = self.tokens.clean_tokens(self.tokens.tokenized)
-        self.word_vector = Vector(self.tokens.tokenized,
+        self.word_vector = Vector(self.tokens.tokenized_dbscan,
                                   self.w2v_size,
                                   self.w2v_window,
                                   self.cpu_number,
@@ -195,7 +195,7 @@ class ml_clustering(object):
 
     @safe_run
     def dimensionality_reduction(self):
-        n = self.detect_embedding_size(self.tokens.vocabulary)
+        n = self.detect_embedding_size(self.tokens.vocabulary_dbscan)
         print('Number of dimensions is {}'.format(n))
         pca = PCA(n_components=n, svd_solver='full')
         pca.fit(self.sent2vec)
@@ -251,8 +251,8 @@ class ml_clustering(object):
 
 
     def gb_regroup(self, gb):
-        common_pattern = self.matcher(gb['tokenized'].values)
-        sequence = self.tokens.tokenize_string(common_pattern)
+        common_pattern = self.matcher(gb['tokenized_pattern'].values)
+        sequence = self.tokens.tokenize_string(self.tokens.tokenizer_pattern, common_pattern)
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
         return {'pattern': common_pattern,
@@ -306,9 +306,9 @@ class ml_clustering(object):
         if len(lines) > 1:
             fdist = nltk.FreqDist([i for l in lines for i in l])
             x = [token if (fdist[token] / len(lines) >= 1) else '{*}' for token in lines[0]]
-            return self.tokens.tokenizer.detokenize([i[0] for i in groupby(x)])
+            return self.tokens.tokenizer_pattern.detokenize([i[0] for i in groupby(x)])
         else:
-            return self.tokens.tokenizer.detokenize(lines[0])
+            return self.tokens.tokenizer_pattern.detokenize(lines[0])
 
 
     def levenshtein_similarity(self, rows, N):
