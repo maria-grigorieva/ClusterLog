@@ -10,8 +10,8 @@ class Tokens(object):
 
 
     def __init__(self, messages):
-        self.tokenizer_dbscan = Tokenizer("conservative", spacer_annotate=False)
-        self.tokenizer_pattern = Tokenizer("conservative", spacer_annotate=True)
+        self.tokenizer_dbscan = Tokenizer("conservative", spacer_annotate=False, preserve_placeholders=True)
+        self.tokenizer_pattern = Tokenizer("conservative", spacer_annotate=True, preserve_placeholders=True)
         self.hashed = None
         self.messages = messages
 
@@ -22,6 +22,7 @@ class Tokens(object):
         """
         self.tokenized_dbscan = self.remove_duplicates(self.pyonmttok(self.tokenizer_dbscan, self.messages))
         self.tokenized_pattern = self.remove_duplicates(self.pyonmttok(self.tokenizer_pattern, self.messages))
+        print(self.tokenized_pattern)
         self.hashed = self.hashing(self.tokenized_dbscan)
         #self.vocabulary = self.get_vocabulary(self.tokenized)
         self.vocabulary_dbscan = self.get_vocabulary(self.tokenized_dbscan)

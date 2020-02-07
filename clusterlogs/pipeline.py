@@ -260,11 +260,6 @@ class ml_clustering(object):
                 'indices': indices,
                 'cluster_size': size}
 
-        # return pd.DataFrame([{'pattern': common_pattern,
-        #          'sequence': sequence,
-        #          'indices': indices,
-        #          'cluster_size': size}], index=None)
-
 
     @safe_run
     def regroup(self):
@@ -276,8 +271,6 @@ class ml_clustering(object):
 
     @safe_run
     def postprocessing(self, accuracy=CLUSTERING_ACCURACY):
-
-        #self.regroup()
 
         result = []
         self.reclustering(self.result.copy(deep=True), result, accuracy)
@@ -305,7 +298,7 @@ class ml_clustering(object):
     def matcher(self, lines):
         if len(lines) > 1:
             fdist = nltk.FreqDist([i for l in lines for i in l])
-            x = [token if (fdist[token] / len(lines) >= 1) else '{*}' for token in lines[0]]
+            x = [token if (fdist[token] / len(lines) >= 1) else '｟*｠' for token in lines[0]]
             return self.tokens.tokenizer_pattern.detokenize([i[0] for i in groupby(x)])
         else:
             return self.tokens.tokenizer_pattern.detokenize(lines[0])
@@ -328,12 +321,6 @@ class ml_clustering(object):
                      range(0, len(rows))])
         else:
             return 1
-
-    #
-    #
-    # def in_cluster(self, cluster_label):
-    #     return self.df[self.df['cluster'] == cluster_label][self.target].values
-
 
 
     def in_cluster(self, groups, cluster_label):
