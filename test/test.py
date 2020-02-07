@@ -6,9 +6,9 @@ from clusterlogs import pipeline
 def main():
     df = pd.read_csv('../samples/all_logs.csv',index_col=0)
     df.dropna(inplace=True)
-    target = 'message'
+    target = '0'
     print(df.head())
-    cluster = pipeline.ml_clustering(df.head(1000), target, mode='process', model_name='all_logs.model').process()
+    cluster = pipeline.ml_clustering(df.head(50000), target, mode='process', model_name='all_logs.model').process()
     #df = pd.read_csv('../samples/harvester_errors24.csv', delimiter=';', index_col=0)
     #df = pd.read_csv('../samples/harvester_errors24.csv', delimiter=';', index_col=0)
     # df = pd.read_csv('../samples/fts_mess_panda.csv', index_col=0)
