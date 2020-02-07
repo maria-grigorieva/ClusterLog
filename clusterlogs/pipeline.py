@@ -90,8 +90,8 @@ class ml_clustering(object):
         :return:
         """
         return self.data_preparation() \
-            .group_equals() \
             .tokenization() \
+            .group_equals() \
             .tokens_vectorization() \
             .sentence_vectorization() \
             .dbscan()
@@ -111,18 +111,6 @@ class ml_clustering(object):
         return self
 
 
-    @safe_run
-    def group_equals(self):
-
-        self.groups = self.df.groupby('cleaned').apply(lambda gr:
-                                                pd.DataFrame([{'indices': gr.index.values.tolist(),
-                                                              'pattern': gr['cleaned'].values[0]}]))
-        self.groups.reset_index(drop=True, inplace=True)
-
-        print('Found {} equal groups'.format(self.groups.shape[0]))
-
-        return self
-
 
     @safe_run
     def tokenization(self):
@@ -130,13 +118,48 @@ class ml_clustering(object):
         Tokenization of a list of error messages.
         :return:
         """
-        self.tokens = Tokens(self.groups['pattern'].values)
+        self.tokens = Tokens(self.df['cleaned'].values)
         self.tokens.process()
-        self.groups['tokenized_dbscan'] = self.tokens.tokenized_dbscan
-        self.groups['hashed'] = self.tokens.hashed
-        self.groups['tokenized_pattern'] = self.tokens.tokenized_pattern
+        self.df['tokenized_dbscan'] = self.tokens.tokenized_dbscan
+        self.df['hashed'] = self.tokens.hashed
+        self.df['tokenized_pattern'] = self.tokens.tokenized_pattern
+        self.df['cleaned'] = self.tokens.patterns
         print('Tokenization finished')
         return self
+
+
+    @safe_run
+    def group_equals(self):
+
+        self.groups = self.df.groupby('cleaned').apply(lambda gr:
+                                                pd.DataFrame([{'indices': gr.index.values.tolist(),
+                                                              'pattern': gr['cleaned'].values[0],
+                                                              'tokenized_dbscan': self.tokens.tokenize_string(
+                                                                  self.tokens.tokenizer_dbscan, gr['cleaned'].values[0]
+                                                              ),
+                                                              'tokenized_pattern': self.tokens.tokenize_string(
+                                                                  self.tokens.tokenizer_pattern, gr['cleaned'].values[0]
+                                                              ),}]))
+        self.groups.reset_index(drop=True, inplace=True)
+
+        print('Found {} equal groups'.format(self.groups.shape[0]))
+
+        return self
+    #
+    #
+    # @safe_run
+    # def tokenization(self):
+    #     """
+    #     Tokenization of a list of error messages.
+    #     :return:
+    #     """
+    #     self.tokens = Tokens(self.groups['pattern'].values)
+    #     self.tokens.process()
+    #     self.groups['tokenized_dbscan'] = self.tokens.tokenized_dbscan
+    #     self.groups['hashed'] = self.tokens.hashed
+    #     self.groups['tokenized_pattern'] = self.tokens.tokenized_pattern
+    #     print('Tokenization finished')
+    #     return self
 
 
 
@@ -166,7 +189,7 @@ class ml_clustering(object):
         from .vectorization import Vector
         # self.w2v_size = self.detect_embedding_size(self.tokens.vocabulary)
         #tokens = self.tokens.clean_tokens(self.tokens.tokenized)
-        self.word_vector = Vector(self.tokens.tokenized_dbscan,
+        self.word_vector = Vector(self.groups['tokenized_dbscan'].values,
                                   self.w2v_size,
                                   self.w2v_window,
                                   self.cpu_number,

@@ -25,10 +25,15 @@ class Tokens(object):
         self.tokenized_pattern = self.remove_neighboring_duplicates(self.pyonmttok(self.tokenizer_pattern, self.messages))
         # for item in self.tokenized_dbscan:
         #     print(item)
-        self.hashed = self.hashing(self.tokenized_dbscan)
+        #self.hashed = self.hashing(self.tokenized_dbscan)
         #self.vocabulary = self.get_vocabulary(self.tokenized)
         self.vocabulary_dbscan = self.get_vocabulary(self.tokenized_dbscan)
         self.vocabulary_pattern = self.get_vocabulary(self.tokenized_pattern)
+        self.patterns = self.detokenize(self.tokenized_pattern)
+
+
+    def detokenize(self, tokenized):
+        return [self.tokenizer_pattern.detokenize(row) for row in tokenized]
 
 
     def remove_neighboring_duplicates(self, tokenized):
