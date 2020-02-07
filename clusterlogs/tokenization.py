@@ -24,9 +24,11 @@ class Tokens(object):
         :return:
         """
         #self.tokenized = self.pyonmttok(self.messages)
-        self.tokenized = self.pyonmttok(self.tokenizer_pattern, self.messages)
+        self.tokenized_dbscan = self.clean_tokens(self.pyonmttok(self.tokenizer_dbscan, self.messages))
+        self.tokenized_pattern = self.pyonmttok(self.tokenizer_pattern, self.messages)
         #self.vocabulary = self.get_vocabulary(self.tokenized)
-        self.vocabulary = self.get_vocabulary(self.tokenized)
+        self.vocabulary_dbscan = self.get_vocabulary(self.tokenized_dbscan)
+        self.vocabulary_pattern = self.get_vocabulary(self.tokenized_pattern)
 
 
     def tokenize_string(self, tokenizer, string):
@@ -56,6 +58,7 @@ class Tokens(object):
                 if i.lower() not in stop:
                     tokenized.append(i)
             result.append(tokenized)
+            #print(tokenized)
         return result
         #return [row.pop(i) for row in tokenized for i in row if i.lower() not in stop]
 

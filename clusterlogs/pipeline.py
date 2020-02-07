@@ -90,8 +90,9 @@ class ml_clustering(object):
         :return:
         """
         return self.data_preparation() \
-            .group_equals() \
+            .group_equals('cleaned') \
             .tokenization() \
+            .regroup('hash') \
             .tokens_vectorization() \
             .sentence_vectorization() \
             .dbscan()
@@ -111,12 +112,26 @@ class ml_clustering(object):
         return self
 
 
-    @safe_run
-    def group_equals(self):
+    # @safe_run
+    # def tokenization(self):
+    #     """
+    #     Tokenization of a list of error messages.
+    #     :return:
+    #     """
+    #     self.tokens = Tokens(self.df['cleaned'].values)
+    #     self.tokens.process()
+    #     self.df['tokenized_dbscan'] = self.tokens.tokenized_dbscan
+    #     self.df['tokenized_pattern'] = self.tokens.tokenized_pattern
+    #     print('Tokenization finished')
+    #     return self
 
-        self.groups = self.df.groupby('cleaned').apply(lambda gr:
+
+    @safe_run
+    def group_equals(self, column):
+
+        self.groups = self.df.groupby(column).apply(lambda gr:
                                                 pd.DataFrame([{'indices': gr.index.values.tolist(),
-                                                              'pattern': gr['cleaned'].values[0]}]))
+                                                              'pattern': gr[column].values[0]}]))
         self.groups.reset_index(drop=True, inplace=True)
 
         print('Found {} equal groups'.format(self.groups.shape[0]))
@@ -133,14 +148,16 @@ class ml_clustering(object):
         """
         self.tokens = Tokens(self.groups['pattern'].values)
         self.tokens.process()
-        self.groups['tokenized'] = self.tokens.tokenized
-        self.groups['tokens_number'] = self.groups.apply(lambda row: len(row['tokenized']), axis=1)
+        self.groups['tokenized_dbscan'] = self.tokens.tokenized_dbscan
+        self.groups['tokenized_pattern'] = self.tokens.tokenized_pattern
+        self.groups['hash'] = self.groups.apply(lambda row: str(row['tokenized_dbscan']), axis=1)
+        self.groups['tokens_number'] = self.groups.apply(lambda row: len(row['tokenized_dbscan']), axis=1)
         pprint.pprint(self.groups['tokens_number'].describe())
         print(self.groups['tokens_number'].values)
         print(self.groups['tokens_number'].unique())
-        min = self.groups['tokens_number'].min()
-        max = self.groups['tokens_number'].max()
-        self.groups['tokens_number_norm'] = self.groups.apply(lambda row: (row['tokens_number']-min)/(max-min), axis=1)
+        # min = self.groups['tokens_number'].min()
+        # max = self.groups['tokens_number'].max()
+        # self.groups['tokens_number_norm'] = self.groups.apply(lambda row: (row['tokens_number']-min)/(max-min), axis=1)
         #pprint.pprint(self.groups['tokens_number_norm'].values)
 
         #self.df['tokenized'] = self.tokens.tokenized
@@ -148,6 +165,16 @@ class ml_clustering(object):
         print('Tokenization finished')
         return self
 
+
+    @safe_run
+    def regroup(self, column):
+
+        self.groups = pd.DataFrame.from_dict([item for item in self.groups.groupby(column).apply(func=self.gb_regroup)],
+                                             orient='columns')
+
+        pprint.pprint(self.groups['tokenized_dbscan'].values)
+        print('regroup finished')
+        return self
 
 
     def detect_embedding_size(self, vocab):
@@ -175,10 +202,10 @@ class ml_clustering(object):
         """
         from .vectorization import Vector
         # self.w2v_size = self.detect_embedding_size(self.tokens.vocabulary)
-        self.tokens_cleaned = self.tokens.clean_tokens(self.tokens.tokenized)
+        # self.tokens_cleaned = self.tokens.clean_tokens(self.tokens.tokenized)
         #pprint.pprint(self.tokens_cleaned)
 
-        self.word_vector = Vector(self.tokens_cleaned,
+        self.word_vector = Vector(self.groups['tokenized_dbscan'].values,
                                   self.w2v_size,
                                   self.w2v_window,
                                   self.cpu_number,
@@ -207,7 +234,7 @@ class ml_clustering(object):
 
     @safe_run
     def dimensionality_reduction(self):
-        n = self.detect_embedding_size(self.tokens_cleaned)
+        n = self.detect_embedding_size(self.tokens.vocabulary_dbscan)
         print('Number of dimensions is {}'.format(n))
         pca = PCA(n_components=n, svd_solver='full')
         pca.fit(self.sent2vec)
@@ -248,7 +275,7 @@ class ml_clustering(object):
         """
         self.sent2vec = self.sent2vec if self.w2v_size <= 10 else self.dimensionality_reduction()
         #pprint.pprint(self.sent2vec)
-        self.extend_sent2vec()
+        #self.extend_sent2vec()
         #pprint.pprint(self.sent2vec)
         self.kneighbors()
         self.epsilon_search()
@@ -272,12 +299,14 @@ class ml_clustering(object):
 
 
     def gb_regroup(self, gb):
-        common_pattern = self.matcher(gb['tokenized'].values)
-        sequence = self.tokens.tokenize_string(self.tokens.tokenizer_pattern, common_pattern)
+        common_pattern = self.matcher(gb['tokenized_pattern'].values)
+        sequence = gb['tokenized_dbscan'].values
+        #sequence = self.tokens.tokenize_string(self.tokens.tokenizer_pattern, common_pattern)
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
         return {'pattern': common_pattern,
-                'sequence': sequence,
+                'tokenized_dbscan': gb['tokenized_dbscan'].values[0],
+                'tokenized_pattern': gb['tokenized_pattern'].values[0],
                 'indices': indices,
                 'cluster_size': size}
 
@@ -286,13 +315,6 @@ class ml_clustering(object):
         #          'indices': indices,
         #          'cluster_size': size}], index=None)
 
-
-    @safe_run
-    def regroup(self):
-
-        self.groups_ = pd.DataFrame.from_dict([item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)])
-
-        print('regroup finished')
 
 
     @safe_run

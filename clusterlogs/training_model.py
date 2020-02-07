@@ -3,6 +3,8 @@ import sys, getopt
 import re
 from gensim.models import Word2Vec
 from pyonmttok import Tokenizer
+from nltk.corpus import stopwords
+from string import punctuation
 
 
 def main(argv):
@@ -35,8 +37,10 @@ def main(argv):
     # Tokenized cleaned messages
     tokenized = tokenization(messages_cleaned)
 
+    cleaned = clean_tokens(tokenized)
+
     try:
-        word2vec = Word2Vec(tokenized,
+        word2vec = Word2Vec(cleaned,
                              size=300,
                              window=7,
                              min_count=1,
@@ -67,6 +71,22 @@ def cleaning(messages):
         item = re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '{*}', item)
         messages_cleaned[idx] = item
     return messages_cleaned
+
+
+def clean_tokens(tokenized):
+    """
+    Clean tokens from english stop words, numbers and punctuation
+    :return:
+    """
+    stop = stopwords.words('english') + list(punctuation) + ["``", "''"]
+    result = []
+    for row in tokenized:
+        tokenized = []
+        for i in row:
+            if i.lower() not in stop:
+                tokenized.append(i)
+        result.append(tokenized)
+    return result
 
 if __name__ == "__main__":
     main(sys.argv[1:])
