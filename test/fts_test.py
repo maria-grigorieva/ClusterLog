@@ -12,7 +12,8 @@ def main():
     pprint.pprint(cluster.timings)
     pprint.pprint(cluster.result)
 
-    pprint.pprint(cluster.in_cluster(cluster.results, 0))
+    pprint.pprint(cluster.in_cluster(cluster.result, 3))
+    pprint.pprint(cluster.result['pattern'].values)
 
     stat = cluster.validation(cluster.result)
     pprint.pprint(stat)

@@ -12,11 +12,8 @@ class Tokens(object):
     def __init__(self, messages):
         self.tokenizer_dbscan = Tokenizer("conservative", spacer_annotate=False)
         self.tokenizer_pattern = Tokenizer("conservative", spacer_annotate=True)
+        self.hashed = None
         self.messages = messages
-        self.tokenized = None
-        self.tokenized_cleaned = None
-        self.vocabulary = None
-        self.vocabulary_cleaned = None
 
 
     def process(self):
@@ -26,6 +23,7 @@ class Tokens(object):
         #self.tokenized = self.pyonmttok(self.messages)
         self.tokenized_dbscan = self.clean_tokens(self.pyonmttok(self.tokenizer_dbscan, self.messages))
         self.tokenized_pattern = self.pyonmttok(self.tokenizer_pattern, self.messages)
+        self.hashed = self.hashing(self.tokenized_dbscan)
         #self.vocabulary = self.get_vocabulary(self.tokenized)
         self.vocabulary_dbscan = self.get_vocabulary(self.tokenized_dbscan)
         self.vocabulary_pattern = self.get_vocabulary(self.tokenized_pattern)
@@ -62,6 +60,8 @@ class Tokens(object):
         return result
         #return [row.pop(i) for row in tokenized for i in row if i.lower() not in stop]
 
+    def hashing(self, tokenized):
+        return [hash(tuple(row)) for row in tokenized]
 
 
     def get_vocabulary(self, tokens):

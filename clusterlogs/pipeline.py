@@ -90,9 +90,8 @@ class ml_clustering(object):
         :return:
         """
         return self.data_preparation() \
-            .group_equals('cleaned') \
             .tokenization() \
-            .regroup('hash') \
+            .group_equals('hashed') \
             .tokens_vectorization() \
             .sentence_vectorization() \
             .dbscan()
@@ -112,27 +111,34 @@ class ml_clustering(object):
         return self
 
 
-    # @safe_run
-    # def tokenization(self):
-    #     """
-    #     Tokenization of a list of error messages.
-    #     :return:
-    #     """
-    #     self.tokens = Tokens(self.df['cleaned'].values)
-    #     self.tokens.process()
-    #     self.df['tokenized_dbscan'] = self.tokens.tokenized_dbscan
-    #     self.df['tokenized_pattern'] = self.tokens.tokenized_pattern
-    #     print('Tokenization finished')
-    #     return self
+    @safe_run
+    def tokenization(self):
+        """
+        Tokenization of a list of error messages.
+        :return:
+        """
+        self.tokens = Tokens(self.df['cleaned'].values)
+        self.tokens.process()
+        self.df['tokenized_dbscan'] = self.tokens.tokenized_dbscan
+        self.df['hashed'] = self.tokens.hashed
+        self.df['tokenized_pattern'] = self.tokens.tokenized_pattern
+        print('Tokenization finished')
+        return self
+
 
 
     @safe_run
     def group_equals(self, column):
 
-        self.groups = self.df.groupby(column).apply(lambda gr:
-                                                pd.DataFrame([{'indices': gr.index.values.tolist(),
-                                                              'pattern': gr[column].values[0]}]))
+        # self.groups = self.df.groupby(column).apply(lambda gr:
+        #                                         pd.DataFrame([{'indices': gr.index.values.tolist(),
+        #                                                        'pattern': self.matcher(gr['tokenized_pattern'].values),
+        #                                                        'tokenized_pattern': self.tokens.tokenize_string(
+        #                                                            self.tokens.tokenizer_pattern, )
+        #                                                        'sequence': gr[column].values[0]}]))
+        self.groups = self.df.groupby(column).apply(func=self.recalculate_group)
         self.groups.reset_index(drop=True, inplace=True)
+
 
         print('Found {} equal groups'.format(self.groups.shape[0]))
 
@@ -140,30 +146,41 @@ class ml_clustering(object):
 
 
 
-    @safe_run
-    def tokenization(self):
-        """
-        Tokenization of a list of error messages.
-        :return:
-        """
-        self.tokens = Tokens(self.groups['pattern'].values)
-        self.tokens.process()
-        self.groups['tokenized_dbscan'] = self.tokens.tokenized_dbscan
-        self.groups['tokenized_pattern'] = self.tokens.tokenized_pattern
-        self.groups['hash'] = self.groups.apply(lambda row: str(row['tokenized_dbscan']), axis=1)
-        self.groups['tokens_number'] = self.groups.apply(lambda row: len(row['tokenized_dbscan']), axis=1)
-        pprint.pprint(self.groups['tokens_number'].describe())
-        print(self.groups['tokens_number'].values)
-        print(self.groups['tokens_number'].unique())
-        # min = self.groups['tokens_number'].min()
-        # max = self.groups['tokens_number'].max()
-        # self.groups['tokens_number_norm'] = self.groups.apply(lambda row: (row['tokens_number']-min)/(max-min), axis=1)
-        #pprint.pprint(self.groups['tokens_number_norm'].values)
+    def recalculate_group(self, gr):
+        indices = gr.index.values.tolist()
+        pattern = self.matcher(gr['tokenized_pattern'].values)
+        tokenized_pattern = self.tokens.tokenize_string(self.tokens.tokenizer_pattern, pattern)
+        tokenized_dbscan = gr['tokenized_dbscan'].values[0]
+        return pd.DataFrame([{'indices': indices,
+                'pattern': pattern,
+                'tokenized_pattern': tokenized_pattern,
+                'tokenized_dbscan': tokenized_dbscan}])
 
-        #self.df['tokenized'] = self.tokens.tokenized
-        # self.df['tokenized_cleaned'] = self.tokens.tokenized_cleaned
-        print('Tokenization finished')
-        return self
+
+    # @safe_run
+    # def tokenization(self):
+    #     """
+    #     Tokenization of a list of error messages.
+    #     :return:
+    #     """
+    #     self.tokens = Tokens(self.groups['pattern'].values)
+    #     self.tokens.process()
+    #     self.groups['tokenized_dbscan'] = self.tokens.tokenized_dbscan
+    #     self.groups['tokenized_pattern'] = self.tokens.tokenized_pattern
+    #     self.groups['hash'] = self.groups.apply(lambda row: str(row['tokenized_dbscan']), axis=1)
+    #     self.groups['tokens_number'] = self.groups.apply(lambda row: len(row['tokenized_dbscan']), axis=1)
+    #     pprint.pprint(self.groups['tokens_number'].describe())
+    #     print(self.groups['tokens_number'].values)
+    #     print(self.groups['tokens_number'].unique())
+    #     # min = self.groups['tokens_number'].min()
+    #     # max = self.groups['tokens_number'].max()
+    #     # self.groups['tokens_number_norm'] = self.groups.apply(lambda row: (row['tokens_number']-min)/(max-min), axis=1)
+    #     #pprint.pprint(self.groups['tokens_number_norm'].values)
+    #
+    #     #self.df['tokenized'] = self.tokens.tokenized
+    #     # self.df['tokenized_cleaned'] = self.tokens.tokenized_cleaned
+    #     print('Tokenization finished')
+    #     return self
 
 
     @safe_run
@@ -300,13 +317,14 @@ class ml_clustering(object):
 
     def gb_regroup(self, gb):
         common_pattern = self.matcher(gb['tokenized_pattern'].values)
-        sequence = gb['tokenized_dbscan'].values
-        #sequence = self.tokens.tokenize_string(self.tokens.tokenizer_pattern, common_pattern)
+        #sequence = gb['tokenized_dbscan'].values
+        tokenized_pattern = self.tokens.tokenize_string(self.tokens.tokenizer_pattern, common_pattern)
+        tokenized_dbscan = self.tokens.tokenize_string(self.tokens.tokenizer_dbscan, common_pattern)
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
         return {'pattern': common_pattern,
-                'tokenized_dbscan': gb['tokenized_dbscan'].values[0],
-                'tokenized_pattern': gb['tokenized_pattern'].values[0],
+                'tokenized_dbscan': tokenized_dbscan,
+                'tokenized_pattern': tokenized_pattern,
                 'indices': indices,
                 'cluster_size': size}
 
