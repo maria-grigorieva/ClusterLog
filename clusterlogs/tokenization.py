@@ -3,6 +3,7 @@ from nltk.corpus import stopwords
 from string import punctuation
 import pprint
 from collections import OrderedDict
+from itertools import groupby
 
 TOKENS_LIMIT = 30
 
@@ -10,8 +11,8 @@ class Tokens(object):
 
 
     def __init__(self, messages):
-        self.tokenizer_dbscan = Tokenizer("conservative", spacer_annotate=False, preserve_placeholders=True)
-        self.tokenizer_pattern = Tokenizer("conservative", spacer_annotate=True, preserve_placeholders=True)
+        self.tokenizer_dbscan = Tokenizer("conservative", spacer_annotate=False, preserve_placeholders=True, segment_case=True)
+        self.tokenizer_pattern = Tokenizer("conservative", spacer_annotate=True, preserve_placeholders=True, segment_case=True)
         self.hashed = None
         self.messages = messages
 
@@ -20,17 +21,21 @@ class Tokens(object):
         """
         :return:
         """
-        self.tokenized_dbscan = self.remove_duplicates(self.pyonmttok(self.tokenizer_dbscan, self.messages))
-        self.tokenized_pattern = self.remove_duplicates(self.pyonmttok(self.tokenizer_pattern, self.messages))
-        print(self.tokenized_pattern)
+        self.tokenized_dbscan = self.remove_neighboring_duplicates(self.pyonmttok(self.tokenizer_dbscan, self.messages))
+        self.tokenized_pattern = self.remove_neighboring_duplicates(self.pyonmttok(self.tokenizer_pattern, self.messages))
+        # for item in self.tokenized_dbscan:
+        #     print(item)
         self.hashed = self.hashing(self.tokenized_dbscan)
         #self.vocabulary = self.get_vocabulary(self.tokenized)
         self.vocabulary_dbscan = self.get_vocabulary(self.tokenized_dbscan)
         self.vocabulary_pattern = self.get_vocabulary(self.tokenized_pattern)
 
 
-    def remove_duplicates(self, tokenized):
-        return [list(dict.fromkeys(item)) for item in tokenized]
+    def remove_neighboring_duplicates(self, tokenized):
+        n = []
+        for row in tokenized:
+            n.append([x for x, _ in groupby(row)])
+        return n
 
 
     def tokenize_string(self, tokenizer, string):

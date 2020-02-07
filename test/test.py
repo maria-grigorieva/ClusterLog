@@ -36,7 +36,7 @@ def main():
     #
     # pprint.pprint(cluster.clusters.shape)
     # pprint.pprint(cluster.outliers.shape)
-    pprint.pprint(cluster.in_cluster(cluster.result, 0))
+    #pprint.pprint(cluster.in_cluster(cluster.result, 0))
 
     #pprint.pprint(cluster.clusters[['pattern']].values)
 

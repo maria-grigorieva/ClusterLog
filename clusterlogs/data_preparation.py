@@ -17,3 +17,8 @@ class Regex(object):
             item = re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '｟*｠', item)
             self.messages_cleaned[idx] =  item
         return self.messages_cleaned
+# &#11816;
+# &#11817;
+#
+# U+2E28
+# U+2E29
