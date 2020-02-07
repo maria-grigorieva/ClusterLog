@@ -51,7 +51,8 @@ def main(argv):
 def tokenization(messages):
     tokenized = []
     for line in messages:
-        tokens, features = Tokenizer("conservative", spacer_annotate=True).tokenize(line)
+        #tokens, features = Tokenizer("conservative", spacer_annotate=True).tokenize(line)
+        tokens, features = Tokenizer("conservative").tokenize(line)
         tokenized.append(tokens)
     return tokenized
 
@@ -59,9 +60,10 @@ def tokenization(messages):
 def cleaning(messages):
     messages_cleaned = [0] * len(messages)
     for idx, item in enumerate(messages):
+        item = re.sub(r'([ ])\1+', r'\1', item)
         item = re.sub(r'([* ])\1+', r'\1', item)
-        item = re.sub(r'((=)+( )*[0-9a-zA-Z_.|:;-]+)', '= {*}', item)
-        item = re.sub(r'((: )[0-9a-zA-Z_.|:;-]+)', ': {*}', item)
+        # item = re.sub(r'((=)+( )*[0-9a-zA-Z_.|:;-]+)', '= {*}', item)
+        # item = re.sub(r'((: )[0-9a-zA-Z_.|:;-]+)', ': {*}', item)
         item = re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '{*}', item)
         messages_cleaned[idx] = item
     return messages_cleaned

@@ -124,6 +124,7 @@ class ml_clustering(object):
         return self
 
 
+
     @safe_run
     def tokenization(self):
         """
@@ -133,6 +134,15 @@ class ml_clustering(object):
         self.tokens = Tokens(self.groups['pattern'].values)
         self.tokens.process()
         self.groups['tokenized'] = self.tokens.tokenized
+        self.groups['tokens_number'] = self.groups.apply(lambda row: len(row['tokenized']), axis=1)
+        pprint.pprint(self.groups['tokens_number'].describe())
+        print(self.groups['tokens_number'].values)
+        print(self.groups['tokens_number'].unique())
+        min = self.groups['tokens_number'].min()
+        max = self.groups['tokens_number'].max()
+        self.groups['tokens_number_norm'] = self.groups.apply(lambda row: (row['tokens_number']-min)/(max-min), axis=1)
+        #pprint.pprint(self.groups['tokens_number_norm'].values)
+
         #self.df['tokenized'] = self.tokens.tokenized
         # self.df['tokenized_cleaned'] = self.tokens.tokenized_cleaned
         print('Tokenization finished')
@@ -165,8 +175,10 @@ class ml_clustering(object):
         """
         from .vectorization import Vector
         # self.w2v_size = self.detect_embedding_size(self.tokens.vocabulary)
-        #tokens = self.tokens.clean_tokens(self.tokens.tokenized)
-        self.word_vector = Vector(self.tokens.tokenized,
+        self.tokens_cleaned = self.tokens.clean_tokens(self.tokens.tokenized)
+        #pprint.pprint(self.tokens_cleaned)
+
+        self.word_vector = Vector(self.tokens_cleaned,
                                   self.w2v_size,
                                   self.w2v_window,
                                   self.cpu_number,
@@ -195,7 +207,7 @@ class ml_clustering(object):
 
     @safe_run
     def dimensionality_reduction(self):
-        n = self.detect_embedding_size(self.tokens.vocabulary)
+        n = self.detect_embedding_size(self.tokens_cleaned)
         print('Number of dimensions is {}'.format(n))
         pca = PCA(n_components=n, svd_solver='full')
         pca.fit(self.sent2vec)
@@ -235,6 +247,9 @@ class ml_clustering(object):
         :return:
         """
         self.sent2vec = self.sent2vec if self.w2v_size <= 10 else self.dimensionality_reduction()
+        #pprint.pprint(self.sent2vec)
+        self.extend_sent2vec()
+        #pprint.pprint(self.sent2vec)
         self.kneighbors()
         self.epsilon_search()
         self.cluster_labels = DBSCAN(eps=self.epsilon,
@@ -250,9 +265,15 @@ class ml_clustering(object):
 
 
 
+    def extend_sent2vec(self):
+        values = self.groups['tokens_number_norm'].values
+
+        self.sent2vec = [np.append(row,values[i]) for i,row in enumerate(self.sent2vec)]
+
+
     def gb_regroup(self, gb):
         common_pattern = self.matcher(gb['tokenized'].values)
-        sequence = self.tokens.tokenize_string(common_pattern)
+        sequence = self.tokens.tokenize_string(self.tokens.tokenizer_pattern, common_pattern)
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
         return {'pattern': common_pattern,
@@ -306,9 +327,9 @@ class ml_clustering(object):
         if len(lines) > 1:
             fdist = nltk.FreqDist([i for l in lines for i in l])
             x = [token if (fdist[token] / len(lines) >= 1) else '{*}' for token in lines[0]]
-            return self.tokens.tokenizer.detokenize([i[0] for i in groupby(x)])
+            return self.tokens.tokenizer_pattern.detokenize([i[0] for i in groupby(x)])
         else:
-            return self.tokens.tokenizer.detokenize(lines[0])
+            return self.tokens.tokenizer_pattern.detokenize(lines[0])
 
 
     def levenshtein_similarity(self, rows, N):
@@ -350,7 +371,8 @@ class ml_clustering(object):
         if np.max(df[column].values) < 100:
             return df, None
         else:
-            return df[df[column] >= 100], df[df[column] < 100]
+            return df[df[column] >= 100], \
+                   df[df[column] < 100]
 
 
 

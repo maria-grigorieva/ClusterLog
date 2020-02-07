@@ -10,7 +10,8 @@ class Tokens(object):
 
 
     def __init__(self, messages):
-        self.tokenizer = Tokenizer("conservative", spacer_annotate=True)
+        self.tokenizer_dbscan = Tokenizer("conservative", spacer_annotate=False)
+        self.tokenizer_pattern = Tokenizer("conservative", spacer_annotate=True)
         self.messages = messages
         self.tokenized = None
         self.tokenized_cleaned = None
@@ -23,20 +24,20 @@ class Tokens(object):
         :return:
         """
         #self.tokenized = self.pyonmttok(self.messages)
-        self.tokenized = self.pyonmttok(self.messages)
+        self.tokenized = self.pyonmttok(self.tokenizer_pattern, self.messages)
         #self.vocabulary = self.get_vocabulary(self.tokenized)
         self.vocabulary = self.get_vocabulary(self.tokenized)
 
 
-    def tokenize_string(self, string):
-        tokens, features = self.tokenizer.tokenize(string)
+    def tokenize_string(self, tokenizer, string):
+        tokens, features = tokenizer.tokenize(string)
         return tokens
 
 
-    def pyonmttok(self, strings):
+    def pyonmttok(self, tokenizer, strings):
         tokenized = []
         for line in strings:
-            tokens, features = self.tokenizer.tokenize(line)
+            tokens, features = tokenizer.tokenize(line)
             tokenized.append(tokens)
         return tokenized
 
@@ -48,7 +49,15 @@ class Tokens(object):
         :return:
         """
         stop = stopwords.words('english') + list(punctuation) + ["``", "''"]
-        return [i for row in tokenized for i in row if i.lower() not in stop]
+        result = []
+        for row in tokenized:
+            tokenized = []
+            for i in row:
+                if i.lower() not in stop:
+                    tokenized.append(i)
+            result.append(tokenized)
+        return result
+        #return [row.pop(i) for row in tokenized for i in row if i.lower() not in stop]
 
 
 
