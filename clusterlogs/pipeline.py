@@ -254,7 +254,8 @@ class ml_clustering(object):
 
 
     def gb_regroup(self, gb):
-        common_pattern = self.common_pattern(gb['tokenized_pattern'].values)
+        #common_pattern = self.common_pattern(gb['tokenized_pattern'].values)
+        common_pattern = self.sequence_matcher(gb['tokenized_pattern'].values)
         sequence = self.tokens.tokenize_string(self.tokens.tokenizer_pattern, common_pattern)
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
@@ -322,18 +323,18 @@ class ml_clustering(object):
             return self.tokens.detokenize_row(self.tokens.tokenizer_pattern, sequences[0])
 
 
-    def common_pattern(self, lines):
-        if len(lines) > 1:
-            length = max(map(len, lines))
-            y=np.array([xi+[0]*(length-len(xi)) for xi in lines])
-            yT=np.transpose(y)
-            pattern = []
-            for i in range(0, yT.shape[0]-1):
-                unique = np.unique(yT[i])
-                pattern.append(unique[0] if len(unique)==1 else '｟*｠')
-            return self.tokens.detokenize_row(self.tokens.tokenizer_pattern, pattern)
-        else:
-            return self.tokens.detokenize_row(self.tokens.tokenizer_pattern, lines[0])
+    # def common_pattern(self, lines):
+    #     if len(lines) > 1:
+    #         length = max(map(len, lines))
+    #         y=np.array([xi+[0]*(length-len(xi)) for xi in lines])
+    #         yT=np.transpose(y)
+    #         pattern = []
+    #         for i in range(0, yT.shape[0]-1):
+    #             unique = np.unique(yT[i])
+    #             pattern.append(unique[0] if len(unique)==1 else '｟*｠')
+    #         return self.tokens.detokenize_row(self.tokens.tokenizer_pattern, pattern)
+    #     else:
+    #         return self.tokens.detokenize_row(self.tokens.tokenizer_pattern, lines[0])
 
 
     def levenshtein_similarity(self, rows):

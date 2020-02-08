@@ -31,6 +31,8 @@ def main(argv):
     # Read messages from log file
     messages = [line for line in open(inputfile)]
 
+    print('Log file contains {} lines'.format(len(messages)))
+
     # Clean messages
    # messages_cleaned = [re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '*', item) for item in messages]
     messages_cleaned = cleaning(messages)
