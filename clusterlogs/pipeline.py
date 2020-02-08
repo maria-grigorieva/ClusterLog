@@ -121,7 +121,7 @@ class ml_clustering(object):
         self.tokens = Tokens(self.df['cleaned'].values)
         self.tokens.process()
         self.df['tokenized_dbscan'] = self.tokens.tokenized_dbscan
-        self.df['hashed'] = self.tokens.hashed
+        #self.df['hashed'] = self.tokens.hashed
         self.df['tokenized_pattern'] = self.tokens.tokenized_pattern
         self.df['cleaned'] = self.tokens.patterns
         print('Tokenization finished')
@@ -274,7 +274,8 @@ class ml_clustering(object):
 
 
     def gb_regroup(self, gb):
-        common_pattern = self.matcher(gb['tokenized_pattern'].values)
+        common_pattern = self.common_pattern(gb['tokenized_pattern'].values)
+        #common_pattern = self.matcher(gb['tokenized_pattern'].values)
         sequence = self.tokens.tokenize_string(self.tokens.tokenizer_pattern, common_pattern)
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
@@ -308,7 +309,7 @@ class ml_clustering(object):
 
         df['ratio'] = self.levenshtein_similarity(df['sequence'].values, 0)
         filtered = df[(df['ratio'] >= accuracy)]
-        pattern = self.matcher(filtered['sequence'].values)
+        pattern = self.common_pattern(filtered['sequence'].values)
         indices = [item for sublist in filtered['indices'].values for item in sublist]
         result.append({'pattern':pattern,
                        'indices': indices,
@@ -322,9 +323,24 @@ class ml_clustering(object):
         if len(lines) > 1:
             fdist = nltk.FreqDist([i for l in lines for i in l])
             x = [token if (fdist[token] / len(lines) >= 1) else '｟*｠' for token in lines[0]]
-            return self.tokens.tokenizer_pattern.detokenize([i[0] for i in groupby(x)])
+            x = [i for i, _ in groupby(x)]
+            return self.tokens.tokenizer_pattern.detokenize(x)
         else:
             return self.tokens.tokenizer_pattern.detokenize(lines[0])
+
+
+    def common_pattern(self, lines):
+        if len(lines) > 1:
+            length = max(map(len, lines))
+            y=np.array([xi+[0]*(length-len(xi)) for xi in lines])
+            yT=np.transpose(y)
+            pattern = []
+            for i in range(0, yT.shape[0]-1):
+                unique = np.unique(yT[i])
+                pattern.append(unique[0] if len(unique)==1 else '｟*｠')
+            return self.tokens.detokenize_row(self.tokens.tokenizer_pattern, pattern)
+        else:
+            return self.tokens.detokenize_row(self.tokens.tokenizer_pattern, lines[0])
 
 
     def levenshtein_similarity(self, rows, N):
