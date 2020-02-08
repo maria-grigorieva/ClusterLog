@@ -15,6 +15,7 @@ import editdistance
 from .validation import Output
 from .tokenization import Tokens
 import difflib
+from string import punctuation
 
 
 CLUSTERING_ACCURACY = 0.8
@@ -356,6 +357,24 @@ class ml_clustering(object):
 
     def validation(self, groups):
         return Output().statistics(self.df, self.target, groups)
+
+
+    def garbage_collector(self, df):
+        stop = list(punctuation) + ['｟*｠']
+        garbage = []
+        for row in df.itertuples():
+            elements = set(row.sequence)
+            c = 0
+            for i,x in enumerate(elements):
+                if x in stop:
+                    c+=1
+            if c == len(elements):
+                garbage.append(row)
+                print("Founded garbage")
+                pprint.pprint(garbage)
+                df.drop([row.Index], axis=0, inplace=True)
+        return garbage
+
 
 
     def split_clusters(self, df, column):

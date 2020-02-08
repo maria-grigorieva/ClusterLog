@@ -23,8 +23,8 @@ def main():
     pprint.pprint(clusters.sort_values(by=['cluster_size'],ascending=False)['pattern'].values)
     pprint.pprint(outliers.shape)
 
-    cluster.postprocessing()
-
+    #cluster.postprocessing()
+    garbage = cluster.garbage_collector(cluster.result)
 
 
 if __name__ == "__main__":
