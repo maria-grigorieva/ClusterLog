@@ -11,8 +11,8 @@ class Tokens(object):
 
 
     def __init__(self, messages):
-        self.tokenizer_dbscan = Tokenizer("conservative", spacer_annotate=False, preserve_placeholders=True, segment_case=True)
-        self.tokenizer_pattern = Tokenizer("conservative", spacer_annotate=True, preserve_placeholders=True, segment_case=True)
+        self.tokenizer_dbscan = Tokenizer("conservative", spacer_annotate=False, preserve_placeholders=True)
+        self.tokenizer_pattern = Tokenizer("conservative", spacer_annotate=True, preserve_placeholders=True)
         self.hashed = None
         self.messages = messages
 

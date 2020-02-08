@@ -18,7 +18,7 @@ import difflib
 from string import punctuation
 
 
-CLUSTERING_ACCURACY = 0.8
+CLUSTERING_ACCURACY = 0.6
 
 STATISTICS = ["cluster_name",
               "cluster_size",
@@ -286,7 +286,7 @@ class ml_clustering(object):
 
     def reclustering(self, df, result, accuracy):
 
-        df['ratio'] = self.levenshtein_similarity(df['sequence'].values)
+        df['ratio'] = self.levenshtein_similarity(df['pattern'].values)
         filtered = df[(df['ratio'] >= accuracy)]
         pattern = self.sequence_matcher(filtered['sequence'].values)
         #pattern = self.common_pattern(filtered['sequence'].values)

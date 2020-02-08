@@ -5,6 +5,7 @@ from gensim.models import Word2Vec
 from pyonmttok import Tokenizer
 from nltk.corpus import stopwords
 from string import punctuation
+from itertools import groupby
 
 
 def main(argv):
@@ -28,7 +29,7 @@ def main(argv):
             outputfile = arg
 
     # Read messages from log file
-    messages = [line.rstrip('\n') for line in open(inputfile)]
+    messages = [line for line in open(inputfile)]
 
     # Clean messages
    # messages_cleaned = [re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '*', item) for item in messages]
@@ -37,7 +38,7 @@ def main(argv):
     # Tokenized cleaned messages
     tokenized = tokenization(messages_cleaned)
 
-    cleaned = clean_tokens(tokenized)
+    cleaned = remove_neighboring_duplicates(tokenized)
 
     try:
         word2vec = Word2Vec(cleaned,
@@ -56,7 +57,10 @@ def tokenization(messages):
     tokenized = []
     for line in messages:
         #tokens, features = Tokenizer("conservative", spacer_annotate=True).tokenize(line)
-        tokens, features = Tokenizer("conservative").tokenize(line)
+        tokens, features = Tokenizer("conservative",
+                                     spacer_annotate=False,
+                                     preserve_placeholders=True)\
+            .tokenize(line)
         tokenized.append(tokens)
     return tokenized
 
@@ -66,11 +70,18 @@ def cleaning(messages):
     for idx, item in enumerate(messages):
         item = re.sub(r'([ ])\1+', r'\1', item)
         item = re.sub(r'([* ])\1+', r'\1', item)
-        # item = re.sub(r'((=)+( )*[0-9a-zA-Z_.|:;-]+)', '= {*}', item)
-        # item = re.sub(r'((: )[0-9a-zA-Z_.|:;-]+)', ': {*}', item)
-        item = re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '{*}', item)
+        item = re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '｟*｠', item)
         messages_cleaned[idx] = item
     return messages_cleaned
+
+
+def remove_neighboring_duplicates(tokenized):
+    n = []
+    for row in tokenized:
+        remove_indices = [i - 1 for i, j in enumerate(row) if j == '｟*｠' and row[i - 1] == '▁']
+        row = [i for j, i in enumerate(row) if j not in remove_indices]
+        n.append([x for x, _ in groupby(row)])
+    return n
 
 
 def clean_tokens(tokenized):
