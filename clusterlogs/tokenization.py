@@ -23,10 +23,9 @@ class Tokens(object):
         """
         self.tokenized_dbscan = self.remove_neighboring_duplicates(self.pyonmttok(self.tokenizer_dbscan, self.messages))
         self.tokenized_pattern = self.remove_neighboring_duplicates(self.pyonmttok(self.tokenizer_pattern, self.messages))
-        for item in self.tokenized_pattern:
-            print(item)
-        #self.hashed = self.hashing(self.tokenized_dbscan)
-        #self.vocabulary = self.get_vocabulary(self.tokenized)
+        # for item in self.tokenized_pattern:
+        #     print(item)
+
         self.vocabulary_dbscan = self.get_vocabulary(self.tokenized_dbscan)
         self.vocabulary_pattern = self.get_vocabulary(self.tokenized_pattern)
         self.patterns = self.detokenize(self.tokenized_pattern)
@@ -37,9 +36,9 @@ class Tokens(object):
 
 
     def detokenize_row(self, tokenizer, row):
-        remove_indices = [i - 1 for i, j in enumerate(row) if j == '｟*｠' and row[i - 1] == '▁']
+        remove_indices = [i - 1 for i, j in enumerate(row) if j == '｟*｠' and row[i-1] == '▁']
         row = [i for j, i in enumerate(row) if j not in remove_indices]
-        return self.tokenizer_pattern.detokenize([x for x, _ in groupby(row)])
+        return tokenizer.detokenize([x for x, _ in groupby(row)])
 
 
     def remove_neighboring_duplicates(self, tokenized):

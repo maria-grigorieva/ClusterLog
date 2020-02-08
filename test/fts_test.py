@@ -23,6 +23,8 @@ def main():
     pprint.pprint(clusters.sort_values(by=['cluster_size'],ascending=False)['pattern'].values)
     pprint.pprint(outliers.shape)
 
+    cluster.postprocessing()
+
 
 
 if __name__ == "__main__":

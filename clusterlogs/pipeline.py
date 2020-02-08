@@ -9,11 +9,12 @@ import math
 from kneed import KneeLocator
 from sklearn.cluster import DBSCAN
 from sklearn.neighbors import NearestNeighbors
-from .tokenization import Tokens
 from .data_preparation import Regex
 from sklearn.decomposition import PCA
 import editdistance
 from .validation import Output
+from .tokenization import Tokens
+import difflib
 
 
 CLUSTERING_ACCURACY = 0.8
@@ -95,8 +96,6 @@ class ml_clustering(object):
             .tokens_vectorization() \
             .sentence_vectorization() \
             .dbscan()
-            # .regroup() \
-            # .postprocessing()
 
 
     @safe_run
@@ -121,7 +120,6 @@ class ml_clustering(object):
         self.tokens = Tokens(self.df['cleaned'].values)
         self.tokens.process()
         self.df['tokenized_dbscan'] = self.tokens.tokenized_dbscan
-        #self.df['hashed'] = self.tokens.hashed
         self.df['tokenized_pattern'] = self.tokens.tokenized_pattern
         self.df['cleaned'] = self.tokens.patterns
         print('Tokenization finished')
@@ -145,21 +143,6 @@ class ml_clustering(object):
         print('Found {} equal groups'.format(self.groups.shape[0]))
 
         return self
-    #
-    #
-    # @safe_run
-    # def tokenization(self):
-    #     """
-    #     Tokenization of a list of error messages.
-    #     :return:
-    #     """
-    #     self.tokens = Tokens(self.groups['pattern'].values)
-    #     self.tokens.process()
-    #     self.groups['tokenized_dbscan'] = self.tokens.tokenized_dbscan
-    #     self.groups['hashed'] = self.tokens.hashed
-    #     self.groups['tokenized_pattern'] = self.tokens.tokenized_pattern
-    #     print('Tokenization finished')
-    #     return self
 
 
 
@@ -171,7 +154,6 @@ class ml_clustering(object):
         :return:
         """
         print('Vocabulary size = {}'.format(len(vocab)))
-        #embedding_size = round(len(vocab) ** (2/3))
         embedding_size = round(math.sqrt(len(vocab)))
         if embedding_size >= 300:
             embedding_size = 300
@@ -187,8 +169,6 @@ class ml_clustering(object):
         :return:
         """
         from .vectorization import Vector
-        # self.w2v_size = self.detect_embedding_size(self.tokens.vocabulary)
-        #tokens = self.tokens.clean_tokens(self.tokens.tokenized)
         self.word_vector = Vector(self.groups['tokenized_dbscan'].values,
                                   self.w2v_size,
                                   self.w2v_window,
@@ -265,7 +245,6 @@ class ml_clustering(object):
                                      n_jobs=self.cpu_number) \
             .fit_predict(self.sent2vec)
         self.groups['cluster'] = self.cluster_labels
-        #self.result = self.groups.groupby('cluster').apply(func=self.gb_regroup)
         self.result = pd.DataFrame.from_dict([item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)],
                                orient='columns')
         print('DBSCAN finished with {} clusters'.format(len(set(self.cluster_labels))))
@@ -275,7 +254,6 @@ class ml_clustering(object):
 
     def gb_regroup(self, gb):
         common_pattern = self.common_pattern(gb['tokenized_pattern'].values)
-        #common_pattern = self.matcher(gb['tokenized_pattern'].values)
         sequence = self.tokens.tokenize_string(self.tokens.tokenizer_pattern, common_pattern)
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
@@ -294,10 +272,10 @@ class ml_clustering(object):
 
 
     @safe_run
-    def postprocessing(self, accuracy=CLUSTERING_ACCURACY):
+    def postprocessing(self, df, accuracy=CLUSTERING_ACCURACY):
 
         result = []
-        self.reclustering(self.result.copy(deep=True), result, accuracy)
+        self.reclustering(df.copy(deep=True), result, accuracy)
 
         self.result_pp = pd.DataFrame(result)
         self.result_pp.sort_values(by=['cluster_size'], ascending=False, inplace=True)
@@ -307,9 +285,10 @@ class ml_clustering(object):
 
     def reclustering(self, df, result, accuracy):
 
-        df['ratio'] = self.levenshtein_similarity(df['sequence'].values, 0)
+        df['ratio'] = self.levenshtein_similarity(df['sequence'].values)
         filtered = df[(df['ratio'] >= accuracy)]
-        pattern = self.common_pattern(filtered['sequence'].values)
+        pattern = self.sequence_matcher(filtered['sequence'].values)
+        #pattern = self.common_pattern(filtered['sequence'].values)
         indices = [item for sublist in filtered['indices'].values for item in sublist]
         result.append({'pattern':pattern,
                        'indices': indices,
@@ -323,10 +302,23 @@ class ml_clustering(object):
         if len(lines) > 1:
             fdist = nltk.FreqDist([i for l in lines for i in l])
             x = [token if (fdist[token] / len(lines) >= 1) else '｟*｠' for token in lines[0]]
-            x = [i for i, _ in groupby(x)]
-            return self.tokens.tokenizer_pattern.detokenize(x)
+            # x = [i for i, _ in groupby(x)]
+            return self.tokens.detokenize_row(self.tokens.tokenizer_pattern, x)
         else:
-            return self.tokens.tokenizer_pattern.detokenize(lines[0])
+            self.tokens.detokenize_row(self.tokens.tokenizer_pattern, lines[0])
+
+
+    def sequence_matcher(self, sequences):
+        if len(sequences) > 1:
+            pattern = sequences[0]
+            for i in range(1,len(sequences)):
+                matches = difflib.SequenceMatcher(None, pattern, sequences[i])
+                m = [pattern[m.a:m.a + m.size] for m
+                          in matches.get_matching_blocks() if m.size > 0]
+                pattern = [val for sublist in m for val in sublist]
+            return self.tokens.detokenize_row(self.tokens.tokenizer_pattern, pattern)
+        else:
+            return self.tokens.detokenize_row(self.tokens.tokenizer_pattern, sequences[0])
 
 
     def common_pattern(self, lines):
@@ -343,21 +335,15 @@ class ml_clustering(object):
             return self.tokens.detokenize_row(self.tokens.tokenizer_pattern, lines[0])
 
 
-    def levenshtein_similarity(self, rows, N):
+    def levenshtein_similarity(self, rows):
         """
         :param rows:
         :return:
         """
         if len(rows) > 1:
-            if N != 0:
                 return (
-                [(1 - editdistance.eval(rows[0][:N], rows[i][:N]) / max(len(rows[0][:N]), len(rows[i][:N]))) for i in
+                [(1 - editdistance.eval(rows[0], rows[i]) / max(len(rows[0]), len(rows[i]))) for i in
                  range(0, len(rows))])
-            else:
-                return (
-                    [(1 - editdistance.eval(rows[0], rows[i]) / (max(len(rows[0]), len(rows[i])) | 1)) for i
-                     in
-                     range(0, len(rows))])
         else:
             return 1
 
