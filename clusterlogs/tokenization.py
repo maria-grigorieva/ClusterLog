@@ -1,16 +1,13 @@
 from pyonmttok import Tokenizer
 from nltk.corpus import stopwords
 from string import punctuation
-import pprint
-from collections import OrderedDict
 from itertools import groupby
 
-TOKENS_LIMIT = 30
 
 class Tokens(object):
 
-    tokenizer_dbscan = Tokenizer("conservative", spacer_annotate=False, preserve_placeholders=True)
-    tokenizer_pattern = Tokenizer("conservative", spacer_annotate=True, preserve_placeholders=True)
+    TOKENIZER_CLUSTER = Tokenizer("conservative", spacer_annotate=False, preserve_placeholders=True)
+    TOKENIZER_PATTERN = Tokenizer("conservative", spacer_annotate=True, preserve_placeholders=True)
 
     def __init__(self, messages):
 
@@ -21,15 +18,16 @@ class Tokens(object):
         """
         :return:
         """
-        self.tokenized_dbscan = self.remove_neighboring_duplicates(self.pyonmttok(Tokens.tokenizer_dbscan, self.messages))
-        self.tokenized_pattern = self.remove_neighboring_duplicates(self.pyonmttok(Tokens.tokenizer_pattern, self.messages))
-        self.vocabulary_dbscan = Tokens.get_vocabulary(self.tokenized_dbscan)
+        self.tokenized_cluster = self.remove_neighboring_duplicates(self.pyonmttok(Tokens.TOKENIZER_CLUSTER, self.messages))
+        self.tokenized_pattern = self.remove_neighboring_duplicates(self.pyonmttok(Tokens.TOKENIZER_PATTERN, self.messages))
+        self.vocabulary_cluster = Tokens.get_vocabulary(self.tokenized_cluster)
         self.vocabulary_pattern = Tokens.get_vocabulary(self.tokenized_pattern)
         self.patterns = self.detokenize(self.tokenized_pattern)
 
 
     def detokenize(self, tokenized):
-        return [self.tokenizer_pattern.detokenize([x for x, _ in groupby(row)]) for row in tokenized]
+        return [self.TOKENIZER_PATTERN.detokenize([x for x, _ in groupby(row)]) for row in tokenized]
+
 
     @staticmethod
     def detokenize_row(tokenizer, row):
@@ -75,11 +73,8 @@ class Tokens(object):
                 if i.lower() not in stop:
                     tokenized.append(i)
             result.append(tokenized)
-            #print(tokenized)
         return result
 
-    def hashing(self, tokenized):
-        return [hash(tuple(row)) for row in tokenized]
 
     @staticmethod
     def get_vocabulary(tokens):

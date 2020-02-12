@@ -10,10 +10,10 @@ def main():
     cluster.process()
 
     pprint.pprint(cluster.timings)
-    pprint.pprint(cluster.result.sort_values(by=['cluster_size'],ascending=False))
+    pprint.pprint(cluster.clusters.result.sort_values(by=['cluster_size'],ascending=False))
 
-    pprint.pprint(cluster.in_cluster(cluster.result, 80))
-    pprint.pprint(cluster.result.sort_values(by=['cluster_size'],ascending=False)['pattern'].values)
+    pprint.pprint(cluster.in_cluster(cluster.clusters.result, 80))
+    pprint.pprint(cluster.clusters.result.sort_values(by=['cluster_size'],ascending=False)['pattern'].values)
 
 
 

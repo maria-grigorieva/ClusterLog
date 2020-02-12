@@ -9,16 +9,6 @@ from .tokenization import Tokens
 from .clusterization import Clustering
 
 
-CLUSTERING_ACCURACY = 0.6
-
-STATISTICS = ["cluster_name",
-              "cluster_size",
-              "pattern",
-              "sequence",
-              "mean_similarity",
-              "std_similarity",
-              "indices"]
-
 def safe_run(method):
     def func_wrapper(self, *args, **kwargs):
 
@@ -102,7 +92,7 @@ class ml_clustering(object):
         """
         self.tokens = Tokens(self.df['cleaned'].values)
         self.tokens.process()
-        self.df['tokenized_dbscan'] = self.tokens.tokenized_dbscan
+        self.df['sequence'] = self.tokens.tokenized_cluster
         self.df['tokenized_pattern'] = self.tokens.tokenized_pattern
         self.df['cleaned'] = self.tokens.patterns
         print('Tokenization finished')
@@ -115,11 +105,11 @@ class ml_clustering(object):
         self.groups = self.df.groupby('cleaned').apply(lambda gr:
                                                 pd.DataFrame([{'indices': gr.index.values.tolist(),
                                                               'pattern': gr['cleaned'].values[0],
-                                                              'tokenized_dbscan': self.tokens.tokenize_string(
-                                                                  self.tokens.tokenizer_dbscan, gr['cleaned'].values[0]
+                                                              'sequence': self.tokens.tokenize_string(
+                                                                  self.tokens.TOKENIZER_CLUSTER, gr['cleaned'].values[0]
                                                               ),
                                                               'tokenized_pattern': self.tokens.tokenize_string(
-                                                                  self.tokens.tokenizer_pattern, gr['cleaned'].values[0]
+                                                                  self.tokens.TOKENIZER_PATTERN, gr['cleaned'].values[0]
                                                               ),}]))
         self.groups.reset_index(drop=True, inplace=True)
 
@@ -137,7 +127,7 @@ class ml_clustering(object):
         :return:
         """
         from .vectorization import Vector
-        self.vectors = Vector(self.groups['tokenized_dbscan'].values,
+        self.vectors = Vector(self.groups['sequence'].values,
                                   self.w2v_size,
                                   self.w2v_window,
                                   self.cpu_number,

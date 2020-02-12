@@ -11,10 +11,11 @@ import nltk
 from .tokenization import Tokens
 
 CLUSTERING_ACCURACY = 0.8
+CLUSTERING_THRESHOLD = 5000
 
 class Clustering:
 
-    def __init__(self, df, groups, tokens, vectors, cpu_number, method='dbscan', threshold=50):
+    def __init__(self, df, groups, tokens, vectors, cpu_number, method='dbscan', threshold=CLUSTERING_THRESHOLD):
         self.groups = groups
         self.df = df
         self.threshold = threshold
@@ -172,9 +173,9 @@ class Clustering:
                 m = [pattern[m.a:m.a + m.size] for m
                           in matches.get_matching_blocks() if m.size > 0]
                 pattern = [val for sublist in m for val in sublist]
-            return Tokens.detokenize_row(Tokens.tokenizer_pattern, pattern)
+            return Tokens.detokenize_row(Tokens.TOKENIZER_PATTERN, pattern)
         else:
-            return Tokens.detokenize_row(Tokens.tokenizer_pattern, sequences[0])
+            return Tokens.detokenize_row(Tokens.TOKENIZER_PATTERN, sequences[0])
 
 
 
@@ -195,9 +196,9 @@ class Clustering:
         if len(lines) > 1:
             fdist = nltk.FreqDist([i for l in lines for i in l])
             x = [token if (fdist[token] / len(lines) >= 1) else '｟*｠' for token in lines[0]]
-            return self.tokens.detokenize_row(self.tokens.tokenizer_pattern, x)
+            return self.tokens.detokenize_row(self.tokens.TOKENIZER_PATTERN, x)
         else:
-            self.tokens.detokenize_row(self.tokens.tokenizer_pattern, lines[0])
+            self.tokens.detokenize_row(self.tokens.TOKENIZER_PATTERN, lines[0])
 
 
     @staticmethod
