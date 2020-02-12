@@ -1,21 +1,11 @@
 from time import time
 import multiprocessing
-import nltk
-import numpy as np
 import pandas as pd
-from itertools import groupby
 import pprint
-import math
-from kneed import KneeLocator
-from sklearn.cluster import DBSCAN
-from sklearn.neighbors import NearestNeighbors
+from string import punctuation
 from .data_preparation import Regex
-from sklearn.decomposition import PCA
-import editdistance
 from .validation import Output
 from .tokenization import Tokens
-import difflib
-from string import punctuation
 from .clusterization import Clustering
 
 
@@ -58,19 +48,10 @@ class ml_clustering(object):
         self.target = target
         self.set_cluster_settings(cluster_settings or CLUSTERING_DEFAULTS)
         self.cpu_number = self.get_cpu_number()
-        self.messages = None
         self.timings = {}
-        self.messages_cleaned = None
-        self.indices = None
-        self.tokens = None
-        self.sent2vec = None
-        self.distances = None
-        self.epsilon = None
-        self.cluster_labels = None
         self.model_name = model_name
         self.mode = mode
-        self.results = None
-        self.groups = None
+
 
 
     @staticmethod
@@ -183,6 +164,7 @@ class ml_clustering(object):
         return self
 
 
+    @safe_run
     def clusterization(self):
 
         self.clusters = Clustering(self.df, self.groups, self.tokens, self.vectors, self.cpu_number)
@@ -195,6 +177,7 @@ class ml_clustering(object):
         return self.df.loc[indices][self.target].values
 
 
+    @safe_run
     def validation(self, groups):
         return Output().statistics(self.df, self.target, groups)
 

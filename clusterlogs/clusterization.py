@@ -29,7 +29,7 @@ class Clustering:
 
     def process(self):
         if self.groups.shape[0] <= self.threshold:
-            self.postprocessing(self.groups)
+            self.matching_clusterization(self.groups)
         else:
             if self.method == 'dbscan':
                 self.dbscan()
@@ -83,14 +83,20 @@ class Clustering:
         print('DBSCAN finished with {} clusters'.format(len(set(self.cluster_labels))))
 
 
-    def postprocessing(self, df, accuracy=CLUSTERING_ACCURACY):
+    def matching_clusterization(self, df, accuracy=CLUSTERING_ACCURACY):
+        """
+        Clusterization messages using sequence matching
+        :param df:
+        :param accuracy:
+        :return:
+        """
         result = []
         self.reclustering(df.copy(deep=True), result, accuracy)
 
-        self.result_pp = pd.DataFrame(result)
-        self.result_pp.sort_values(by=['cluster_size'], ascending=False, inplace=True)
+        self.result = pd.DataFrame(result)
+        self.result.sort_values(by=['cluster_size'], ascending=False, inplace=True)
 
-        print('postprocessed')
+        print('Postprocessed with {} clusters'.format(self.result.shape[0]))
 
 
     def hdbscan(self):
@@ -123,6 +129,18 @@ class Clustering:
 
 
     def reclustering(self, df, result, accuracy):
+        """
+        Clusterization of the groups:
+        - take the 1st message (pattern) and compare if with others
+        - take all messages, which are similar with the 1st with more than 80% and
+        join them into the new separate cluster
+        - remove these messages from the initial group
+        - repeat these steps while group has messages
+        :param df:
+        :param result:
+        :param accuracy:
+        :return:
+        """
         df['ratio'] = self.levenshtein_similarity(df['pattern'].values)
         filtered = df[(df['ratio'] >= accuracy)]
         pattern = self.sequence_matcher(filtered['tokenized_pattern'].values)
