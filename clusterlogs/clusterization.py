@@ -80,7 +80,7 @@ class Clustering:
         self.groups['cluster'] = self.cluster_labels
         self.result = pd.DataFrame.from_dict(
             [item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)],
-            orient='columns')
+            orient='columns').sort_values(by=['cluster_size'], ascending=False, inplace=True)
         print('DBSCAN finished with {} clusters'.format(len(set(self.cluster_labels))))
 
 
@@ -109,7 +109,7 @@ class Clustering:
         self.groups['cluster'] = self.cluster_labels
         self.result = pd.DataFrame.from_dict(
             [item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)],
-            orient='columns')
+            orient='columns').sort_values(by=['cluster_size'], ascending=False)
         print('HDBSCAN finished with {} clusters'.format(len(set(self.cluster_labels))))
 
 
@@ -126,7 +126,7 @@ class Clustering:
         self.groups['cluster'] = self.cluster_labels
         self.result = pd.DataFrame.from_dict(
             [item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)],
-            orient='columns')
+            orient='columns').sort_values(by=['cluster_size'], ascending=False)
 
 
     def reclustering(self, df, result, accuracy):
