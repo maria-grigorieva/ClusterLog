@@ -9,10 +9,11 @@ TOKENS_LIMIT = 30
 
 class Tokens(object):
 
+    tokenizer_dbscan = Tokenizer("conservative", spacer_annotate=False, preserve_placeholders=True)
+    tokenizer_pattern = Tokenizer("conservative", spacer_annotate=True, preserve_placeholders=True)
 
     def __init__(self, messages):
-        self.tokenizer_dbscan = Tokenizer("conservative", spacer_annotate=False, preserve_placeholders=True)
-        self.tokenizer_pattern = Tokenizer("conservative", spacer_annotate=True, preserve_placeholders=True)
+
         self.messages = messages
 
 
@@ -20,21 +21,18 @@ class Tokens(object):
         """
         :return:
         """
-        self.tokenized_dbscan = self.remove_neighboring_duplicates(self.pyonmttok(self.tokenizer_dbscan, self.messages))
-        self.tokenized_pattern = self.remove_neighboring_duplicates(self.pyonmttok(self.tokenizer_pattern, self.messages))
-        # for item in self.tokenized_pattern:
-        #     print(item)
-
-        self.vocabulary_dbscan = self.get_vocabulary(self.tokenized_dbscan)
-        self.vocabulary_pattern = self.get_vocabulary(self.tokenized_pattern)
+        self.tokenized_dbscan = self.remove_neighboring_duplicates(self.pyonmttok(Tokens.tokenizer_dbscan, self.messages))
+        self.tokenized_pattern = self.remove_neighboring_duplicates(self.pyonmttok(Tokens.tokenizer_pattern, self.messages))
+        self.vocabulary_dbscan = Tokens.get_vocabulary(self.tokenized_dbscan)
+        self.vocabulary_pattern = Tokens.get_vocabulary(self.tokenized_pattern)
         self.patterns = self.detokenize(self.tokenized_pattern)
 
 
     def detokenize(self, tokenized):
         return [self.tokenizer_pattern.detokenize([x for x, _ in groupby(row)]) for row in tokenized]
 
-
-    def detokenize_row(self, tokenizer, row):
+    @staticmethod
+    def detokenize_row(tokenizer, row):
         remove_indices = [i - 1 for i, j in enumerate(row) if j == '｟*｠' and row[i-1] == '▁']
         row = [i for j, i in enumerate(row) if j not in remove_indices]
         return tokenizer.detokenize([x for x, _ in groupby(row)])
@@ -49,7 +47,8 @@ class Tokens(object):
         return n
 
 
-    def tokenize_string(self, tokenizer, row):
+    @staticmethod
+    def tokenize_string(tokenizer, row):
         tokens, features = tokenizer.tokenize(row)
         return tokens
 
@@ -82,7 +81,7 @@ class Tokens(object):
     def hashing(self, tokenized):
         return [hash(tuple(row)) for row in tokenized]
 
-
-    def get_vocabulary(self, tokens):
+    @staticmethod
+    def get_vocabulary(tokens):
         flat_list = [item for row in tokens for item in row]
         return list(set(flat_list))

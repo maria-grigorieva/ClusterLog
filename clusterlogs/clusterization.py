@@ -14,7 +14,7 @@ CLUSTERING_ACCURACY = 0.8
 
 class Clustering:
 
-    def __init__(self, df, groups, tokens, vectors, cpu_number, method='dbscan', threshold=5000):
+    def __init__(self, df, groups, tokens, vectors, cpu_number, method='dbscan', threshold=50):
         self.groups = groups
         self.df = df
         self.threshold = threshold

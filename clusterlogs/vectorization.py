@@ -2,6 +2,7 @@ from gensim.models import Word2Vec
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 import numpy as np
 from .pipeline import ml_clustering
+import math
 
 class Vector(ml_clustering):
 
@@ -68,7 +69,7 @@ class Vector(ml_clustering):
         return w2c
 
 
-    def sent2vec(self):
+    def vectorize_messages(self):
         """
         Calculates mathematical average of the word vector representations
         of all the words in each sentence
@@ -79,4 +80,19 @@ class Vector(ml_clustering):
             sent_vec = np.average([self.word2vec[w] if w in self.word2vec else np.zeros((self.w2v_size,), dtype=np.float32)
                                    for w in sent], 0)
             sent2vec.append(np.zeros((self.w2v_size,), dtype=np.float32) if np.isnan(np.sum(sent_vec)) else sent_vec)
-        return np.array(sent2vec)
+        self.sent2vec = np.array(sent2vec)
+
+
+    @staticmethod
+    def detect_embedding_size(vocab):
+        """
+        Automatic detection of word2vec embedding vector size,
+        based on the length of vocabulary.
+        Max embedding size = 300
+        :return:
+        """
+        print('Vocabulary size = {}'.format(len(vocab)))
+        embedding_size = round(math.sqrt(len(vocab)))
+        if embedding_size >= 300:
+            embedding_size = 300
+        return embedding_size
