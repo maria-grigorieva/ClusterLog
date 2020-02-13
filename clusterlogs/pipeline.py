@@ -1,4 +1,5 @@
 from time import time
+import numpy as np
 import multiprocessing
 import pandas as pd
 import pprint
@@ -6,7 +7,8 @@ from string import punctuation
 from .data_preparation import Regex
 from .validation import Output
 from .tokenization import Tokens
-from .clusterization import Clustering
+from .ml_clusterization import MLClustering
+from .matching_clusterization import SClustering
 from .tfidf import TermsAnalysis
 
 
@@ -32,6 +34,8 @@ CLUSTERING_DEFAULTS = {"w2v_size": 300,
 
 
 class ml_clustering(object):
+
+    CLUSTERING_THRESHOLD = 5000
 
 
     def __init__(self, df, target, cluster_settings=None, model_name='word2vec.model', mode='create'):
@@ -64,24 +68,26 @@ class ml_clustering(object):
         Chain of methods, providing data preparation, vectorization and clusterization
         :return:
         """
-        return self.data_preparation() \
-            .tokenization() \
-            .group_equals() \
-            .tokens_vectorization() \
-            .sentence_vectorization() \
-            .clusterization()
+        self.tokenization()
+        self.group_equals()
+        if self.groups.shape[0] <= self.CLUSTERING_THRESHOLD:
+            self.matching_clusterization()
+        else:
+            self.tokens_vectorization()
+            self.sentence_vectorization()
+            self.ml_clusterization()
 
 
-    @safe_run
-    def data_preparation(self):
-        """
-        Cleaning log messages from unnucessary substrings and tokenization
-        :return:
-        """
-        #self.preprocessed = Regex(self.df[self.target].values)
-        #self.df['cleaned'] = self.preprocessed.process()
-        print('Data Preparation finished')
-        return self
+    # @safe_run
+    # def data_preparation(self):
+    #     """
+    #     Cleaning log messages from unnucessary substrings and tokenization
+    #     :return:
+    #     """
+    #     #self.preprocessed = Regex(self.df[self.target].values)
+    #     #self.df['cleaned'] = self.preprocessed.process()
+    #     print('Data Preparation finished')
+    #     return self
 
 
 
@@ -159,12 +165,16 @@ class ml_clustering(object):
         return self
 
 
-    @safe_run
-    def clusterization(self):
+    def matching_clusterization(self):
+        clusters = SClustering(self.groups, self.tokens)
+        self.result = clusters.matching_clusterization()
 
-        self.clusters = Clustering(self.df, self.groups, self.tokens, self.vectors, self.cpu_number)
-        self.clusters.process()
-        return self
+
+    @safe_run
+    def ml_clusterization(self):
+
+        self.clusters = MLClustering(self.df, self.groups, self.tokens, self.vectors, self.cpu_number)
+        self.result = self.clusters.process()
 
 
     def in_cluster(self, groups, cluster_label):
@@ -192,6 +202,14 @@ class ml_clustering(object):
                 pprint.pprint(garbage)
                 df.drop([row.Index], axis=0, inplace=True)
         return garbage
+
+
+    @staticmethod
+    def split_clusters(df, column, threshold=100):
+        if np.max(df[column].values) < threshold:
+            return df, None
+        else:
+            return df[df[column] >= threshold], df[df[column] < threshold]
 
 
 

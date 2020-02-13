@@ -106,7 +106,7 @@ class TermsAnalysis:
             x = []
             for k, v in row.items():
                 if v >= stats[i]:
-                    x.append('(*)')
+                    x.append('｟*｠')
                 else:
                     x.append(k)
             new_arr.append(x)
