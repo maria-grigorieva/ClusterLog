@@ -7,6 +7,7 @@ from .data_preparation import Regex
 from .validation import Output
 from .tokenization import Tokens
 from .clusterization import Clustering
+from .tfidf import TermsAnalysis
 
 
 def safe_run(method):
@@ -77,8 +78,8 @@ class ml_clustering(object):
         Cleaning log messages from unnucessary substrings and tokenization
         :return:
         """
-        self.preprocessed = Regex(self.df[self.target].values)
-        self.df['cleaned'] = self.preprocessed.process()
+        #self.preprocessed = Regex(self.df[self.target].values)
+        #self.df['cleaned'] = self.preprocessed.process()
         print('Data Preparation finished')
         return self
 
@@ -90,11 +91,15 @@ class ml_clustering(object):
         Tokenization of a list of error messages.
         :return:
         """
-        self.tokens = Tokens(self.df['cleaned'].values)
+        #self.tokens = Tokens(self.df['cleaned'].values)
+        self.tokens = Tokens(self.df[self.target].values)
         self.tokens.process()
         self.df['sequence'] = self.tokens.tokenized_cluster
         self.df['tokenized_pattern'] = self.tokens.tokenized_pattern
-        self.df['cleaned'] = self.tokens.patterns
+        self.tfidf = TermsAnalysis(self.tokens.tokenized_pattern)
+        cleaned_tokens = self.tfidf.process()
+        self.df['cleaned'] = self.tokens.detokenize(cleaned_tokens)
+        #self.df['cleaned'] = self.tokens.patterns
         print('Tokenization finished')
         return self
 
