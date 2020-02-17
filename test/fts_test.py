@@ -12,6 +12,8 @@ def main():
     pprint.pprint(cluster.timings)
     pprint.pprint(cluster.result)
 
+
+
     # pprint.pprint(cluster.in_cluster(cluster.clusters.result, 80))
     # pprint.pprint(cluster.clusters.result.sort_values(by=['cluster_size'],ascending=False)['pattern'].values)
     #

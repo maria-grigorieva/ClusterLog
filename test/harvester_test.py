@@ -1,7 +1,7 @@
 import pandas as pd
 import sys
 import pprint
-from clusterlogs import pipeline, cluster_output
+from clusterlogs import pipeline
 
 def main():
     df = pd.read_csv('../samples/harvester_errors24.csv', sep=';')
@@ -10,7 +10,7 @@ def main():
     cluster = pipeline.ml_clustering(df, target, mode='create', model_name='harvester_test.model')
     cluster.process()
 
-    pprint.pprint(cluster.results)
+    pprint.pprint(cluster.result)
 
     # output = cluster.clustered_output(mode)
     # stats = cluster.statistics(output_mode='dict')

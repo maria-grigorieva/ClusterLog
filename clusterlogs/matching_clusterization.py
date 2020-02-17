@@ -4,7 +4,7 @@ import editdistance
 from .tokenization import Tokens
 
 
-CLUSTERING_ACCURACY = 0.7
+CLUSTERING_ACCURACY = 0.8
 
 class SClustering:
 
