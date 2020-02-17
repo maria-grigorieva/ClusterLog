@@ -101,7 +101,7 @@ class TermsAnalysis:
             mean = np.mean(all_vals)
             std = np.std(all_vals)
             top = mean + std
-            print(row)
+            # print(row)
             x = []
             for k, v in row.items():
                 if v < top:
@@ -109,5 +109,5 @@ class TermsAnalysis:
                 else:
                     x.append('｟*｠')
             new_arr.append(x)
-            print(x)
+            # print(x)
         return new_arr
