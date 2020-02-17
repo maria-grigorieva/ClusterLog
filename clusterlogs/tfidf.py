@@ -13,8 +13,8 @@ class TermsAnalysis:
 
         f_matrix = self.create_frequency_matrix(self.tokenized)
         tf_matrix = self.create_tf_matrix(f_matrix)
-        dpw = self.create_documents_per_words(f_matrix)
-        idf_matrix = self.create_idf_matrix(f_matrix, dpw, len(self.tokenized))
+        dpw = self.create_documents_per_words(tf_matrix)
+        idf_matrix = self.create_idf_matrix(tf_matrix, dpw, len(self.tokenized))
         tf_idf = self.create_tf_idf_matrix(tf_matrix, idf_matrix)
         return self.remove_unnecessary(self.tokenized, tf_idf)
 

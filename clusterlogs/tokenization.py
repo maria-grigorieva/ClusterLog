@@ -7,7 +7,7 @@ from itertools import groupby
 class Tokens(object):
 
     TOKENIZER_CLUSTER = Tokenizer("conservative", spacer_annotate=False, preserve_placeholders=True)
-    TOKENIZER_PATTERN = Tokenizer("aggressive", spacer_annotate=True, preserve_placeholders=True)
+    TOKENIZER_PATTERN = Tokenizer("conservative", spacer_annotate=True, preserve_placeholders=True)
     #TOKENIZER_PATTERN = Tokenizer("conservative", spacer_annotate=True, preserve_placeholders=True)
 
     def __init__(self, messages):

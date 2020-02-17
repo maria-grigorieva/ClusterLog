@@ -106,12 +106,14 @@ class MLClustering:
 
 
     def gb_regroup(self, gb):
-        common_pattern = self.sequence_matcher(gb['tokenized_pattern'].values)
+        tokenized_pattern = self.sequence_matcher(gb['tokenized_pattern'].values)
+        common_pattern = Tokens.detokenize_row(Tokens.TOKENIZER_PATTERN, tokenized_pattern)
         sequence = self.tokens.tokenize_string(self.tokens.TOKENIZER_PATTERN, common_pattern)
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
         return {'pattern': common_pattern,
                 'sequence': sequence,
+                'tokenized_pattern': tokenized_pattern,
                 'indices': indices,
                 'cluster_size': size}
 
@@ -124,7 +126,7 @@ class MLClustering:
                 m = [pattern[m.a:m.a + m.size] for m
                           in matches.get_matching_blocks() if m.size > 0]
                 pattern = [val for sublist in m for val in sublist]
-            return Tokens.detokenize_row(Tokens.TOKENIZER_PATTERN, pattern)
+            return pattern
         else:
-            return Tokens.detokenize_row(Tokens.TOKENIZER_PATTERN, sequences[0])
+            return sequences[0]
 
