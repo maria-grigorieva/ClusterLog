@@ -12,6 +12,8 @@ def main():
     pprint.pprint(cluster.timings)
     pprint.pprint(cluster.result)
 
+    pprint.pprint(cluster.result['pattern'].values)
+
 
 
     # pprint.pprint(cluster.in_cluster(cluster.clusters.result, 80))

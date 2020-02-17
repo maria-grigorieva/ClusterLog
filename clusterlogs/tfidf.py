@@ -16,7 +16,7 @@ class TermsAnalysis:
         dpw = self.create_documents_per_words(f_matrix)
         idf_matrix = self.create_idf_matrix(f_matrix, dpw, len(self.tokenized))
         tf_idf = self.create_tf_idf_matrix(tf_matrix, idf_matrix)
-        return self.remove_unnecessary(tf_idf)
+        return self.remove_unnecessary(self.tokenized, tf_idf)
 
 
 
@@ -94,20 +94,11 @@ class TermsAnalysis:
         return tf_idf_matrix
 
 
-    def remove_unnecessary(self, tf_idf):
+    def remove_unnecessary(self, tokenized, tf_idf):
         new_arr = []
-        for i, row in enumerate(tf_idf):
-            all_vals = [v for k, v in row.items()]
-            mean = np.mean(all_vals)
-            std = np.std(all_vals)
-            top = mean + std
-            # print(row)
-            x = []
-            for k, v in row.items():
-                if v < top:
-                    x.append(k)
-                else:
-                    x.append('｟*｠')
-            new_arr.append(x)
-            # print(x)
+        for i, row in enumerate(tokenized):
+            weights = [tf_idf[i][token] for token in row]
+            top = np.mean(weights) + np.std(weights)
+            new_arr.append([v if weights[x] < top else '｟*｠' for x,v in enumerate(row)])
+            # print([v if weights[x] < top else '｟*｠' for x,v in enumerate(row)])
         return new_arr

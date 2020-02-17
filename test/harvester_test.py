@@ -7,7 +7,7 @@ def main():
     df = pd.read_csv('../samples/harvester_errors24.csv', sep=';')
     target = 'message'
     mode = 'INDEX'
-    cluster = pipeline.ml_clustering(df, target, mode='create', model_name='harvester_test.model')
+    cluster = pipeline.ml_clustering(df.head(1000), target, mode='create', model_name='harvester_test.model')
     cluster.process()
 
     pprint.pprint(cluster.result)
