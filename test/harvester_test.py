@@ -7,7 +7,7 @@ def main():
     df = pd.read_csv('../samples/harvester_errors24.csv', sep=';')
     target = 'message'
     mode = 'INDEX'
-    cluster = pipeline.Chain(df, target, mode='create', model_name='harvester_test.model',matching_accuracy=0.7)
+    cluster = pipeline.Chain(df, target, mode='create', model_name='../models/harvester.model',matching_accuracy=0.7)
     cluster.process()
 
     pprint.pprint(cluster.result)

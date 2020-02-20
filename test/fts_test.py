@@ -4,9 +4,9 @@ import pprint
 from clusterlogs import pipeline
 
 def main():
-    df = pd.read_csv('../fts_10K.csv')
+    df = pd.read_csv('../samples/fts_10K.csv')
     target = 'message'
-    cluster = pipeline.Chain(df, target, model_name='fts.model', mode='process')
+    cluster = pipeline.Chain(df, target, model_name='../models/fts.model', mode='process')
     cluster.process()
 
     pprint.pprint(cluster.timings)
