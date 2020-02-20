@@ -22,9 +22,11 @@ class SClustering:
         :return:
         """
         result = []
-        self.reclustering(self.groups.copy(deep=True), result, accuracy)
-
-        self.result = pd.DataFrame(result)
+        if self.groups.shape[0] <= 100:
+            self.result = self.groups
+        else:
+            self.reclustering(self.groups.copy(deep=True), result, accuracy)
+            self.result = pd.DataFrame(result)
         print('Postprocessed with {} clusters'.format(self.result.shape[0]))
         return self.result.sort_values(by=['cluster_size'], ascending=False)
 

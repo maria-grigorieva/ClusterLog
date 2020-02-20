@@ -1,10 +1,10 @@
 from gensim.models import Word2Vec
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 import numpy as np
-from .pipeline import ml_clustering
+from .pipeline import Chain
 import math
 
-class Vector(ml_clustering):
+class Vector(Chain):
 
     def __init__(self, tokenized, w2v_size, w2v_window, cpu_number, model_name):
         self.word2vec = None

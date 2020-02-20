@@ -4,7 +4,6 @@ import multiprocessing
 import pandas as pd
 import pprint
 from string import punctuation
-from .data_preparation import Regex
 from .validation import Output
 from .tokenization import Tokens
 from .ml_clusterization import MLClustering
@@ -33,12 +32,12 @@ CLUSTERING_DEFAULTS = {"w2v_size": 300,
                        "min_samples": 1}
 
 
-class ml_clustering(object):
+class Chain(object):
 
     CLUSTERING_THRESHOLD = 5000
 
-
-    def __init__(self, df, target, cluster_settings=None, model_name='word2vec.model', mode='create'):
+    def __init__(self, df, target, cluster_settings=None, model_name='word2vec.model', mode='create',
+                 threshold=CLUSTERING_THRESHOLD, matching_accuracy=0.8):
         self.df = df
         self.target = target
         self.set_cluster_settings(cluster_settings or CLUSTERING_DEFAULTS)
@@ -46,7 +45,8 @@ class ml_clustering(object):
         self.timings = {}
         self.model_name = model_name
         self.mode = mode
-
+        self.threshold = threshold
+        self.matching_accuracy = matching_accuracy
 
 
     @staticmethod
@@ -71,24 +71,11 @@ class ml_clustering(object):
         self.tokenization()
         self.group_equals()
         if self.groups.shape[0] <= self.CLUSTERING_THRESHOLD:
-            self.matching_clusterization()
+            self.matching_clusterization(accuracy=self.matching_accuracy)
         else:
             self.tokens_vectorization()
             self.sentence_vectorization()
             self.ml_clusterization()
-
-
-    # @safe_run
-    # def data_preparation(self):
-    #     """
-    #     Cleaning log messages from unnucessary substrings and tokenization
-    #     :return:
-    #     """
-    #     #self.preprocessed = Regex(self.df[self.target].values)
-    #     #self.df['cleaned'] = self.preprocessed.process()
-    #     print('Data Preparation finished')
-    #     return self
-
 
 
     @safe_run
@@ -97,7 +84,6 @@ class ml_clustering(object):
         Tokenization of a list of error messages.
         :return:
         """
-        #self.tokens = Tokens(self.df['cleaned'].values)
         self.tokens = Tokens(self.df[self.target].values)
         self.tokens.process()
         self.df['sequence'] = self.tokens.tokenized_cluster
@@ -105,9 +91,7 @@ class ml_clustering(object):
         self.tfidf = TermsAnalysis(self.tokens.tokenized_pattern)
         cleaned_tokens = self.tfidf.process()
         self.df['cleaned'] = self.tokens.detokenize(cleaned_tokens)
-        #self.df['cleaned'] = self.tokens.patterns
         print('Tokenization finished')
-        return self
 
 
     @safe_run
@@ -121,12 +105,12 @@ class ml_clustering(object):
                                                               ),
                                                               'tokenized_pattern': self.tokens.tokenize_string(
                                                                   self.tokens.TOKENIZER_PATTERN, gr['cleaned'].values[0]
-                                                              ),}]))
+                                                              ),
+                                                               'cluster_size': len(gr.index.values.tolist())}]))
         self.groups.reset_index(drop=True, inplace=True)
 
         print('Found {} equal groups'.format(self.groups.shape[0]))
 
-        return self
 
 
     @safe_run
@@ -150,7 +134,7 @@ class ml_clustering(object):
         if self.mode == 'process':
             self.vectors.load_word2vec_model()
         print('Vectorization of tokens finished')
-        return self
+
 
 
     @safe_run
@@ -165,9 +149,9 @@ class ml_clustering(object):
         return self
 
 
-    def matching_clusterization(self):
+    def matching_clusterization(self, accuracy):
         clusters = SClustering(self.groups, self.tokens)
-        self.result = clusters.matching_clusterization()
+        self.result = clusters.matching_clusterization(accuracy)
 
 
     @safe_run

@@ -34,8 +34,8 @@ def main(argv):
     print('Log file contains {} lines'.format(len(messages)))
 
     # Clean messages
-   # messages_cleaned = [re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '*', item) for item in messages]
-    messages_cleaned = cleaning(messages)
+    messages_cleaned = [re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '*', item) for item in messages]
+    #messages_cleaned = cleaning(messages)
 
     # Tokenized cleaned messages
     tokenized = tokenization(messages_cleaned)
@@ -58,7 +58,6 @@ def main(argv):
 def tokenization(messages):
     tokenized = []
     for line in messages:
-        #tokens, features = Tokenizer("conservative", spacer_annotate=True).tokenize(line)
         tokens, features = Tokenizer("conservative",
                                      spacer_annotate=False,
                                      preserve_placeholders=True)\
@@ -67,14 +66,14 @@ def tokenization(messages):
     return tokenized
 
 
-def cleaning(messages):
-    messages_cleaned = [0] * len(messages)
-    for idx, item in enumerate(messages):
-        item = re.sub(r'([ ])\1+', r'\1', item)
-        item = re.sub(r'([* ])\1+', r'\1', item)
-        item = re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '｟*｠', item)
-        messages_cleaned[idx] = item
-    return messages_cleaned
+# def cleaning(messages):
+#     messages_cleaned = [0] * len(messages)
+#     for idx, item in enumerate(messages):
+#         item = re.sub(r'([ ])\1+', r'\1', item)
+#         item = re.sub(r'([* ])\1+', r'\1', item)
+#         item = re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', '｟*｠', item)
+#         messages_cleaned[idx] = item
+#     return messages_cleaned
 
 
 def remove_neighboring_duplicates(tokenized):
