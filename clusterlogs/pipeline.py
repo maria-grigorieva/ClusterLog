@@ -90,7 +90,7 @@ class Chain(object):
         self.tokens.process()
         self.df['sequence'] = self.tokens.tokenized_cluster
         self.df['tokenized_pattern'] = self.tokens.tokenized_pattern
-        self.tfidf = TermsAnalysis(self.tokens.tokenized_pattern)
+        self.tfidf = TermsAnalysis(self.tokens.tokenized_cluster, self.tokens.tokenized_pattern)
         cleaned_tokens = self.tfidf.process()
         self.df['cleaned'] = self.tokens.detokenize(cleaned_tokens)
         print('Tokenization finished')

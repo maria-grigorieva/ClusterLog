@@ -19,9 +19,9 @@ class Tokens(object):
         """
         :return:
         """
-        self.tokenized_cluster = self.clean_tokens(self.pyonmttok(Tokens.TOKENIZER_CLUSTER, self.messages))
+        #self.tokenized_cluster = self.clean_tokens(self.pyonmttok(Tokens.TOKENIZER_CLUSTER, self.messages))
         #self.tokenized_pattern = self.remove_neighboring_duplicates(self.pyonmttok(Tokens.TOKENIZER_PATTERN, self.messages))
-        #self.tokenized_cluster = self.pyonmttok(Tokens.TOKENIZER_CLUSTER, self.messages)
+        self.tokenized_cluster = self.pyonmttok(Tokens.TOKENIZER_CLUSTER, self.messages)
         self.tokenized_pattern = self.pyonmttok(Tokens.TOKENIZER_PATTERN, self.messages)
 
         self.vocabulary_cluster = Tokens.get_vocabulary(self.tokenized_cluster)

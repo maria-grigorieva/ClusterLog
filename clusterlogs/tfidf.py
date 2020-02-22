@@ -9,15 +9,16 @@ from nltk.corpus import words
 
 class TermsAnalysis:
 
-    def __init__(self, tokenized):
+    def __init__(self, tokenized_cluster, tokenized_pattern):
 
-        self.tokenized = tokenized
+        self.tokenized_cluster = tokenized_cluster
+        self.tokenized_pattern = tokenized_pattern
 
 
     def process(self):
 
-        dct = Dictionary(self.tokenized)
-        corpus = [dct.doc2bow(line) for line in self.tokenized]
+        dct = Dictionary(self.tokenized_cluster)
+        corpus = [dct.doc2bow(line) for line in self.tokenized_cluster]
         tfidf = TfidfModel(corpus)
         corpus_tfidf = tfidf[corpus]
         d = {dct.get(id): value for doc in corpus_tfidf for id, value in doc}
@@ -27,10 +28,10 @@ class TermsAnalysis:
         top = np.sort(unique_weights)[-percentile_10:][0]
 
         new_arr = []
-        for row in self.tokenized:
-            new_arr.append([item if ((item in d and d[item] <= top) or (item in punctuation) or (item not in d)
-                                     or (item in set(stopwords.words('english') or (item.lower() in words.words()))))
-                            else '｟*｠' for item in row])
+        for i,row in enumerate(self.tokenized_cluster):
+            new_arr.append([self.tokenized_pattern[i][j] if ((item in d and d[item] <= top) or (item in punctuation) or (item not in d)
+                                     or (item.lower() in set(stopwords.words('english') or (item.lower() in words.words('english')))))
+                            else '｟*｠' for j,item in enumerate(row)])
         return new_arr
 
         # f_matrix = self.create_frequency_matrix(self.tokenized)
@@ -129,3 +130,19 @@ class TermsAnalysis:
             print([v if weights[x] < top or v in punctuation else '｟*｠' for x,v in enumerate(row)])
             # print([v if weights[x] < top else '｟*｠' for x,v in enumerate(row)])
         return new_arr
+
+
+    # def clean_tokens(self, tokenized):
+    #     """
+    #     Clean tokens from english stop words, numbers and punctuation
+    #     :return:
+    #     """
+    #     stop = stopwords.words('english') + list(punctuation) + ["``", "''"] + words.words('english')
+    #     result = []
+    #     for row in tokenized:
+    #         tokenized = []
+    #         for i in row:
+    #             if i.lower() not in stop:
+    #                 tokenized.append(i)
+    #         result.append(tokenized)
+    #     return result
