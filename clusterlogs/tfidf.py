@@ -1,5 +1,10 @@
 import math
 import numpy as np
+from string import punctuation
+from nltk.corpus import stopwords
+from gensim.models import TfidfModel
+from gensim.corpora import Dictionary
+from nltk.corpus import words
 
 
 class TermsAnalysis:
@@ -11,12 +16,29 @@ class TermsAnalysis:
 
     def process(self):
 
-        f_matrix = self.create_frequency_matrix(self.tokenized)
-        tf_matrix = self.create_tf_matrix(f_matrix)
-        dpw = self.create_documents_per_words(tf_matrix)
-        idf_matrix = self.create_idf_matrix(tf_matrix, dpw, len(self.tokenized))
-        tf_idf = self.create_tf_idf_matrix(tf_matrix, idf_matrix)
-        return self.remove_unnecessary(self.tokenized, tf_idf)
+        dct = Dictionary(self.tokenized)
+        corpus = [dct.doc2bow(line) for line in self.tokenized]
+        tfidf = TfidfModel(corpus)
+        corpus_tfidf = tfidf[corpus]
+        d = {dct.get(id): value for doc in corpus_tfidf for id, value in doc}
+        weights = [value for doc in corpus_tfidf for id, value in doc]
+        unique_weights = np.unique(weights)
+        percentile_10 = round(len(unique_weights)*0.02)
+        top = np.sort(unique_weights)[-percentile_10:][0]
+
+        new_arr = []
+        for row in self.tokenized:
+            new_arr.append([item if ((item in d and d[item] <= top) or (item in punctuation) or (item not in d)
+                                     or (item in set(stopwords.words('english') or (item.lower() in words.words()))))
+                            else '｟*｠' for item in row])
+        return new_arr
+
+        # f_matrix = self.create_frequency_matrix(self.tokenized)
+        # tf_matrix = self.create_tf_matrix(f_matrix)
+        # dpw = self.create_documents_per_words(tf_matrix)
+        # idf_matrix = self.create_idf_matrix(tf_matrix, dpw, len(self.tokenized))
+        # tf_idf = self.create_tf_idf_matrix(tf_matrix, idf_matrix)
+        # return self.remove_unnecessary(self.tokenized, tf_idf)
 
 
 
@@ -97,8 +119,13 @@ class TermsAnalysis:
     def remove_unnecessary(self, tokenized, tf_idf):
         new_arr = []
         for i, row in enumerate(tokenized):
+            print(row)
             weights = [tf_idf[i][token] for token in row]
+            print(weights)
             top = np.mean(weights) + np.std(weights)
-            new_arr.append([v if weights[x] < top else '｟*｠' for x,v in enumerate(row)])
+            stopset = set(stopwords.words('english'))
+            new_arr.append([v if weights[x] < top or v in punctuation or v in stopset
+                            else '｟*｠' for x,v in enumerate(row)])
+            print([v if weights[x] < top or v in punctuation else '｟*｠' for x,v in enumerate(row)])
             # print([v if weights[x] < top else '｟*｠' for x,v in enumerate(row)])
         return new_arr

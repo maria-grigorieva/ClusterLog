@@ -35,9 +35,10 @@ CLUSTERING_DEFAULTS = {"w2v_size": 300,
 class Chain(object):
 
     CLUSTERING_THRESHOLD = 5000
+    MATCHING_ACCURACY = 0.8
 
     def __init__(self, df, target, cluster_settings=None, model_name='word2vec.model', mode='create',
-                 threshold=CLUSTERING_THRESHOLD, matching_accuracy=0.8):
+                 threshold=CLUSTERING_THRESHOLD, matching_accuracy=MATCHING_ACCURACY):
         self.df = df
         self.target = target
         self.set_cluster_settings(cluster_settings or CLUSTERING_DEFAULTS)
@@ -71,11 +72,12 @@ class Chain(object):
         self.tokenization()
         self.group_equals()
         if self.groups.shape[0] <= self.CLUSTERING_THRESHOLD:
-            self.matching_clusterization(accuracy=self.matching_accuracy)
+            self.matching_clusterization(self.groups)
         else:
             self.tokens_vectorization()
             self.sentence_vectorization()
             self.ml_clusterization()
+            self.matching_clusterization(self.result)
 
 
     @safe_run
@@ -101,7 +103,9 @@ class Chain(object):
                                                 pd.DataFrame([{'indices': gr.index.values.tolist(),
                                                               'pattern': gr['cleaned'].values[0],
                                                               'sequence': self.tokens.tokenize_string(
-                                                                  self.tokens.TOKENIZER_CLUSTER, gr['cleaned'].values[0]
+                                                                  self.tokens.TOKENIZER_CLUSTER,
+                                                                  gr['cleaned'].values[0],
+                                                                  True
                                                               ),
                                                               'tokenized_pattern': self.tokens.tokenize_string(
                                                                   self.tokens.TOKENIZER_PATTERN, gr['cleaned'].values[0]
@@ -149,9 +153,11 @@ class Chain(object):
         return self
 
 
-    def matching_clusterization(self, accuracy):
-        clusters = SClustering(self.groups, self.tokens)
-        self.result = clusters.matching_clusterization(accuracy)
+    @safe_run
+    def matching_clusterization(self, groups):
+        print('Matching Clusterization!')
+        clusters = SClustering(groups, self.tokens, self.matching_accuracy)
+        self.result = clusters.matching_clusterization()
 
 
     @safe_run

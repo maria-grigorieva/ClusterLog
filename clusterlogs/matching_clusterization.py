@@ -3,18 +3,15 @@ import difflib
 import editdistance
 from .tokenization import Tokens
 
-
-CLUSTERING_ACCURACY = 0.8
-
 class SClustering:
 
-    def __init__(self, groups, tokens):
+    def __init__(self, groups, tokens, accuracy):
         self.groups = groups
         self.tokens = tokens
+        self.accuracy = accuracy
 
 
-
-    def matching_clusterization(self, accuracy=CLUSTERING_ACCURACY):
+    def matching_clusterization(self):
         """
         Clusterization messages using sequence matching
         :param df:
@@ -22,17 +19,14 @@ class SClustering:
         :return:
         """
         result = []
-        if self.groups.shape[0] <= 100:
-            self.result = self.groups
-        else:
-            self.reclustering(self.groups.copy(deep=True), result, accuracy)
-            self.result = pd.DataFrame(result)
+        self.reclustering(self.groups.copy(deep=True), result)
+        self.result = pd.DataFrame(result)
         print('Postprocessed with {} clusters'.format(self.result.shape[0]))
         return self.result.sort_values(by=['cluster_size'], ascending=False)
 
 
 
-    def reclustering(self, df, result, accuracy):
+    def reclustering(self, df, result):
         """
         Clusterization of the groups:
         - take the 1st message (pattern) and compare if with others
@@ -45,8 +39,8 @@ class SClustering:
         :param accuracy:
         :return:
         """
-        df['ratio'] = self.levenshtein_similarity(df['tokenized_pattern'].values)
-        filtered = df[(df['ratio'] >= accuracy)]
+        df['ratio'] = self.levenshtein_similarity(df['sequence'].values)
+        filtered = df[(df['ratio'] >= self.accuracy)]
         pattern = self.sequence_matcher(filtered['tokenized_pattern'].values)
         indices = [item for sublist in filtered['indices'].values for item in sublist]
         result.append({'pattern': pattern,
@@ -54,19 +48,7 @@ class SClustering:
                        'cluster_size': len(indices)})
         df.drop(filtered.index, axis=0, inplace=True)
         while df.shape[0] > 0:
-            self.reclustering(df, result, accuracy)
-
-
-
-    def gb_regroup(self, gb):
-        common_pattern = self.sequence_matcher(gb['tokenized_pattern'].values)
-        sequence = self.tokens.tokenize_string(self.tokens.TOKENIZER_PATTERN, common_pattern)
-        indices = [i for sublist in gb['indices'].values for i in sublist]
-        size = len(indices)
-        return {'pattern': common_pattern,
-                'sequence': sequence,
-                'indices': indices,
-                'cluster_size': size}
+            self.reclustering(df, result)
 
 
 

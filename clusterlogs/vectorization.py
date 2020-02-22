@@ -37,6 +37,7 @@ class Vector(Chain):
                                  workers=self.cpu_number,
                                  iter=iterations)
 
+
         self.word2vec.save(self.model_name)
 
 

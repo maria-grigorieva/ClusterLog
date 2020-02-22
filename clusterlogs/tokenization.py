@@ -20,7 +20,10 @@ class Tokens(object):
         :return:
         """
         self.tokenized_cluster = self.clean_tokens(self.pyonmttok(Tokens.TOKENIZER_CLUSTER, self.messages))
-        self.tokenized_pattern = self.remove_neighboring_duplicates(self.pyonmttok(Tokens.TOKENIZER_PATTERN, self.messages))
+        #self.tokenized_pattern = self.remove_neighboring_duplicates(self.pyonmttok(Tokens.TOKENIZER_PATTERN, self.messages))
+        #self.tokenized_cluster = self.pyonmttok(Tokens.TOKENIZER_CLUSTER, self.messages)
+        self.tokenized_pattern = self.pyonmttok(Tokens.TOKENIZER_PATTERN, self.messages)
+
         self.vocabulary_cluster = Tokens.get_vocabulary(self.tokenized_cluster)
         self.vocabulary_pattern = Tokens.get_vocabulary(self.tokenized_pattern)
         self.patterns = self.detokenize(self.tokenized_pattern)
@@ -32,9 +35,10 @@ class Tokens(object):
 
     @staticmethod
     def detokenize_row(tokenizer, row):
-        remove_indices = [i - 1 for i, j in enumerate(row) if j == '｟*｠' and row[i-1] == '▁']
-        row = [i for j, i in enumerate(row) if j not in remove_indices]
-        return tokenizer.detokenize([x for x, _ in groupby(row)])
+        return tokenizer.detokenize(row)
+        # remove_indices = [i - 1 for i, j in enumerate(row) if j == '｟*｠' and row[i-1] == '▁']
+        # row = [i for j, i in enumerate(row) if j not in remove_indices]
+        # return tokenizer.detokenize([x for x, _ in groupby(row)])
 
 
     def remove_neighboring_duplicates(self, tokenized):
@@ -47,9 +51,13 @@ class Tokens(object):
 
 
     @staticmethod
-    def tokenize_string(tokenizer, row):
+    def tokenize_string(tokenizer, row, clean=False):
         tokens, features = tokenizer.tokenize(row)
-        return tokens
+        if clean:
+            stop = stopwords.words('english') + list(punctuation) + ["``", "''"]
+            return [i for i in tokens if i.lower() not in stop ]
+        else:
+            return tokens
 
 
     def pyonmttok(self, tokenizer, strings):
