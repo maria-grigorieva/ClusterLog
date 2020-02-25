@@ -1,12 +1,10 @@
 import math
 import numpy as np
 from string import punctuation
-from nltk.corpus import stopwords, words
 from gensim.models import TfidfModel
 from gensim.corpora import Dictionary
-from collections import defaultdict
-import string
-
+from .tokenization import Tokens
+import warnings
 
 
 class TermsAnalysis:
@@ -16,92 +14,34 @@ class TermsAnalysis:
         self.tokens = tokens
 
 
-    def process__(self):
-
-        significant_terms = words.words() + stopwords.words('english') + ['｟*｠']
-
-        # remove words that appear only once
-        frequency = defaultdict(int)
-        for row in self.tokens.tokenized_pattern:
-            for token in row:
-                frequency[token] += 1
-
-        tokenized = [
-            [token if frequency[token] > 1 else '｟*｠' for token in row]
-            for row in self.tokens.tokenized_pattern
-            ]
-
-        dct = Dictionary(tokenized)
-        corpus = [dct.doc2bow(line) for line in tokenized]
-        tfidf = TfidfModel(corpus,normalize=True)
-        corpus_tfidf = tfidf[corpus]
-        d = {dct.get(id): value for doc in corpus_tfidf for id, value in doc}
-        weights = list(d.values())
-        # weights = [value for doc in corpus_tfidf for id, value in doc]
-        allowed_tokens = words.words() + stopwords.words('english') + list(punctuation) + ['｟*｠']
-        # d_ = {}
-        #
-        # for key, value in d.items():
-        #     if (key.replace('\u2581', '').lower() not in allowed_tokens):
-        #         d_[key] = value
-
-        #unique_weights = np.unique(weights)
-        #percentile_10 = round(len(unique_weights)*0.02)
-        #top = np.sort(unique_weights)[-percentile_10:][0]
-        top = np.mean(weights) + np.std(weights)
-        #
-        new_arr = []
-        for row in tokenized:
-            new_arr.append([item if ((item in d and d[item] <= top) or (item not in d) or (item in significant_terms))
-                            else '｟*｠' for item in row])
-
-        #
-        # new_arr = []
-        # for i, row in enumerate(self.tokens.tokenized_pattern):
-        #     weights = [d[token] if token in d else 0.00 for token in row]
-        #     weights = [i/len(row) for i in weights]
-        #     top = np.mean(weights) + np.std(weights)
-        #     new_arr.append([v if weights[x] < top or v in punctuation
-        #                     else '｟*｠' for x, v in enumerate(row)])
-            #print([v if weights[x] < top or v in punctuation else '｟*｠' for x, v in enumerate(row)])
-            # print([v if weights[x] < top else '｟*｠' for x,v in enumerate(row)])
-
-        return new_arr
-
-        # f_matrix = self.create_frequency_matrix(self.tokenized)
-        # tf_matrix = self.create_tf_matrix(f_matrix)
-        # dpw = self.create_documents_per_words(tf_matrix)
-        # idf_matrix = self.create_idf_matrix(tf_matrix, dpw, len(self.tokenized))
-        # tf_idf = self.create_tf_idf_matrix(tf_matrix, idf_matrix)
-        # return self.remove_unnecessary(self.tokenized, tf_idf)
-
-
     def process(self):
 
-        frequency = defaultdict(int)
-        for row in self.tokens.tokenized_pattern:
-            for token in row:
-                frequency[token] += 1
-
+        # remove tokens with frequency = 1
+        frequency = Tokens.get_term_frequencies(self.tokens.tokenized_cluster)
+        print('Initial size of vocabulary: {}'.format(len(self.tokens.vocabulary_cluster)))
         tokenized = [
-            [token if frequency[token] > 1 else '｟*｠' for token in row]
-            for row in self.tokens.tokenized_pattern
-            ]
+            [token for token in row if frequency[token] > 1]
+            for row in self.tokens.tokenized_cluster]
+
+        print('Size of vocabulary after removing tokens with 1 frequency: {}'.format(len(Tokens.get_vocabulary(tokenized))))
 
         dct = Dictionary(tokenized)
         corpus = [dct.doc2bow(line) for line in tokenized]
         tfidf = TfidfModel(corpus, normalize=True)
         corpus_tfidf = tfidf[corpus]
         d = {dct.get(id): value for doc in corpus_tfidf for id, value in doc}
-        weights = list(d.values())
+        tokenized_tfidf = []
+        rows_weights = [[token[1] for token in doc] for doc in corpus_tfidf]
+        for i,row in enumerate(tokenized):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                top = np.mean(rows_weights[i]) + np.std(rows_weights[i])
+                tokenized_tfidf.append([token for token in row if d.get(token) < top or token not in d])
 
-        top = np.mean(weights) + np.std(weights)
-        new_arr = []
-        for row in tokenized:
-            new_arr.append([item if ((item in d and d[item] <= top) or (item not in d))
-                            else '｟*｠' for item in row])
+        print('Size of vocabulary after removing rare tokens: {}'.format(
+            len(Tokens.get_vocabulary(tokenized_tfidf))))
 
-        return new_arr
+        return tokenized_tfidf
 
 
     def create_frequency_matrix(self, tokenized):
@@ -207,3 +147,11 @@ class TermsAnalysis:
     #                 tokenized.append(i)
     #         result.append(tokenized)
     #     return result
+
+
+        # f_matrix = self.create_frequency_matrix(self.tokenized)
+        # tf_matrix = self.create_tf_matrix(f_matrix)
+        # dpw = self.create_documents_per_words(tf_matrix)
+        # idf_matrix = self.create_idf_matrix(tf_matrix, dpw, len(self.tokenized))
+        # tf_idf = self.create_tf_idf_matrix(tf_matrix, idf_matrix)
+        # return self.remove_unnecessary(self.tokenized, tf_idf)

@@ -31,7 +31,7 @@ def main(argv):
     print('Log file contains {} lines'.format(len(messages)))
 
     tokens = Tokens(messages)
-    tokenized = tokens.pyonmttok(Tokens.TOKENIZER_CLUSTER, messages)
+    tokenized = Tokens.clean_tokenized(tokens.pyonmttok(Tokens.TOKENIZER, messages))
     vocab = tokens.get_vocabulary(tokenized)
     print('Initial vocabulary size is {}'.format(len(vocab)))
     tfidf = TermsAnalysis(tokenized)

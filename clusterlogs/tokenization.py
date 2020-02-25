@@ -2,13 +2,13 @@ from pyonmttok import Tokenizer
 from nltk.corpus import stopwords
 from string import punctuation
 from itertools import groupby
+from collections import defaultdict
 
 
 class Tokens(object):
 
-    TOKENIZER_CLUSTER = Tokenizer("conservative", spacer_annotate=False, preserve_placeholders=True)
-    TOKENIZER_PATTERN = Tokenizer("conservative", spacer_annotate=True, preserve_placeholders=True, spacer_new=True)
-    #TOKENIZER_PATTERN = Tokenizer("conservative", spacer_annotate=True, preserve_placeholders=True)
+    TOKENIZER = Tokenizer("conservative", spacer_annotate=True, preserve_placeholders=True, spacer_new=True)
+    STOP = stopwords.words('english') + list(punctuation) + ["``", "''", u"\u2581"]
 
     def __init__(self, messages):
 
@@ -19,10 +19,8 @@ class Tokens(object):
         """
         :return:
         """
-        self.tokenized_cluster = self.clean_tokens(self.pyonmttok(Tokens.TOKENIZER_CLUSTER, self.messages))
-        #self.tokenized_pattern = self.remove_neighboring_duplicates(self.pyonmttok(Tokens.TOKENIZER_PATTERN, self.messages))
-        #self.tokenized_cluster = self.pyonmttok(Tokens.TOKENIZER_CLUSTER, self.messages)
-        self.tokenized_pattern = self.pyonmttok(Tokens.TOKENIZER_PATTERN, self.messages)
+        self.tokenized_pattern = self.pyonmttok(Tokens.TOKENIZER, self.messages)
+        self.tokenized_cluster = self.clean_tokenized(self.tokenized_pattern)
 
         self.vocabulary_cluster = Tokens.get_vocabulary(self.tokenized_cluster)
         self.vocabulary_pattern = Tokens.get_vocabulary(self.tokenized_pattern)
@@ -35,7 +33,7 @@ class Tokens(object):
 
 
     def detokenize(self, tokenized):
-        return [self.TOKENIZER_PATTERN.detokenize([x for x, _ in groupby(row)]) for row in tokenized]
+        return [self.TOKENIZER.detokenize([x for x, _ in groupby(row)]) for row in tokenized]
 
 
     @staticmethod
@@ -58,38 +56,39 @@ class Tokens(object):
     def tokenize_string(tokenizer, row, clean=False):
         tokens, features = tokenizer.tokenize(row)
         if clean:
-            stop = stopwords.words('english') + list(punctuation) + ["``", "''"]
-            return [i for i in tokens if i.lower() not in stop ]
+            return [i for i in tokens if i.lower() not in Tokens.STOP]
         else:
             return tokens
 
 
     def pyonmttok(self, tokenizer, strings):
-        tokenized = []
-        for line in strings:
-            tokens, features = tokenizer.tokenize(line)
-            tokenized.append(tokens)
-        return tokenized
+        return [tokenizer.tokenize(line)[0] for line in strings]
 
 
-
-    def clean_tokens(self, tokenized):
+    @staticmethod
+    def clean_tokenized(tokenized):
         """
         Clean tokens from english stop words, numbers and punctuation
         :return:
         """
-        stop = stopwords.words('english') + list(punctuation) + ["``", "''"]
-        result = []
-        for row in tokenized:
-            tokenized = []
-            for i in row:
-                if i.lower() not in stop:
-                    tokenized.append(i)
-            result.append(tokenized)
-        return result
+        return [[token for token in row if token.lower() not in Tokens.STOP] for row in tokenized]
+
+
+    @staticmethod
+    def clean_row(row):
+        return [token for token in row if token.lower() not in Tokens.STOP]
 
 
     @staticmethod
     def get_vocabulary(tokens):
         flat_list = [item for row in tokens for item in row]
         return list(set(flat_list))
+
+
+    @staticmethod
+    def get_term_frequencies(tokenized):
+        frequency = defaultdict(int)
+        for row in tokenized:
+            for token in row:
+                frequency[token] += 1
+        return frequency

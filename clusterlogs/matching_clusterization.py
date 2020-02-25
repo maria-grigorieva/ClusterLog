@@ -46,7 +46,7 @@ class SClustering:
         filtered = df[(df['ratio'] >= self.accuracy)]
         tokenized_pattern = self.matcher(filtered['tokenized_pattern'].values)
         indices = [item for sublist in filtered['indices'].values for item in sublist]
-        result.append({'pattern': Tokens.detokenize_row(Tokens.TOKENIZER_PATTERN, tokenized_pattern),
+        result.append({'pattern': Tokens.detokenize_row(Tokens.TOKENIZER, tokenized_pattern),
                        'indices': indices,
                        'cluster_size': len(indices)})
         df.drop(filtered.index, axis=0, inplace=True)
@@ -73,9 +73,9 @@ class SClustering:
                 m = [pattern[m.a:m.a + m.size] for m
                      in matches.get_matching_blocks() if m.size > 0]
                 pattern = [val for sublist in m for val in sublist]
-            return Tokens.detokenize_row(Tokens.TOKENIZER_PATTERN, pattern)
+            return Tokens.detokenize_row(Tokens.TOKENIZER, pattern)
         else:
-            return Tokens.detokenize_row(Tokens.TOKENIZER_PATTERN, sequences[0])
+            return Tokens.detokenize_row(Tokens.TOKENIZER, sequences[0])
 
 
 

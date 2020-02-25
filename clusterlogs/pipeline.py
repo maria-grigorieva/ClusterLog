@@ -104,18 +104,6 @@ class Chain(object):
 
         self.groups = self.df.groupby('cleaned').apply(func=self.regroup)
 
-        # self.groups = self.df.groupby('cleaned').apply(lambda gr:
-        #                                         pd.DataFrame([{'indices': gr.index.values.tolist(),
-        #                                                       'pattern': gr['cleaned'].values[0],
-        #                                                       'sequence': self.tokens.tokenize_string(
-        #                                                           self.tokens.TOKENIZER_CLUSTER,
-        #                                                           gr['cleaned'].values[0],
-        #                                                           True
-        #                                                       ),
-        #                                                       'tokenized_pattern': self.tokens.tokenize_string(
-        #                                                           self.tokens.TOKENIZER_PATTERN, gr['cleaned'].values[0]
-        #                                                       ),
-        #                                                        'cluster_size': len(gr.index.values.tolist())}]))
         self.groups.reset_index(drop=True, inplace=True)
 
         print('Found {} equal groups'.format(self.groups.shape[0]))
@@ -124,10 +112,11 @@ class Chain(object):
 
     def regroup(self, gr):
         pattern = self.matcher(gr['tokenized_pattern'].values)
+        sequence = self.matcher(gr['sequence'].values)
         return pd.DataFrame([{'indices': gr.index.values.tolist(),
                        'pattern': self.tokens.detokenize_row(
-                           self.tokens.TOKENIZER_PATTERN,pattern),
-                       'sequence': gr['cleaned'].values[0],
+                           self.tokens.TOKENIZER,pattern),
+                       'sequence': sequence,
                        'tokenized_pattern': pattern,
                        'cluster_size': len(gr.index.values.tolist())}])
 
@@ -140,18 +129,6 @@ class Chain(object):
         else:
             return lines[0]
 
-
-    def sequence_matcher(self, sequences):
-        if len(sequences) > 1:
-            pattern = sequences[0]
-            for i in range(1, len(sequences)):
-                matches = difflib.SequenceMatcher(None, pattern, sequences[i])
-                m = [pattern[m.a:m.a + m.size] for m
-                     in matches.get_matching_blocks() if m.size > 0]
-                pattern = [val for sublist in m for val in sublist]
-            return pattern
-        else:
-            return sequences[0]
 
 
     @safe_run

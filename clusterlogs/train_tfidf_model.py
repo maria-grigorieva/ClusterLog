@@ -31,7 +31,7 @@ def main(argv):
     print('Log file contains {} lines'.format(len(messages)))
 
     tokens = Tokens(messages)
-    tokenized = tokens.pyonmttok(Tokens.TOKENIZER_CLUSTER, messages)
+    tokenized = Tokens.clean_tokenized(tokens.pyonmttok(Tokens.TOKENIZER, messages))
 
     dct = Dictionary(tokenized)
     corpus = [dct.doc2bow(line) for line in tokenized]
