@@ -42,7 +42,8 @@ class SClustering:
         :param accuracy:
         :return:
         """
-        df['ratio'] = self.levenshtein_similarity(df['sequence'].values)
+        top_sequence = df['sequence'].describe().top
+        df['ratio'] = self.levenshtein_similarity(top_sequence, df['sequence'].values)
         filtered = df[(df['ratio'] >= self.accuracy)]
         tokenized_pattern = self.matcher(filtered['tokenized_pattern'].values)
         indices = [item for sublist in filtered['indices'].values for item in sublist]
@@ -79,14 +80,14 @@ class SClustering:
 
 
 
-    def levenshtein_similarity(self, rows):
+    def levenshtein_similarity(self, top, rows):
         """
         :param rows:
         :return:
         """
         if len(rows) > 1:
             return (
-                [(1 - editdistance.eval(rows[0], rows[i]) / max(len(rows[0]), len(rows[i]))) for i in
+                [(1 - editdistance.eval(top, rows[i]) / max(len(top), len(rows[i]))) for i in
                  range(0, len(rows))])
         else:
             return 1
