@@ -16,14 +16,14 @@ class TermsAnalysis:
 
     def process(self):
 
-        # remove tokens with frequency = 1
+        # remove words that appear only once
         frequency = Tokens.get_term_frequencies(self.tokens.tokenized_cluster)
         print('Initial size of vocabulary: {}'.format(len(self.tokens.vocabulary_cluster)))
         tokenized = [
             [token for token in row if frequency[token] > 1]
             for row in self.tokens.tokenized_cluster]
 
-        print('Size of vocabulary after removing tokens with 1 frequency: {}'.format(len(Tokens.get_vocabulary(tokenized))))
+        print('Size of vocabulary after removing tokens that appears only once: {}'.format(len(Tokens.get_vocabulary(tokenized))))
 
         dct = Dictionary(tokenized)
         corpus = [dct.doc2bow(line) for line in tokenized]
