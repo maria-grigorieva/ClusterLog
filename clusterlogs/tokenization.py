@@ -7,7 +7,7 @@ from itertools import groupby
 class Tokens(object):
 
     TOKENIZER_CLUSTER = Tokenizer("conservative", spacer_annotate=False, preserve_placeholders=True)
-    TOKENIZER_PATTERN = Tokenizer("conservative", spacer_annotate=True, preserve_placeholders=True)
+    TOKENIZER_PATTERN = Tokenizer("conservative", spacer_annotate=True, preserve_placeholders=True, spacer_new=True)
     #TOKENIZER_PATTERN = Tokenizer("conservative", spacer_annotate=True, preserve_placeholders=True)
 
     def __init__(self, messages):
@@ -19,14 +19,19 @@ class Tokens(object):
         """
         :return:
         """
-        #self.tokenized_cluster = self.clean_tokens(self.pyonmttok(Tokens.TOKENIZER_CLUSTER, self.messages))
+        self.tokenized_cluster = self.clean_tokens(self.pyonmttok(Tokens.TOKENIZER_CLUSTER, self.messages))
         #self.tokenized_pattern = self.remove_neighboring_duplicates(self.pyonmttok(Tokens.TOKENIZER_PATTERN, self.messages))
-        self.tokenized_cluster = self.pyonmttok(Tokens.TOKENIZER_CLUSTER, self.messages)
+        #self.tokenized_cluster = self.pyonmttok(Tokens.TOKENIZER_CLUSTER, self.messages)
         self.tokenized_pattern = self.pyonmttok(Tokens.TOKENIZER_PATTERN, self.messages)
 
         self.vocabulary_cluster = Tokens.get_vocabulary(self.tokenized_cluster)
         self.vocabulary_pattern = Tokens.get_vocabulary(self.tokenized_pattern)
         self.patterns = self.detokenize(self.tokenized_pattern)
+
+
+    @staticmethod
+    def remove_adjacent(L):
+        return [elem for i, elem in enumerate(L) if i == 0 or L[i - 1] != elem]
 
 
     def detokenize(self, tokenized):
@@ -35,10 +40,9 @@ class Tokens(object):
 
     @staticmethod
     def detokenize_row(tokenizer, row):
-        return tokenizer.detokenize(row)
-        # remove_indices = [i - 1 for i, j in enumerate(row) if j == '｟*｠' and row[i-1] == '▁']
-        # row = [i for j, i in enumerate(row) if j not in remove_indices]
-        # return tokenizer.detokenize([x for x, _ in groupby(row)])
+        remove_indices = [i - 1 for i, j in enumerate(row) if j == '｟*｠' and row[i - 1] == '▁']
+        row = [i for j, i in enumerate(row) if j not in remove_indices]
+        return tokenizer.detokenize(Tokens.remove_adjacent(row))
 
 
     def remove_neighboring_duplicates(self, tokenized):

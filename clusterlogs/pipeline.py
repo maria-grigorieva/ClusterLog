@@ -9,6 +9,9 @@ from .tokenization import Tokens
 from .ml_clusterization import MLClustering
 from .matching_clusterization import SClustering
 from .tfidf import TermsAnalysis
+import difflib
+import nltk
+from itertools import groupby
 
 
 def safe_run(method):
@@ -90,7 +93,7 @@ class Chain(object):
         self.tokens.process()
         self.df['sequence'] = self.tokens.tokenized_cluster
         self.df['tokenized_pattern'] = self.tokens.tokenized_pattern
-        self.tfidf = TermsAnalysis(self.tokens.tokenized_cluster, self.tokens.tokenized_pattern)
+        self.tfidf = TermsAnalysis(self.tokens)
         cleaned_tokens = self.tfidf.process()
         self.df['cleaned'] = self.tokens.detokenize(cleaned_tokens)
         print('Tokenization finished')
@@ -99,22 +102,56 @@ class Chain(object):
     @safe_run
     def group_equals(self):
 
-        self.groups = self.df.groupby('cleaned').apply(lambda gr:
-                                                pd.DataFrame([{'indices': gr.index.values.tolist(),
-                                                              'pattern': gr['cleaned'].values[0],
-                                                              'sequence': self.tokens.tokenize_string(
-                                                                  self.tokens.TOKENIZER_CLUSTER,
-                                                                  gr['cleaned'].values[0],
-                                                                  True
-                                                              ),
-                                                              'tokenized_pattern': self.tokens.tokenize_string(
-                                                                  self.tokens.TOKENIZER_PATTERN, gr['cleaned'].values[0]
-                                                              ),
-                                                               'cluster_size': len(gr.index.values.tolist())}]))
+        self.groups = self.df.groupby('cleaned').apply(func=self.regroup)
+
+        # self.groups = self.df.groupby('cleaned').apply(lambda gr:
+        #                                         pd.DataFrame([{'indices': gr.index.values.tolist(),
+        #                                                       'pattern': gr['cleaned'].values[0],
+        #                                                       'sequence': self.tokens.tokenize_string(
+        #                                                           self.tokens.TOKENIZER_CLUSTER,
+        #                                                           gr['cleaned'].values[0],
+        #                                                           True
+        #                                                       ),
+        #                                                       'tokenized_pattern': self.tokens.tokenize_string(
+        #                                                           self.tokens.TOKENIZER_PATTERN, gr['cleaned'].values[0]
+        #                                                       ),
+        #                                                        'cluster_size': len(gr.index.values.tolist())}]))
         self.groups.reset_index(drop=True, inplace=True)
 
         print('Found {} equal groups'.format(self.groups.shape[0]))
 
+
+
+    def regroup(self, gr):
+        pattern = self.matcher(gr['tokenized_pattern'].values)
+        return pd.DataFrame([{'indices': gr.index.values.tolist(),
+                       'pattern': self.tokens.detokenize_row(
+                           self.tokens.TOKENIZER_PATTERN,pattern),
+                       'sequence': gr['cleaned'].values[0],
+                       'tokenized_pattern': pattern,
+                       'cluster_size': len(gr.index.values.tolist())}])
+
+
+    def matcher(self, lines):
+        if len(lines) > 1:
+            fdist = nltk.FreqDist([i for l in lines for i in l])
+            x = [token if (fdist[token]/len(lines) >= 1) else '｟*｠' for token in lines[0]]
+            return [i[0] for i in groupby(x)]
+        else:
+            return lines[0]
+
+
+    def sequence_matcher(self, sequences):
+        if len(sequences) > 1:
+            pattern = sequences[0]
+            for i in range(1, len(sequences)):
+                matches = difflib.SequenceMatcher(None, pattern, sequences[i])
+                m = [pattern[m.a:m.a + m.size] for m
+                     in matches.get_matching_blocks() if m.size > 0]
+                pattern = [val for sublist in m for val in sublist]
+            return pattern
+        else:
+            return sequences[0]
 
 
     @safe_run

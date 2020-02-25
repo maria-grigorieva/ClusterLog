@@ -2,6 +2,9 @@ import pandas as pd
 import difflib
 import editdistance
 from .tokenization import Tokens
+import nltk
+from itertools import groupby
+
 
 class SClustering:
 
@@ -41,14 +44,24 @@ class SClustering:
         """
         df['ratio'] = self.levenshtein_similarity(df['sequence'].values)
         filtered = df[(df['ratio'] >= self.accuracy)]
-        pattern = self.sequence_matcher(filtered['tokenized_pattern'].values)
+        tokenized_pattern = self.matcher(filtered['tokenized_pattern'].values)
         indices = [item for sublist in filtered['indices'].values for item in sublist]
-        result.append({'pattern': pattern,
+        result.append({'pattern': Tokens.detokenize_row(Tokens.TOKENIZER_PATTERN, tokenized_pattern),
                        'indices': indices,
                        'cluster_size': len(indices)})
         df.drop(filtered.index, axis=0, inplace=True)
         while df.shape[0] > 0:
             self.reclustering(df, result)
+
+
+
+    def matcher(self, lines):
+        if len(lines) > 1:
+            fdist = nltk.FreqDist([i for l in lines for i in l])
+            x = [token if (fdist[token]/len(lines) >= 1) else '｟*｠' for token in lines[0]]
+            return [i[0] for i in groupby(x)]
+        else:
+            return lines[0]
 
 
 
