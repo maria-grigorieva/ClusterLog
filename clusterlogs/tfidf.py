@@ -5,6 +5,7 @@ from gensim.models import TfidfModel
 from gensim.corpora import Dictionary
 from .tokenization import Tokens
 import warnings
+from nltk.corpus import words
 
 
 class TermsAnalysis:
@@ -30,6 +31,8 @@ class TermsAnalysis:
         tfidf = TfidfModel(corpus, normalize=True)
         corpus_tfidf = tfidf[corpus]
         d = {dct.get(id): value for doc in corpus_tfidf for id, value in doc}
+        for item in words.words():
+            d[item] = 0.00
         tokenized_tfidf = []
         rows_weights = [[token[1] for token in doc] for doc in corpus_tfidf]
         for i,row in enumerate(tokenized):

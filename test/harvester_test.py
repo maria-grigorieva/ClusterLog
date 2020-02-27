@@ -8,10 +8,11 @@ def main():
     #df = pd.read_csv('/Users/maria/cernbox/LogsClusterization/Harvester/data_sample30days.csv', sep='\t')
     target = 'message'
     mode = 'INDEX'
-    cluster = pipeline.Chain(df.head(1000), target, mode='create', model_name='../models/harvester.model',matching_accuracy=0.6)
+    cluster = pipeline.Chain(df, target, mode='create', model_name='../models/harvester.model',matching_accuracy=0.6)
     cluster.process()
 
     pprint.pprint(cluster.result)
+    pprint.pprint(cluster.result['pattern'].values)
 
     # output = cluster.clustered_output(mode)
     # stats = cluster.statistics(output_mode='dict')
