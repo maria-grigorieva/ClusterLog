@@ -49,7 +49,8 @@ class SClustering:
         indices = [item for sublist in filtered['indices'].values for item in sublist]
         result.append({'pattern': Tokens.detokenize_row(Tokens.TOKENIZER, tokenized_pattern),
                        'indices': indices,
-                       'cluster_size': len(indices)})
+                       'cluster_size': len(indices),
+                       'sequence':tokenized_pattern})
         df.drop(filtered.index, axis=0, inplace=True)
         while df.shape[0] > 0:
             self.reclustering(df, result)
@@ -59,6 +60,7 @@ class SClustering:
     def matcher(self, lines):
         if len(lines) > 1:
             fdist = nltk.FreqDist([i for l in lines for i in l])
+            #x = [token for token in lines[0] if (fdist[token] / len(lines) >= 1)]
             x = [token if (fdist[token]/len(lines) >= 1) else '｟*｠' for token in lines[0]]
             return [i[0] for i in groupby(x)]
         else:

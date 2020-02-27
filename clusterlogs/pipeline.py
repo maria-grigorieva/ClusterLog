@@ -73,6 +73,7 @@ class Chain(object):
         :return:
         """
         self.tokenization()
+        self.tfidf()
         self.group_equals()
         if self.groups.shape[0] <= self.CLUSTERING_THRESHOLD:
             self.matching_clusterization(self.groups)
@@ -93,6 +94,10 @@ class Chain(object):
         self.tokens.process()
         self.df['sequence'] = self.tokens.tokenized_cluster
         self.df['tokenized_pattern'] = self.tokens.tokenized_pattern
+
+
+    @safe_run
+    def tfidf(self):
         self.tfidf = TermsAnalysis(self.tokens)
         cleaned_tokens = self.tfidf.process()
         self.df['cleaned'] = self.tokens.detokenize(cleaned_tokens)
@@ -125,6 +130,7 @@ class Chain(object):
         if len(lines) > 1:
             fdist = nltk.FreqDist([i for l in lines for i in l])
             x = [token if (fdist[token]/len(lines) >= 1) else '｟*｠' for token in lines[0]]
+            #x = [token for token in lines[0] if (fdist[token] / len(lines) >= 1)]
             return [i[0] for i in groupby(x)]
         else:
             return lines[0]
