@@ -32,8 +32,8 @@ class SClustering:
     def reclustering(self, df, result):
         """
         Clusterization of the groups:
-        - take the 1st message (pattern) and compare if with others
-        - take all messages, which are similar with the 1st with more than 80% and
+        - take the most frequent sequence of tokens and compare if with others
+        - take all messages, which are similar with the 1st with more than accuracy threshold and
         join them into the new separate cluster
         - remove these messages from the initial group
         - repeat these steps while group has messages
@@ -48,9 +48,10 @@ class SClustering:
         tokenized_pattern = self.matcher(filtered['tokenized_pattern'].values)
         indices = [item for sublist in filtered['indices'].values for item in sublist]
         result.append({'pattern': Tokens.detokenize_row(Tokens.TOKENIZER, tokenized_pattern),
+                       'tokenized_pattern': tokenized_pattern,
                        'indices': indices,
                        'cluster_size': len(indices),
-                       'sequence':tokenized_pattern})
+                       'sequence':top_sequence})
         df.drop(filtered.index, axis=0, inplace=True)
         while df.shape[0] > 0:
             self.reclustering(df, result)
@@ -84,6 +85,10 @@ class SClustering:
 
     def levenshtein_similarity(self, top, rows):
         """
+        Search similarities between top and all other sequences of tokens.
+        May be used for strings as well.
+        top - most frequent sequence
+        rows - all sequences
         :param rows:
         :return:
         """

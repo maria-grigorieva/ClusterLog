@@ -116,13 +116,26 @@ class Chain(object):
 
 
     def regroup(self, gr):
-        pattern = self.matcher(gr['tokenized_pattern'].values)
+        """
+        tokenized_pattern - common sequence of tokens, generated based on all tokens
+        sequence - common sequence of tokens, based on cleaned tokens
+        pattern - textual log pattern, based on all tokens
+        indices - indices of the initial dataframe, corresponding to current cluster/group of log messages
+        cluster_size - number of messages in cluster/group
+
+        The difference between sequence and tokenized_pattern is that tokenized_pattern is used for the
+        reconstruction of textual pattern (detokenization), sequence - is a set of most frequent tokens
+        and can be used only for grouping/clusterization.
+        :param gr:
+        :return:
+        """
+        tokenized_pattern = self.matcher(gr['tokenized_pattern'].values)
         sequence = self.matcher(gr['sequence'].values)
         return pd.DataFrame([{'indices': gr.index.values.tolist(),
                        'pattern': self.tokens.detokenize_row(
-                           self.tokens.TOKENIZER,pattern),
+                           self.tokens.TOKENIZER,tokenized_pattern),
                        'sequence': sequence,
-                       'tokenized_pattern': pattern,
+                       'tokenized_pattern': tokenized_pattern,
                        'cluster_size': len(gr.index.values.tolist())}])
 
 

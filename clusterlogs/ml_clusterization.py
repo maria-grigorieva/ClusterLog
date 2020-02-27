@@ -107,11 +107,11 @@ class MLClustering:
 
     def gb_regroup(self, gb):
         tokenized_pattern = self.sequence_matcher(gb['tokenized_pattern'].values)
-        common_pattern = Tokens.detokenize_row(Tokens.TOKENIZER, tokenized_pattern)
-        sequence = self.tokens.tokenize_string(self.tokens.TOKENIZER, common_pattern)
+        pattern = Tokens.detokenize_row(Tokens.TOKENIZER, tokenized_pattern)
+        sequence = Tokens.clean_row(self.tokens.tokenize_string(self.tokens.TOKENIZER, pattern))
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
-        return {'pattern': common_pattern,
+        return {'pattern': pattern,
                 'sequence': sequence,
                 'tokenized_pattern': tokenized_pattern,
                 'indices': indices,
