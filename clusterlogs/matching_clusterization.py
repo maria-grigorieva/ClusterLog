@@ -41,7 +41,7 @@ class SClustering:
         :param accuracy:
         :return:
         """
-        top_sequence = df['sequence'].describe().top
+        top_sequence = df['sequence'].apply(tuple).describe().top
         df['ratio'] = self.levenshtein_similarity(top_sequence, df['sequence'].values)
         filtered = df[(df['ratio'] >= self.accuracy)]
         tokenized_pattern = self.matcher(filtered['tokenized_pattern'].values)
