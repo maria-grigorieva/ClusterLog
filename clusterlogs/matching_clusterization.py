@@ -24,7 +24,6 @@ class SClustering:
         result = []
         self.reclustering(self.groups.copy(deep=True), result)
         self.result = pd.DataFrame(result)
-        print('Postprocessed with {} clusters'.format(self.result.shape[0]))
         return self.result.sort_values(by=['cluster_size'], ascending=False)
 
 
