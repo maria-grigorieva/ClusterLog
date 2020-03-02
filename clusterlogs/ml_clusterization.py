@@ -29,7 +29,7 @@ class MLClustering:
 
 
     def dimensionality_reduction(self):
-        n = self.vectors.detect_embedding_size(self.tokens.vocabulary_cluster)
+        n = self.vectors.detect_embedding_size(self.tokens.vocabulary_pattern)
         print('Number of dimensions is {}'.format(n))
         pca = PCA(n_components=n, svd_solver='full')
         pca.fit(self.vectors.sent2vec)

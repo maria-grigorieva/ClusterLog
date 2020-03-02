@@ -73,10 +73,14 @@ class Chain(object):
         :return:
         """
         self.tokenization(self.df[self.target].values)
-        self.df['sequence'] = self.tokens.tokenized_cluster
+        #self.df['sequence'] = self.tokens.tokenized_cluster
+        self.df['sequence'] = self.tokens.tokenized_pattern
         self.df['tokenized_pattern'] = self.tokens.tokenized_pattern
         cleaned_tokens = self.tfidf()
+        #print(np.unique(cleaned_tokens))
         self.df['cleaned'] = self.tokens.detokenize(cleaned_tokens)
+        self.df['sequence'] = cleaned_tokens
+        self.df['tokenized_pattern'] = cleaned_tokens
         self.group_equals(self.df, 'cleaned')
         if self.groups.shape[0] <= self.CLUSTERING_THRESHOLD:
             self.matching_clusterization(self.groups)
@@ -102,6 +106,7 @@ class Chain(object):
         """
         self.tokens = Tokens(messages)
         self.tokens.process()
+        print('Tokenization finished')
 
 
     @safe_run
@@ -112,7 +117,8 @@ class Chain(object):
         """
         self.tfidf = TermsAnalysis(self.tokens)
         cleaned_tokens = self.tfidf.process()
-        print('Tokenization finished')
+        #cleaned_tokens = self.tfidf.all_english_words()
+        print('Tokens TF-IDF cleaning finished')
         return cleaned_tokens
 
 
@@ -140,8 +146,9 @@ class Chain(object):
         :param gr:
         :return:
         """
-        tokenized_pattern = self.matcher(gr['tokenized_pattern'].values)
-        sequence = self.matcher(gr['sequence'].values)
+        #tokenized_pattern = self.matcher(gr['tokenized_pattern'].values)
+        sequence = self.matrix_matching(gr['sequence'].values)
+        tokenized_pattern = self.matrix_matching(gr['tokenized_pattern'].values)
         return pd.DataFrame([{'indices': gr.index.values.tolist(),
                        'pattern': self.tokens.detokenize_row(
                            self.tokens.TOKENIZER,tokenized_pattern),
@@ -160,6 +167,11 @@ class Chain(object):
         else:
             return lines[0]
 
+
+    def matrix_matching(self, lines):
+        #print(lines)
+        x = list(map(list, zip(*lines)))
+        return [tokens[0] if len(tokens) == 1 else '|'.join(tokens[:2])+'{'+str(len(tokens))+'}' for tokens in [np.unique(line) for line in x]]
 
 
     @safe_run

@@ -21,9 +21,9 @@ class Tokens(object):
         :return:
         """
         self.tokenized_pattern = self.pyonmttok(Tokens.TOKENIZER, self.messages)
-        self.tokenized_cluster = self.clean_tokenized(self.tokenized_pattern)
+        #self.tokenized_cluster = self.clean_tokenized(self.tokenized_pattern)
 
-        self.vocabulary_cluster = Tokens.get_vocabulary(self.tokenized_cluster)
+        #self.vocabulary_cluster = Tokens.get_vocabulary(self.tokenized_cluster)
         self.vocabulary_pattern = Tokens.get_vocabulary(self.tokenized_pattern)
         self.patterns = self.detokenize(self.tokenized_pattern)
 

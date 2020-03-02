@@ -4,6 +4,7 @@ import editdistance
 from .tokenization import Tokens
 import nltk
 from itertools import groupby
+import numpy as np
 
 
 class SClustering:
@@ -44,7 +45,10 @@ class SClustering:
         top_sequence = df['sequence'].apply(tuple).describe().top
         df['ratio'] = self.levenshtein_similarity(top_sequence, df['sequence'].values)
         filtered = df[(df['ratio'] >= self.accuracy)]
+        print(filtered['pattern'].values)
         tokenized_pattern = self.matcher(filtered['tokenized_pattern'].values)
+        print(Tokens.detokenize_row(Tokens.TOKENIZER, tokenized_pattern))
+        #tokenized_pattern = self.matrix_matching(filtered['tokenized_pattern'].values)
         indices = [item for sublist in filtered['indices'].values for item in sublist]
         result.append({'pattern': Tokens.detokenize_row(Tokens.TOKENIZER, tokenized_pattern),
                        'tokenized_pattern': tokenized_pattern,
@@ -66,6 +70,11 @@ class SClustering:
         else:
             return lines[0]
 
+
+    def matrix_matching(self, lines):
+        x = list(map(list, zip(*lines)))
+        return [tokens[0] if len(tokens) == 1 else '|'.join(tokens[:3]) + '{' + str(len(tokens)) + '}' for tokens in
+                [np.unique(line) for line in x]]
 
 
     def sequence_matcher(self, sequences):
