@@ -2,8 +2,7 @@
 import sys, getopt
 import numpy as np
 from gensim.models import Word2Vec
-from clusterlogs.tfidf import TermsAnalysis
-from clusterlogs.tokenization import Tokens
+from clusterlogs.data_preparation import Regex
 
 def main(argv):
 
@@ -29,19 +28,14 @@ def main(argv):
     messages = [line for line in open(inputfile)]
 
     print('Log file contains {} lines'.format(len(messages)))
+    data_preparation = Regex(messages)
+    cleaned_strings = data_preparation.process()
+    result = np.unique(cleaned_strings)
 
-    tokens = Tokens(messages)
-    tokenized = Tokens.clean_tokenized(tokens.pyonmttok(Tokens.TOKENIZER, messages))
-    vocab = tokens.get_vocabulary(tokenized)
-    print('Initial vocabulary size is {}'.format(len(vocab)))
-    tfidf = TermsAnalysis(tokenized)
-    cleaned = tfidf.process()
-    result = np.unique(cleaned)
-    vocab = tokens.get_vocabulary(result)
-    print('Cleaned vocabulary size is {}'.format(len(vocab)))
+    print('Number of unique lines after cleaning is {}'.format(len(result)))
 
     try:
-        word2vec = Word2Vec(np.unique(cleaned),
+        word2vec = Word2Vec(np.unique(result),
                              size=300,
                              window=7,
                              min_count=1,

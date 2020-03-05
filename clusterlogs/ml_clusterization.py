@@ -5,8 +5,10 @@ from sklearn.decomposition import PCA
 import math
 import pandas as pd
 import numpy as np
-import difflib
 from .tokenization import Tokens
+import editdistance
+from .phraser import phraser
+from .sequence_matching import Match
 
 
 class MLClustering:
@@ -29,7 +31,8 @@ class MLClustering:
 
 
     def dimensionality_reduction(self):
-        n = self.vectors.detect_embedding_size(self.tokens.vocabulary_pattern)
+        #n = self.vectors.detect_embedding_size(self.tokens.vocabulary_pattern)
+        n = self.vectors.detect_embedding_size(self.tokens.get_vocabulary(self.groups['sequence']))
         print('Number of dimensions is {}'.format(n))
         pca = PCA(n_components=n, svd_solver='full')
         pca.fit(self.vectors.sent2vec)
@@ -79,15 +82,16 @@ class MLClustering:
 
     def hdbscan(self):
         import hdbscan
-        self.tokens.sent2vec = self.tokens.sent2vec if self.w2v_size <= 10 else self.dimensionality_reduction()
+        self.tokens.sent2vec = self.tokens.sent2vec if self.vectors.w2v_size <= 10 else self.dimensionality_reduction()
 
         clusterer = hdbscan.HDBSCAN(min_cluster_size=100, min_samples=1)
         self.cluster_labels = clusterer.fit_predict(self.tokens.sent2vec)
         self.groups['cluster'] = self.cluster_labels
-        self.result = pd.DataFrame.from_dict(
+        print('HDBSCAN finished with {} clusters'.format(len(set(self.cluster_labels))))
+        return pd.DataFrame.from_dict(
             [item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)],
             orient='columns').sort_values(by=['cluster_size'], ascending=False)
-        print('HDBSCAN finished with {} clusters'.format(len(set(self.cluster_labels))))
+
 
 
     def hierarchical(self):
@@ -106,27 +110,42 @@ class MLClustering:
 
 
     def gb_regroup(self, gb):
-        tokenized_pattern = self.sequence_matcher(gb['tokenized_pattern'].values)
+        # Search for the common tokenized pattern
+        pattern_matcher = Match(gb['tokenized_pattern'].values)
+        tokenized_pattern = pattern_matcher.sequence_matcher()
+        # and detokenize it to common tectual pattern
         pattern = Tokens.detokenize_row(Tokens.TOKENIZER, tokenized_pattern)
-        sequence = Tokens.clean_row(self.tokens.tokenize_string(self.tokens.TOKENIZER, pattern))
+        # Search for the common sequence
+        matcher_sequence = Match(gb['sequence'].values)
+        sequence = matcher_sequence.sequence_matcher()
+        # Generate text from all group sequences
+        text = '. '.join([' '.join(row) for row in gb['sequence'].values])
+        # Extract common phrases
+        phrases = phraser(text)
+        # Get all indices for the group
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
         return {'pattern': pattern,
                 'sequence': sequence,
                 'tokenized_pattern': tokenized_pattern,
                 'indices': indices,
-                'cluster_size': size}
+                'cluster_size': size,
+                'common_phrases': phrases.extract_common_phrases()}
 
 
-    def sequence_matcher(self, sequences):
-        if len(sequences) > 1:
-            pattern = sequences[0]
-            for i in range(1,len(sequences)):
-                matches = difflib.SequenceMatcher(None, pattern, sequences[i])
-                m = [pattern[m.a:m.a + m.size] for m
-                          in matches.get_matching_blocks() if m.size > 0]
-                pattern = [val for sublist in m for val in sublist]
-            return pattern
+
+    def levenshtein_similarity(self, top, rows):
+        """
+        Search similarities between top and all other sequences of tokens.
+        May be used for strings as well.
+        top - most frequent sequence
+        rows - all sequences
+        :param rows:
+        :return:
+        """
+        if len(rows) > 1:
+            return (
+                [(1 - editdistance.eval(top, rows[i]) / max(len(top), len(rows[i]))) for i in
+                 range(0, len(rows))])
         else:
-            return sequences[0]
-
+            return [1]

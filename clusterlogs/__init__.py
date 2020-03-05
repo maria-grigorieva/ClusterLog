@@ -5,4 +5,6 @@ from .data_preparation import *
 from .validation import *
 from .ml_clusterization import *
 from .tfidf import *
-from .matching_clusterization import *
+from .similarity_clusterization import *
+from .phraser import *
+from .sequence_matching import *

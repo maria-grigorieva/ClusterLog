@@ -5,8 +5,7 @@ from gensim.models import TfidfModel
 from gensim.corpora import Dictionary
 from .tokenization import Tokens
 import warnings
-from nltk.corpus import words
-from nltk.corpus import stopwords
+import pprint
 
 
 class TermsAnalysis:
@@ -18,75 +17,74 @@ class TermsAnalysis:
 
     def process(self):
 
-        #remove words that appear only once
-        frequency = Tokens.get_term_frequencies(self.tokens.tokenized_pattern)
-
-        #tokens_to_remove = [token for token in frequency if frequency[token] == 1]
+        print('Initial number of error messages: {}'.format(len(self.tokens.tokenized_pattern)))
         print('Initial size of vocabulary: {}'.format(len(self.tokens.vocabulary_pattern)))
-        tokenized = [
-            [token if frequency[token] > 1 else '｟*｠' for token in row]
-            for row in self.tokens.tokenized_pattern]
-
-        print('Size of vocabulary after removing tokens that appear only once: {}'.format(len(Tokens.get_vocabulary(tokenized))))
-
-        # f_matrix = self.create_frequency_matrix(tokenized)
-        # tf_matrix = self.create_tf_matrix(f_matrix)
-        # dpw = self.create_documents_per_words(tf_matrix)
-        # idf_matrix = self.create_idf_matrix(tf_matrix, dpw, len(tokenized))
-        # tf_idf = self.create_tf_idf_matrix(tf_matrix, idf_matrix)
-        # tokenized_tfidf = self.remove_unnecessary(tokenized, tf_idf)
+        # get only unique messages
+        unique_tokenized = np.unique(self.tokens.tokenized_pattern)
+        print('Number of unique messages: {}'.format(len(unique_tokenized)))
+        # convert all tokens to lower case
+        unique_tokenized = self.tokens.to_lower(unique_tokenized)
+        # clean tokens from stop words and punctuation (it's necessary for the TF-IDF analysis)
+        unique_tokenized = self.tokens.clean_tokenized(unique_tokenized)
+        # get frequence of cleaned tokens
+        frequency = Tokens.get_term_frequencies(unique_tokenized)
+        # remove tokens that appear only once and save tokens which are textual substrings
+        unique_tokenized = [
+            [token for token in row if frequency[token] > 1]
+            for row in unique_tokenized]
+        print('Size of vocabulary after removing stop tokens and tokens, that appear only once: {}'.
+              format(len(Tokens.get_vocabulary(unique_tokenized))))
+        print(Tokens.get_vocabulary(unique_tokenized))
+        # # TF-IDF Terms Analysis
+        # dct = Dictionary(unique_tokenized)
+        # corpus = [dct.doc2bow(line) for line in unique_tokenized]
+        # tfidf = TfidfModel(corpus, normalize=True)
+        # corpus_tfidf = tfidf[corpus]
+        # d = {dct.get(id): value for doc in corpus_tfidf for id, value in doc}
+        # for k,v in d.items():
+        #     if k.isalpha():
+        #         d[k] = 0.00
+        # weights = [x[1] for x in d.items()]
+        # max = np.max(weights)
+        # print(max)
+        # std = np.std(weights)
+        # print(std)
+        # top = round((max - std),1)
+        # #top = round((np.mean(weights) + np.std(weights)),1)
+        # top = np.mean(weights)
+        # print(top)
+        # s = {k: v for k, v in sorted(d.items(), key=lambda item: item[1], reverse=True)}
+        # print(list(s.items()))
         #
+        # tokenized_tfidf = []
+        # # take initial messages and remove all rare tokens
+        # # the token is rare if it's weight is more than top
+        # for i,row in enumerate(self.tokens.tokenized_pattern):
+        #     # print(row)
+        #     with warnings.catch_warnings():
+        #         warnings.simplefilter("ignore", category=RuntimeWarning)
+        #         try:
+        #             # tokenized_tfidf.append([token if
+        #             #                         (token in d and d[token] < top) or
+        #             #                         token.isalpha() or
+        #             #                         token in punctuation or
+        #             #                         token in u"\u2581"
+        #             #                         else '｟*｠' for token in row])
+        #             tokenized_tfidf.append([token for token in row if
+        #                                     (token.lower() in d and d[token.lower()] < top) or
+        #                                     token.lower().isalpha()])
+        #         except Exception as e:
+        #             print(row)
+        #
+        # vocab = Tokens.get_vocabulary(tokenized_tfidf)
         # print('Size of vocabulary after removing rare tokens: {}'.format(
-        #     len(Tokens.get_vocabulary(tokenized_tfidf))))
-        #
-        # return tokenized_tfidf
-        #
-        #print(self.tokens.tokenized_pattern)
-        dct = Dictionary(tokenized)
-        corpus = [dct.doc2bow(line) for line in tokenized]
-        tfidf = TfidfModel(corpus, normalize=True)
-        corpus_tfidf = tfidf[corpus]
-        d = {dct.get(id): value for doc in corpus_tfidf for id, value in doc}
-        for item in words.words():
-            d[item] = 0.00
+        #     len(vocab)))
         tokenized_tfidf = []
-        rows_weights = [[token[1] for token in doc] for doc in corpus_tfidf]
-        #top = np.mean(rows_weights) + np.std(rows_weights)
-        for i,row in enumerate(tokenized):
-            #print(row)
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", category=RuntimeWarning)
-                #top = np.mean(rows_weights[i]) + np.std(rows_weights[i])
-                top = np.max(rows_weights[i])
-                tokenized_tfidf.append([token if token in d and d[token] < top or
-                                        token in punctuation or token == '｟*｠' or
-                                        token == '▁' else '｟*｠' for token in row])
-                # tokenized_tfidf.append([token for token in row if (token in d and d[token] < top)
-                #                        or (token in punctuation) or (token in stopwords.words()) or
-                #                         (token not in d)])
-
-        print('Size of vocabulary after removing rare tokens: {}'.format(
-            len(Tokens.get_vocabulary(tokenized_tfidf))))
-
-        #print(tokenized_tfidf)
-
+        for i,row in enumerate(self.tokens.tokenized_pattern):
+            tokenized_tfidf.append([token for token in row if
+                                    token.lower() in Tokens.get_vocabulary(unique_tokenized)])
+        pprint.pprint(tokenized_tfidf)
         return tokenized_tfidf
-
-
-
-    def all_english_words(self):
-        new_arr = []
-        for row in self.tokens.tokenized_pattern:
-            tokens = []
-            for token in row:
-                if token.lower() in words.words():
-                    tokens.append(token.lower())
-                new_arr.append(tokens)
-        return new_arr
-        # return [[token for token in row if token.lower() in [words.words() + stopwords.words()] or
-        #         not token.isalpha()]
-        #         for row in self.tokens.tokenized_pattern]
-
 
 
     def create_frequency_matrix(self, tokenized):
@@ -174,3 +172,17 @@ class TermsAnalysis:
             tokenized_tfidf.append([v if weights[x] < top else '｟*｠' for x,v in enumerate(row)])
             print([v for x,v in enumerate(row) if weights[x] < top ])
         return tokenized_tfidf
+
+
+
+        # f_matrix = self.create_frequency_matrix(tokenized)
+        # tf_matrix = self.create_tf_matrix(f_matrix)
+        # dpw = self.create_documents_per_words(tf_matrix)
+        # idf_matrix = self.create_idf_matrix(tf_matrix, dpw, len(tokenized))
+        # tf_idf = self.create_tf_idf_matrix(tf_matrix, idf_matrix)
+        # tokenized_tfidf = self.remove_unnecessary(tokenized, tf_idf)
+        #
+        # print('Size of vocabulary after removing rare tokens: {}'.format(
+        #     len(Tokens.get_vocabulary(tokenized_tfidf))))
+        #
+        # return tokenized_tfidf

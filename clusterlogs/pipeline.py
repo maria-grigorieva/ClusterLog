@@ -7,11 +7,10 @@ from string import punctuation
 from .validation import Output
 from .tokenization import Tokens
 from .ml_clusterization import MLClustering
-from .matching_clusterization import SClustering
-from .tfidf import TermsAnalysis
-import nltk
-from itertools import groupby
+from .similarity_clusterization import SClustering
 from .data_preparation import Regex
+import hashlib
+from .sequence_matching import Match
 
 
 def safe_run(method):
@@ -39,11 +38,16 @@ class Chain(object):
 
     CLUSTERING_THRESHOLD = 5000
     MATCHING_ACCURACY = 0.8
+    CLUSTERING_TYPE = 'SIMILARITY'
 
-    def __init__(self, df, target, cluster_settings=None, model_name='word2vec.model', mode='create',
-                 threshold=CLUSTERING_THRESHOLD, matching_accuracy=MATCHING_ACCURACY):
+    def __init__(self, df, target, tokenizer_type='conservative', cluster_settings=None,
+                 model_name='word2vec.model', mode='create',
+                 threshold=CLUSTERING_THRESHOLD,
+                 matching_accuracy=MATCHING_ACCURACY,
+                 clustering_type=CLUSTERING_TYPE):
         self.df = df
         self.target = target
+        self.tokenizer_type = tokenizer_type
         self.set_cluster_settings(cluster_settings or CLUSTERING_DEFAULTS)
         self.cpu_number = self.get_cpu_number()
         self.timings = {}
@@ -51,6 +55,7 @@ class Chain(object):
         self.mode = mode
         self.threshold = threshold
         self.matching_accuracy = matching_accuracy
+        self.clustering_type = clustering_type
 
 
     @staticmethod
@@ -72,54 +77,44 @@ class Chain(object):
         Chain of methods, providing data preparation, vectorization and clusterization
         :return:
         """
-        self.tokenization(self.df[self.target].values)
-        #self.df['sequence'] = self.tokens.tokenized_cluster
-        self.df['sequence'] = self.tokens.tokenized_pattern
-        self.df['tokenized_pattern'] = self.tokens.tokenized_pattern
-        cleaned_tokens = self.tfidf()
-        #print(np.unique(cleaned_tokens))
-        self.df['cleaned'] = self.tokens.detokenize(cleaned_tokens)
-        self.df['sequence'] = cleaned_tokens
-        self.df['tokenized_pattern'] = cleaned_tokens
-        self.group_equals(self.df, 'cleaned')
-        if self.groups.shape[0] <= self.CLUSTERING_THRESHOLD:
-            self.matching_clusterization(self.groups)
+        self.tokens = Tokens(self.df[self.target].values, self.tokenizer_type)
+        self.tokens.process()
+        self.df['tokenized_pattern'] = self.tokens.tokenized
+
+        data_preparation = Regex(self.df[self.target].values)
+        cleaned_strings = data_preparation.process()
+        self.df['hash'] = self.generateHash(cleaned_strings)
+
+        self.df['sequence'] = [row.split(' ') for row in cleaned_strings]
+
+        self.group_equals(self.df, 'hash')
+
+        if self.clustering_type == 'SIMILARITY':
+            if self.groups.shape[0] <= self.CLUSTERING_THRESHOLD:
+
+                clusters = SClustering(self.groups, self.matching_accuracy)
+                self.result = clusters.process()
+                print('Finished with {} clusters'.format(self.result.shape[0]))
         else:
             self.tokens_vectorization()
             self.sentence_vectorization()
             self.ml_clusterization()
-            self.matching_clusterization(self.result)
 
 
-    @safe_run
-    def clean_regex(self):
-        regex = Regex(self.df[self.target].values)
-        regex.process()
-        self.df['cleaned'] = regex.messages_cleaned
+    def generateHash(self, sequences):
+        return [hashlib.md5(repr(row).encode('utf-8')).hexdigest() for row in sequences]
 
 
-    @safe_run
-    def tokenization(self, messages):
-        """
-        Tokenization of a list of error messages.
-        :return:
-        """
-        self.tokens = Tokens(messages)
-        self.tokens.process()
-        print('Tokenization finished')
-
-
-    @safe_run
-    def tfidf(self):
-        """
-        Generate TF-IDF model and remove tokens with max weights
-        :return:
-        """
-        self.tfidf = TermsAnalysis(self.tokens)
-        cleaned_tokens = self.tfidf.process()
-        #cleaned_tokens = self.tfidf.all_english_words()
-        print('Tokens TF-IDF cleaning finished')
-        return cleaned_tokens
+    # @safe_run
+    # def tfidf(self):
+    #     """
+    #     Generate TF-IDF model and remove tokens with max weights
+    #     :return:
+    #     """
+    #     self.tfidf = TermsAnalysis(self.tokens)
+    #     cleaned_tokens = self.tfidf.process()
+    #     print('Tokens TF-IDF cleaning finished')
+    #     return cleaned_tokens
 
 
     @safe_run
@@ -146,32 +141,14 @@ class Chain(object):
         :param gr:
         :return:
         """
-        #tokenized_pattern = self.matcher(gr['tokenized_pattern'].values)
-        sequence = self.matrix_matching(gr['sequence'].values)
-        tokenized_pattern = self.matrix_matching(gr['tokenized_pattern'].values)
+        matcher = Match(gr['tokenized_pattern'].values)
+        tokenized_pattern = matcher.sequence_matcher()
         return pd.DataFrame([{'indices': gr.index.values.tolist(),
                        'pattern': self.tokens.detokenize_row(
                            self.tokens.TOKENIZER,tokenized_pattern),
-                       'sequence': sequence,
+                       'sequence': gr['sequence'].values[0],
                        'tokenized_pattern': tokenized_pattern,
                        'cluster_size': len(gr.index.values.tolist())}])
-
-
-    @safe_run
-    def matcher(self, lines):
-        if len(lines) > 1:
-            fdist = nltk.FreqDist([i for l in lines for i in l])
-            x = [token if (fdist[token]/len(lines) >= 1) else '｟*｠' for token in lines[0]]
-            #x = [token for token in lines[0] if (fdist[token] / len(lines) >= 1)]
-            return [i[0] for i in groupby(x)]
-        else:
-            return lines[0]
-
-
-    def matrix_matching(self, lines):
-        #print(lines)
-        x = list(map(list, zip(*lines)))
-        return [tokens[0] if len(tokens) == 1 else '|'.join(tokens[:2])+'{'+str(len(tokens))+'}' for tokens in [np.unique(line) for line in x]]
 
 
     @safe_run
@@ -214,7 +191,7 @@ class Chain(object):
     def matching_clusterization(self, groups):
         print('Matching Clusterization...')
         clusters = SClustering(groups, self.tokens, self.matching_accuracy)
-        self.result = clusters.matching_clusterization()
+        self.result = clusters.process()
         print('Finished with {} clusters'.format(self.result.shape[0]))
 
 

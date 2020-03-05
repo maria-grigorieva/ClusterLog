@@ -7,25 +7,20 @@ from collections import defaultdict
 
 class Tokens(object):
 
-    TOKENIZER = Tokenizer("conservative", spacer_annotate=True, preserve_placeholders=True, spacer_new=True)
+    #TOKENIZER = Tokenizer("space", spacer_annotate=True, preserve_placeholders=True, spacer_new=True)
     STOP = stopwords.words('english') + list(punctuation) + ["``", "''", u"\u2581"]
 
-    def __init__(self, messages):
+    def __init__(self, messages, tokenizer_type):
 
         self.messages = messages
-
+        Tokens.TOKENIZER = Tokenizer(tokenizer_type, spacer_annotate=True, preserve_placeholders=True, spacer_new=True)
 
 
     def process(self):
         """
         :return:
         """
-        self.tokenized_pattern = self.pyonmttok(Tokens.TOKENIZER, self.messages)
-        #self.tokenized_cluster = self.clean_tokenized(self.tokenized_pattern)
-
-        #self.vocabulary_cluster = Tokens.get_vocabulary(self.tokenized_cluster)
-        self.vocabulary_pattern = Tokens.get_vocabulary(self.tokenized_pattern)
-        self.patterns = self.detokenize(self.tokenized_pattern)
+        self.tokenized = self.pyonmttok(Tokens.TOKENIZER, self.messages)
 
 
     @staticmethod
@@ -41,7 +36,8 @@ class Tokens(object):
     def detokenize_row(tokenizer, row):
         remove_indices = [i - 1 for i, j in enumerate(row) if j == '｟*｠' and row[i - 1] == '▁']
         row = [i for j, i in enumerate(row) if j not in remove_indices]
-        return tokenizer.detokenize(Tokens.remove_adjacent(row))
+        #return tokenizer.detokenize(Tokens.remove_adjacent(row))
+        return tokenizer.detokenize(row)
 
 
     def remove_neighboring_duplicates(self, tokenized):
@@ -72,12 +68,15 @@ class Tokens(object):
         Clean tokens from english stop words, numbers and punctuation
         :return:
         """
-        return [[token for token in row if token.lower() not in Tokens.STOP] for row in tokenized]
+        return [[token for token in row if token.lower().isalpha()]
+                for row in tokenized]
+        # return [[token for token in row if token.lower() not in Tokens.STOP and token.lower().isalpha()]
+        #         for row in tokenized]
 
 
     @staticmethod
     def clean_row(row):
-        return [token for token in row if token.lower() not in Tokens.STOP]
+        return [token for token in row if token.lower() not in Tokens.STOP and token.lower().isalpha()]
 
 
     @staticmethod
@@ -93,3 +92,7 @@ class Tokens(object):
             for token in row:
                 frequency[token] += 1
         return frequency
+
+
+    def to_lower(self, tokenized):
+        return [[token.lower() for token in row] for row in tokenized]
