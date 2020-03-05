@@ -31,11 +31,13 @@ class Match:
             pattern = self.sequences[0]
             for i in range(1, len(self.sequences)):
                 matches = difflib.SequenceMatcher(None, pattern, self.sequences[i])
-                m = [pattern[m.a:m.a + m.size] for m
-                     in matches.get_matching_blocks() if m.size > 0]
-                if add_placeholder:
-                    m = [item + ['(.*?)'] if i < len(m)-1 else item for i,item in enumerate(m)]
-                pattern = [val for sublist in m for val in sublist]
+                if matches.ratio() > 0.5:
+                    m = [pattern[m.a:m.a + m.size] for m
+                         in matches.get_matching_blocks() if m.size > 0]
+                    pattern = [val for sublist in m for val in sublist]
+                    if add_placeholder:
+                        x = [item + ['(.*?)'] if i < len(m)-1 else item for i,item in enumerate(m)]
+                        pattern = [val for sublist in x for val in sublist]
             return pattern
         else:
             return self.sequences[0]
