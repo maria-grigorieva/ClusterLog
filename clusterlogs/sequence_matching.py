@@ -2,6 +2,8 @@ import nltk
 import numpy as np
 import difflib
 from itertools import groupby
+import random
+from string import punctuation
 
 
 class Match:
@@ -27,10 +29,15 @@ class Match:
 
 
     def sequence_matcher(self, add_placeholder=False):
-        if len(self.sequences) > 1:
-            pattern = self.sequences[0]
-            for i in range(1, len(self.sequences)):
-                matches = difflib.SequenceMatcher(None, pattern, self.sequences[i])
+        # number of attempts
+        max_attempts = 3
+        attempt = 1
+        # detect unique sentences
+        unique = np.unique(self.sequences)
+        if len(unique) > 1:
+            pattern = random.choice(unique)
+            for i in range(1, len(unique)):
+                matches = difflib.SequenceMatcher(None, pattern, unique[i])
                 if matches.ratio() > 0.5:
                     m = [pattern[m.a:m.a + m.size] for m
                          in matches.get_matching_blocks() if m.size > 0]
@@ -38,9 +45,18 @@ class Match:
                     if add_placeholder:
                         x = [item + ['(.*?)'] if i < len(m)-1 else item for i,item in enumerate(m)]
                         pattern = [val for sublist in x for val in sublist]
-            return pattern
+            # TODO:
+            # if pattern is empty - try to make it based on another sample message
+            is_empty = sum([True if token in list(punctuation) or token == '(.*?)' or
+                                    token == '▁' else False for token in pattern])
+            if is_empty == len(pattern) and attempt <= max_attempts:
+                attempt += 1
+                print('Search for common pattern. Next attempt')
+                self.sequence_matcher(add_placeholder)
+            else:
+                return pattern
         else:
-            return self.sequences[0]
+            return unique[0]
 
 
     # def matching_clusters(self, sequences, patterns):
