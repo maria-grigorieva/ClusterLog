@@ -14,7 +14,7 @@ class Match:
         if len(self.sequences) > 1:
             fdist = nltk.FreqDist([i for l in self.sequences for i in l])
             #x = [token for token in lines[0] if (fdist[token] / len(lines) >= 1)]
-            x = [token if (fdist[token]/len(self.sequences) >= 1) else '｟*｠' for token in self.sequences[0]]
+            x = [token if (fdist[token]/len(self.sequences) >= 1) else '(.*?)' for token in self.sequences[0]]
             return [i[0] for i in groupby(x)]
         else:
             return self.sequences[0]
@@ -22,17 +22,21 @@ class Match:
 
     def matrix_matching(self):
         x = list(map(list, zip(*self.sequences)))
-        return [tokens[0] if len(tokens) == 1 else '|'.join(tokens[:3]) + '{' + str(len(tokens)) + '}' for tokens in
+        return [tokens[0] if len(tokens) == 1 else '(.*?)' for tokens in
                 [np.unique(line) for line in x]]
 
 
-    def sequence_matcher(self):
+    def sequence_matcher(self, add_placeholder=False):
         if len(self.sequences) > 1:
             pattern = self.sequences[0]
             for i in range(1, len(self.sequences)):
                 matches = difflib.SequenceMatcher(None, pattern, self.sequences[i])
-                m = [pattern[m.a:m.a + m.size] for m
-                     in matches.get_matching_blocks() if m.size > 0]
+                if add_placeholder:
+                    m = [pattern[m.a:m.a + m.size] + ['(.*?)'] for m
+                         in matches.get_matching_blocks() if m.size > 0]
+                else:
+                    m = [pattern[m.a:m.a + m.size] for m
+                         in matches.get_matching_blocks() if m.size > 0]
                 pattern = [val for sublist in m for val in sublist]
             return pattern
         else:

@@ -13,7 +13,7 @@ from .sequence_matching import Match
 
 class MLClustering:
 
-    def __init__(self, df, groups, tokens, vectors, cpu_number, method='dbscan'):
+    def __init__(self, df, groups, tokens, vectors, cpu_number, add_placeholder, method='dbscan'):
         self.groups = groups
         self.df = df
         self.method = method
@@ -23,6 +23,7 @@ class MLClustering:
         self.epsilon = None
         self.min_samples = 1
         self.cpu_number = cpu_number
+        self.add_placeholder = add_placeholder
 
 
     def process(self):
@@ -112,12 +113,12 @@ class MLClustering:
     def gb_regroup(self, gb):
         # Search for the common tokenized pattern
         pattern_matcher = Match(gb['tokenized_pattern'].values)
-        tokenized_pattern = pattern_matcher.sequence_matcher()
+        tokenized_pattern = pattern_matcher.sequence_matcher(self.add_placeholder)
         # and detokenize it to common tectual pattern
         pattern = Tokens.detokenize_row(Tokens.TOKENIZER, tokenized_pattern)
         # Search for the common sequence
         matcher_sequence = Match(gb['sequence'].values)
-        sequence = matcher_sequence.sequence_matcher()
+        sequence = matcher_sequence.sequence_matcher(False)
         # Generate text from all group sequences
         text = '. '.join([' '.join(row) for row in gb['sequence'].values])
         # Extract common phrases

@@ -8,9 +8,10 @@ from .sequence_matching import Match
 
 class SClustering:
 
-    def __init__(self, groups, accuracy):
+    def __init__(self, groups, accuracy, add_placeholder):
         self.groups = groups
         self.accuracy = accuracy
+        self.add_placeholder = add_placeholder
 
 
     def process(self):
@@ -49,12 +50,12 @@ class SClustering:
         filtered = df[(df['ratio'] >= self.accuracy)]
         # Search common tokenized pattern and detokenize it
         pattern = Match(filtered['tokenized_pattern'].values)
-        tokenized_pattern = pattern.sequence_matcher()
+        tokenized_pattern = pattern.sequence_matcher(self.add_placeholder)
         textual_pattern = Tokens.detokenize_row(Tokens.TOKENIZER, tokenized_pattern)
         # print(tokenized_pattern)
         # Search common sequence
         sequence = Match(filtered['sequence'].values)
-        common_sequence = sequence.sequence_matcher()
+        common_sequence = sequence.sequence_matcher(False)
         # Detect indices for the group
         indices = [item for sublist in filtered['indices'].values for item in sublist]
         # Convert list of sequences to text

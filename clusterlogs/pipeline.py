@@ -40,8 +40,12 @@ class Chain(object):
     MATCHING_ACCURACY = 0.8
     CLUSTERING_TYPE = 'SIMILARITY'
 
-    def __init__(self, df, target, tokenizer_type='conservative', cluster_settings=None,
-                 model_name='word2vec.model', mode='create',
+    def __init__(self, df, target,
+                 tokenizer_type='conservative',
+                 cluster_settings=None,
+                 model_name='word2vec.model',
+                 mode='create',
+                 add_placeholder=False,
                  threshold=CLUSTERING_THRESHOLD,
                  matching_accuracy=MATCHING_ACCURACY,
                  clustering_type=CLUSTERING_TYPE):
@@ -56,6 +60,7 @@ class Chain(object):
         self.threshold = threshold
         self.matching_accuracy = matching_accuracy
         self.clustering_type = clustering_type
+        self.add_placeholder = add_placeholder
 
 
     @staticmethod
@@ -92,7 +97,7 @@ class Chain(object):
         if self.clustering_type == 'SIMILARITY':
             if self.groups.shape[0] <= self.CLUSTERING_THRESHOLD:
 
-                clusters = SClustering(self.groups, self.matching_accuracy)
+                clusters = SClustering(self.groups, self.matching_accuracy, self.add_placeholder)
                 self.result = clusters.process()
                 print('Finished with {} clusters'.format(self.result.shape[0]))
         else:
@@ -142,7 +147,7 @@ class Chain(object):
         :return:
         """
         matcher = Match(gr['tokenized_pattern'].values)
-        tokenized_pattern = matcher.sequence_matcher()
+        tokenized_pattern = matcher.sequence_matcher(self.add_placeholder)
         return pd.DataFrame([{'indices': gr.index.values.tolist(),
                        'pattern': self.tokens.detokenize_row(
                            self.tokens.TOKENIZER,tokenized_pattern),
@@ -198,7 +203,8 @@ class Chain(object):
     @safe_run
     def ml_clusterization(self):
 
-        self.clusters = MLClustering(self.df, self.groups, self.tokens, self.vectors, self.cpu_number)
+        self.clusters = MLClustering(self.df, self.groups, self.tokens,
+                                     self.vectors, self.cpu_number, self.add_placeholder)
         self.result = self.clusters.process()
 
 
