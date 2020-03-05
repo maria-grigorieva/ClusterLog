@@ -13,7 +13,7 @@ from .sequence_matching import Match
 
 class MLClustering:
 
-    def __init__(self, df, groups, tokens, vectors, cpu_number, add_placeholder, method='dbscan'):
+    def __init__(self, df, groups, tokens, vectors, cpu_number, add_placeholder, method):
         self.groups = groups
         self.df = df
         self.method = method
@@ -29,6 +29,10 @@ class MLClustering:
     def process(self):
         if self.method == 'dbscan':
             return self.dbscan()
+        if self.method == 'hdbscan':
+            return self.hdbscan()
+        if self.method == 'hierarchical':
+            return self.hierarchical()
 
 
     def dimensionality_reduction(self):
@@ -83,10 +87,10 @@ class MLClustering:
 
     def hdbscan(self):
         import hdbscan
-        self.tokens.sent2vec = self.tokens.sent2vec if self.vectors.w2v_size <= 10 else self.dimensionality_reduction()
+        self.vectors.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 else self.dimensionality_reduction()
 
         clusterer = hdbscan.HDBSCAN(min_cluster_size=100, min_samples=1)
-        self.cluster_labels = clusterer.fit_predict(self.tokens.sent2vec)
+        self.cluster_labels = clusterer.fit_predict(self.vectors.sent2vec)
         self.groups['cluster'] = self.cluster_labels
         print('HDBSCAN finished with {} clusters'.format(len(set(self.cluster_labels))))
         return pd.DataFrame.from_dict(
@@ -100,7 +104,7 @@ class MLClustering:
         Agglomerative clusterization
         :return:
         """
-        self.tokens.sent2vec = self.tokens.sent2vec if self.w2v_size <= 10 else self.dimensionality_reduction()
+        self.tokens.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 else self.dimensionality_reduction()
         self.cluster_labels = AgglomerativeClustering(n_clusters=None,
                                                       distance_threshold=0.1) \
             .fit_predict(self.tokens.sent2vec)

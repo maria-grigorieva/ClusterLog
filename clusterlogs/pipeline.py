@@ -39,6 +39,7 @@ class Chain(object):
     CLUSTERING_THRESHOLD = 5000
     MATCHING_ACCURACY = 0.8
     CLUSTERING_TYPE = 'SIMILARITY'
+    ALGORITHM = 'dbscan'
 
     def __init__(self, df, target,
                  tokenizer_type='conservative',
@@ -48,7 +49,8 @@ class Chain(object):
                  add_placeholder=False,
                  threshold=CLUSTERING_THRESHOLD,
                  matching_accuracy=MATCHING_ACCURACY,
-                 clustering_type=CLUSTERING_TYPE):
+                 clustering_type=CLUSTERING_TYPE,
+                 algorithm=ALGORITHM):
         self.df = df
         self.target = target
         self.tokenizer_type = tokenizer_type
@@ -61,6 +63,7 @@ class Chain(object):
         self.matching_accuracy = matching_accuracy
         self.clustering_type = clustering_type
         self.add_placeholder = add_placeholder
+        self.algorithm = algorithm
 
 
     @staticmethod
@@ -204,7 +207,8 @@ class Chain(object):
     def ml_clusterization(self):
 
         self.clusters = MLClustering(self.df, self.groups, self.tokens,
-                                     self.vectors, self.cpu_number, self.add_placeholder)
+                                     self.vectors, self.cpu_number, self.add_placeholder,
+                                     self.algorithm)
         self.result = self.clusters.process()
 
 
