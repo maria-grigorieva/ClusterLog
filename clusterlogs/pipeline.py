@@ -97,9 +97,7 @@ class Chain(object):
 
         self.group_equals(self.df, 'hash')
 
-        if self.clustering_type == 'SIMILARITY':
-            if self.groups.shape[0] <= self.CLUSTERING_THRESHOLD:
-
+        if self.clustering_type == 'SIMILARITY' and self.groups.shape[0] <= self.CLUSTERING_THRESHOLD:
                 clusters = SClustering(self.groups, self.matching_accuracy, self.add_placeholder)
                 self.result = clusters.process()
                 print('Finished with {} clusters'.format(self.result.shape[0]))
