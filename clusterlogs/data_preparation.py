@@ -14,8 +14,8 @@ class Regex(object):
         for idx, item in enumerate(self.messages):
             item = re.sub(r'(/[\w\./]*[\s]?)', ' ', item)
             item = re.sub(r'([a-zA-Z0-9]+[_]+[\S]+)', ' ', item)
-            item = re.sub(r'[^\w\s]', ' ', item)
             item = re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', ' ', item)
+            item = re.sub(r'[^\w\s]', ' ', item)
             item = re.sub(' +', ' ', item)
             self.messages_cleaned[idx] =  item
         return self.messages_cleaned

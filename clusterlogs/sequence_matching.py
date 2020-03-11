@@ -51,7 +51,7 @@ class Match:
                                     token == '▁' else False for token in pattern])
             if is_empty == len(pattern) and attempt <= max_attempts:
                 attempt += 1
-                print('Search for common pattern. Next attempt')
+                print('Search for common pattern for {}. Next attempt...'.format(pattern))
                 self.sequence_matcher(add_placeholder)
             else:
                 return pattern
