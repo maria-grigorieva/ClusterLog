@@ -91,9 +91,18 @@ class Chain(object):
 
         data_preparation = Regex(self.df[self.target].values)
         cleaned_strings = data_preparation.process()
+        cleaned_tokens = [row.split(' ') for row in cleaned_strings]
+        # # get frequence of cleaned tokens
+        # frequency = Tokens.get_term_frequencies(cleaned_tokens)
+        # # remove tokens that appear only once and save tokens which are textual substrings
+        # cleaned_tokens = [
+        #     [token for token in row if frequency[token] > 1]
+        #     for row in cleaned_tokens]
+        #self.df[self.target] = cleaned_strings
+        cleaned_strings = [' '.join(row) for row in cleaned_tokens]
         self.df['hash'] = self.generateHash(cleaned_strings)
 
-        self.df['sequence'] = [row.split(' ') for row in cleaned_strings]
+        self.df['sequence'] = cleaned_tokens
 
         self.group_equals(self.df, 'hash')
 

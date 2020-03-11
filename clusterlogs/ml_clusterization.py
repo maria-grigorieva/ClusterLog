@@ -9,6 +9,7 @@ from .tokenization import Tokens
 import editdistance
 from .phraser import phraser
 from .sequence_matching import Match
+import re
 
 
 class MLClustering:
@@ -120,6 +121,7 @@ class MLClustering:
         tokenized_pattern = pattern_matcher.sequence_matcher(self.add_placeholder)
         # and detokenize it to common tectual pattern
         pattern = Tokens.detokenize_row(Tokens.TOKENIZER, tokenized_pattern)
+        pattern = re.sub('\((.*?)\)+[\S\s]*\((.*?)\)+', '(.*?)', pattern)
         # Search for the common sequence
         matcher_sequence = Match(gb['sequence'].values)
         sequence = matcher_sequence.sequence_matcher(False)

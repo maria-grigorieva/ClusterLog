@@ -4,6 +4,7 @@ from .tokenization import Tokens
 import pprint
 from .phraser import phraser
 from .sequence_matching import Match
+import re
 
 
 class SClustering:
@@ -52,6 +53,7 @@ class SClustering:
         pattern = Match(filtered['tokenized_pattern'].values)
         tokenized_pattern = pattern.sequence_matcher(self.add_placeholder)
         textual_pattern = Tokens.detokenize_row(Tokens.TOKENIZER, tokenized_pattern)
+        textual_pattern = re.sub('\((.*?)\)+[\S\s]*\((.*?)\)+', '(.*?)', textual_pattern)
         # print(tokenized_pattern)
         # Search common sequence
         sequence = Match(filtered['sequence'].values)
