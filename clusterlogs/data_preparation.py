@@ -12,6 +12,7 @@ class Regex(object):
         """
         self.messages_cleaned = [0] * len(self.messages)
         for idx, item in enumerate(self.messages):
+            item = re.sub(r'[^ ]+\.[^ ]+', ' ', item) # any URL
             item = re.sub(r'(/[\w\./]*[\s]?)', ' ', item)
             item = re.sub(r'([a-zA-Z0-9]+[_]+[\S]+)', ' ', item)
             item = re.sub(r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+', ' ', item)

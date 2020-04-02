@@ -8,7 +8,10 @@ class phraser:
 
     def extract_common_phrases(self):
         Rake = RAKE.Rake(RAKE.GoogleSearchStopList())
-        phrases = sorted(Rake.run(self.text, minFrequency=1, maxWords=7),
+        phrases = sorted(Rake.run(self.text, minFrequency=1, minCharacters=3, maxWords=5),
                          key=lambda x: x[1], reverse=True)
-        return [item[0] for item in phrases]
+        if len(phrases) == 0:
+            return self.text
+        else:
+            return [item for item in phrases]
 

@@ -10,6 +10,11 @@ import editdistance
 from .phraser import phraser
 from .sequence_matching import Match
 import re
+# from .Drain import *
+from .LogCluster import *
+from .data_preparation import *
+import pprint
+from .tokenization import *
 
 
 class MLClustering:
@@ -117,14 +122,23 @@ class MLClustering:
 
     def gb_regroup(self, gb):
         # Search for the common tokenized pattern
-        pattern_matcher = Match(gb['tokenized_pattern'].values)
-        tokenized_pattern = pattern_matcher.sequence_matcher(self.add_placeholder)
+        #pattern_matcher = Match(gb['tokenized_pattern'].values)
+        #tokenized_pattern = pattern_matcher.sequence_matcher(self.add_placeholder)
         # and detokenize it to common tectual pattern
-        pattern = Tokens.detokenize_row(Tokens.TOKENIZER, tokenized_pattern)
-        pattern = re.sub('\((.*?)\)+[\S\s]*\((.*?)\)+', '(.*?)', pattern)
+        # pattern = Tokens.detokenize_row(Tokens.TOKENIZER, tokenized_pattern)
+        # pattern = re.sub('\((.*?)\)+[\S\s]*\((.*?)\)+', '(.*?)', pattern)
+        # pprint.pprint(gb['pattern'].values)
+        # pprint.pprint(gb['sequence'].values)
+        tokenized_pattern = gb['tokenized_pattern'].values[0]
+        #pattern =  Tokens.detokenize_row(Tokens.TOKENIZER, tokenized_pattern)
+
+        pattern = self.logcluster_clusterization(gb['pattern'].values)
+        #
+        # text = '. '.join([' '.join(row) for row in pattern])
         # Search for the common sequence
         matcher_sequence = Match(gb['sequence'].values)
         sequence = matcher_sequence.sequence_matcher(False)
+
         # Generate text from all group sequences
         text = '. '.join([' '.join(row) for row in gb['sequence'].values])
         # Extract common phrases
@@ -156,3 +170,23 @@ class MLClustering:
                  range(0, len(rows))])
         else:
             return [1]
+
+
+
+    def drain_clusterization(self, messages):
+        regex = [r'(/[\w\./]*[\s]?)', r'([a-zA-Z0-9]+[_]+[\S]+)', r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)', r'[^\w\s]']
+        #regex = []
+        parser = LogParser(input=messages, st=0.5, rex=regex)
+        result = parser.parse()
+        return result
+
+
+    def logcluster_clusterization(self, messages):
+        if len(messages) == 1:
+            r = Regex(messages)
+            return r.process()
+        else:
+            support = 1 if len(messages) > 1 and len(messages) < 20 else 2
+            regex = [r'[^ ]+\.[^ ]+', r'(/[\w\./]*[\s]?)', r'([a-zA-Z0-9]+[_]+[\S]+)', r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)', r'[^\w\s]']
+            parser = LogParser(messages=messages, support=support, outdir='',rex=regex)
+            return parser.parse()

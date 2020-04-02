@@ -42,7 +42,7 @@ class Chain(object):
     ALGORITHM = 'dbscan'
 
     def __init__(self, df, target,
-                 tokenizer_type='conservative',
+                 tokenizer_type='space',
                  cluster_settings=None,
                  model_name='word2vec.model',
                  mode='create',
