@@ -8,13 +8,23 @@ This package doesn't work currently with python 2.7 because of `kneed` library, 
 
 ```
 editdistance==0.5.3
-gensim==3.4.0
-kneed==0.4.1
+gensim==3.8.1
+kneed==0.5.0
 nltk==3.4.5
 numpy==1.16.4
-pandas==0.25.1
+pandas==1.0.1
 pyonmttok==1.10.1
 scikit-learn==0.21.2
+matplotlib==3.0.3
+hdbscan==0.8.24
+python-rake==1.4.5
+pytextrank==2.0.1
+Jinja2==2.11.1
+```
+
+Execute in command line to download dictionary required for pyTextRank library
+```
+python -m spacy download en_core_web_sm
 ```
 
 **Input:**
@@ -41,6 +51,12 @@ Optional input:
     - `min_samples` (default: 1)
 - `model_name` (path to a file with word2vec model)
 - `mode` ('create'(default) | 'update' | 'load')
+- `output_file` (path to report file)
+- `add_placeholder` (default: FALSE)
+- `threshold` (clustering threshold, default = 5000)
+- `matching_accuracy` (accuracy threshold, default = 0.8)
+- `clustering_type` (ML | SIMILARITY, default=SIMILARITY)
+- `algorithm` (dbscan|hdbscan|hierarchical, default=dbscan)
 
 **Modes:**
 1) `create`

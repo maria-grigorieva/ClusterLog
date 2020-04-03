@@ -9,3 +9,5 @@ scikit-learn==0.21.2
 matplotlib==3.0.3
 hdbscan==0.8.24
 python-rake==1.4.5
+pytextrank==2.0.1
+Jinja2==2.11.1

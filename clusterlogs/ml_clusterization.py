@@ -8,15 +8,15 @@ import editdistance
 from .phraser import phraser
 from .LogCluster import *
 from .data_preparation import *
+from .tokenization import *
 
 
 class MLClustering:
 
-    def __init__(self, df, groups, tokens, vectors, cpu_number, add_placeholder, method):
+    def __init__(self, df, groups, vectors, cpu_number, add_placeholder, method):
         self.groups = groups
         self.df = df
         self.method = method
-        self.tokens = tokens
         self.vectors = vectors
         self.distances = None
         self.epsilon = None
@@ -35,8 +35,7 @@ class MLClustering:
 
 
     def dimensionality_reduction(self):
-        #n = self.vectors.detect_embedding_size(self.tokens.vocabulary_pattern)
-        n = self.vectors.detect_embedding_size(self.tokens.get_vocabulary(self.groups['sequence']))
+        n = self.vectors.detect_embedding_size(get_vocabulary(self.groups['sequence']))
         print('Number of dimensions is {}'.format(n))
         pca = PCA(n_components=n, svd_solver='full')
         pca.fit(self.vectors.sent2vec)
@@ -103,10 +102,10 @@ class MLClustering:
         Agglomerative clusterization
         :return:
         """
-        self.tokens.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 else self.dimensionality_reduction()
+        self.vectors.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 else self.dimensionality_reduction()
         self.cluster_labels = AgglomerativeClustering(n_clusters=None,
                                                       distance_threshold=0.1) \
-            .fit_predict(self.tokens.sent2vec)
+            .fit_predict(self.vectors.sent2vec)
         self.groups['cluster'] = self.cluster_labels
         self.result = pd.DataFrame.from_dict(
             [item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)],
@@ -159,11 +158,14 @@ class MLClustering:
 
 
     def logcluster_clusterization(self, messages):
-        print(messages)
         if len(messages) == 1:
             return clean_messages(messages)
         else:
             support = 1 if len(messages) > 1 and len(messages) < 20 else 2
             regex = [r'[^ ]+\.[^ ]+', r'(/[\w\./]*[\s]?)', r'([a-zA-Z0-9]+[_]+[\S]+)', r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)', r'[^\w\s]']
             parser = LogParser(messages=messages, support=support, outdir='',rex=regex)
-            return parser.parse()
+            patterns = parser.parse()
+            if len(patterns) == 0:
+                parser = LogParser(messages=messages, support=1, outdir='', rex=regex)
+                patterns = parser.parse()
+            return patterns

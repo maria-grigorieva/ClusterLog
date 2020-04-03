@@ -5,13 +5,13 @@ import pandas as pd
 import pprint
 from string import punctuation
 from .validation import Output
-from .tokenization import Tokens
+from .tokenization import *
 from .ml_clusterization import MLClustering
 from .similarity_clusterization import SClustering
 from .data_preparation import *
 import hashlib
 from .sequence_matching import Match
-from .reporting import *
+from .reporting import report
 
 
 def safe_run(method):
@@ -47,6 +47,7 @@ class Chain(object):
                  cluster_settings=None,
                  model_name='word2vec.model',
                  mode='create',
+                 output_file='report.html',
                  add_placeholder=False,
                  threshold=CLUSTERING_THRESHOLD,
                  matching_accuracy=MATCHING_ACCURACY,
@@ -65,6 +66,7 @@ class Chain(object):
         self.clustering_type = clustering_type
         self.add_placeholder = add_placeholder
         self.algorithm = algorithm
+        self.output_file = output_file
 
 
     @staticmethod
@@ -86,14 +88,12 @@ class Chain(object):
         Chain of methods, providing data preparation, vectorization and clusterization
         :return:
         """
-        self.tokens = Tokens(self.df[self.target].values, self.tokenizer_type)
-        self.tokens.process()
-        self.df['tokenized_pattern'] = self.tokens.tokenized
+        self.df['tokenized_pattern'] = tokenize_messages(self.df[self.target].values, self.tokenizer_type)
 
         cleaned_strings = clean_messages(self.df[self.target].values)
         cleaned_tokens = [row.split(' ') for row in cleaned_strings]
         # get frequence of cleaned tokens
-        frequency = Tokens.get_term_frequencies(cleaned_tokens)
+        frequency = get_term_frequencies(cleaned_tokens)
         # remove tokens that appear only once and save tokens which are textual substrings
         cleaned_tokens = [
             [token for token in row if frequency[token] > 1]
@@ -106,7 +106,7 @@ class Chain(object):
         self.group_equals(self.df, 'hash')
 
         if self.clustering_type == 'SIMILARITY' and self.groups.shape[0] <= self.CLUSTERING_THRESHOLD:
-                clusters = SClustering(self.groups, self.matching_accuracy, self.add_placeholder)
+                clusters = SClustering(self.groups, self.matching_accuracy, self.add_placeholder, self.tokenizer_type)
                 self.result = clusters.process()
                 print('Finished with {} clusters'.format(self.result.shape[0]))
         else:
@@ -114,7 +114,7 @@ class Chain(object):
             self.sentence_vectorization()
             self.ml_clusterization()
 
-        generate_html_report(self.result)
+        report.generate_html_report(self.result, self.output_file)
 
 
 
@@ -161,8 +161,7 @@ class Chain(object):
         matcher = Match(gr['tokenized_pattern'].values)
         tokenized_pattern = matcher.sequence_matcher(self.add_placeholder)
         return pd.DataFrame([{'indices': gr.index.values.tolist(),
-                       'pattern': self.tokens.detokenize_row(
-                           self.tokens.TOKENIZER,tokenized_pattern),
+                       'pattern': detokenize_row(tokenized_pattern, self.tokenizer_type),
                        'sequence': gr['sequence'].values[0],
                        'tokenized_pattern': tokenized_pattern,
                        'cluster_size': len(gr.index.values.tolist())}])
@@ -204,18 +203,11 @@ class Chain(object):
         return self
 
 
-    @safe_run
-    def matching_clusterization(self, groups):
-        print('Matching Clusterization...')
-        clusters = SClustering(groups, self.tokens, self.matching_accuracy)
-        self.result = clusters.process()
-        print('Finished with {} clusters'.format(self.result.shape[0]))
-
 
     @safe_run
     def ml_clusterization(self):
 
-        self.clusters = MLClustering(self.df, self.groups, self.tokens,
+        self.clusters = MLClustering(self.df, self.groups,
                                      self.vectors, self.cpu_number, self.add_placeholder,
                                      self.algorithm)
         self.result = self.clusters.process()

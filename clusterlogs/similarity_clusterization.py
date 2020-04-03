@@ -1,6 +1,6 @@
 import pandas as pd
 import editdistance
-from .tokenization import Tokens
+from .tokenization import *
 import pprint
 from .phraser import phraser
 from .sequence_matching import Match
@@ -9,10 +9,11 @@ import re
 
 class SClustering:
 
-    def __init__(self, groups, accuracy, add_placeholder):
+    def __init__(self, groups, accuracy, add_placeholder, tokenizer_type):
         self.groups = groups
         self.accuracy = accuracy
         self.add_placeholder = add_placeholder
+        self.tokenizer_type = tokenizer_type
 
 
     def process(self):
@@ -52,7 +53,7 @@ class SClustering:
         # Search common tokenized pattern and detokenize it
         pattern = Match(filtered['tokenized_pattern'].values)
         tokenized_pattern = pattern.sequence_matcher(self.add_placeholder)
-        textual_pattern = Tokens.detokenize_row(Tokens.TOKENIZER, tokenized_pattern)
+        textual_pattern = detokenize_row(tokenized_pattern, self.tokenizer_type)
         textual_pattern = re.sub('\((.*?)\)+[\S\s]*\((.*?)\)+', '(.*?)', textual_pattern)
         # print(tokenized_pattern)
         # Search common sequence
@@ -62,16 +63,17 @@ class SClustering:
         indices = [item for sublist in filtered['indices'].values for item in sublist]
         # Convert list of sequences to text
         text = '. '.join([' '.join(row) for row in filtered['sequence'].values])
-        phrases = phraser(text)
-        common_phrases = phrases.extract_common_phrases()
-        #pprint.pprint(common_phrases)
+        # Extract common phrases
+        phrases_pyTextRank = phraser(text, 'pyTextRank')
+        phrases_RAKE = phraser(text, 'RAKE')
 
-        result.append({'pattern': textual_pattern,
+        result.append({'pattern': [textual_pattern],
                        'tokenized_pattern': tokenized_pattern,
                        'indices': indices,
                        'cluster_size': len(indices),
                        'sequence': common_sequence,
-                       'common_phrases': common_phrases})
+                       'common_phrases_pyTextRank': phrases_pyTextRank.extract_common_phrases(),
+                       'common_phrases_RAKE': phrases_RAKE.extract_common_phrases()})
 
         df.drop(filtered.index, axis=0, inplace=True)
         while df.shape[0] > 0:

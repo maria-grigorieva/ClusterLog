@@ -3,14 +3,14 @@ import numpy as np
 from string import punctuation
 from gensim.models import TfidfModel
 from gensim.corpora import Dictionary
-from .tokenization import Tokens
+from .tokenization import *
 import warnings
 import pprint
 
 
 class TermsAnalysis:
 
-    def __init__(self, tokens):
+    def __init__(self, tokens, tokenizer_type):
 
         self.tokens = tokens
 
@@ -27,14 +27,14 @@ class TermsAnalysis:
         # clean tokens from stop words and punctuation (it's necessary for the TF-IDF analysis)
         unique_tokenized = self.tokens.clean_tokenized(unique_tokenized)
         # get frequence of cleaned tokens
-        frequency = Tokens.get_term_frequencies(unique_tokenized)
+        frequency = get_term_frequencies(unique_tokenized)
         # remove tokens that appear only once and save tokens which are textual substrings
         unique_tokenized = [
             [token for token in row if frequency[token] > 1]
             for row in unique_tokenized]
         print('Size of vocabulary after removing stop tokens and tokens, that appear only once: {}'.
-              format(len(Tokens.get_vocabulary(unique_tokenized))))
-        print(Tokens.get_vocabulary(unique_tokenized))
+              format(len(get_vocabulary(unique_tokenized))))
+        print(get_vocabulary(unique_tokenized))
         # # TF-IDF Terms Analysis
         # dct = Dictionary(unique_tokenized)
         # corpus = [dct.doc2bow(line) for line in unique_tokenized]
@@ -82,7 +82,7 @@ class TermsAnalysis:
         tokenized_tfidf = []
         for i,row in enumerate(self.tokens.tokenized_pattern):
             tokenized_tfidf.append([token for token in row if
-                                    token.lower() in Tokens.get_vocabulary(unique_tokenized)])
+                                    token.lower() in get_vocabulary(unique_tokenized)])
         pprint.pprint(tokenized_tfidf)
         return tokenized_tfidf
 
