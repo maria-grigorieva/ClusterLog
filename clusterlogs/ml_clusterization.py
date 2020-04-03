@@ -3,18 +3,11 @@ from sklearn.cluster import DBSCAN, AgglomerativeClustering
 from sklearn.neighbors import NearestNeighbors
 from sklearn.decomposition import PCA
 import math
-import pandas as pd
 import numpy as np
-from .tokenization import Tokens
 import editdistance
 from .phraser import phraser
-from .sequence_matching import Match
-import re
-# from .Drain import *
 from .LogCluster import *
 from .data_preparation import *
-import pprint
-from .tokenization import *
 
 
 class MLClustering:
@@ -121,37 +114,21 @@ class MLClustering:
 
 
     def gb_regroup(self, gb):
-        # Search for the common tokenized pattern
-        #pattern_matcher = Match(gb['tokenized_pattern'].values)
-        #tokenized_pattern = pattern_matcher.sequence_matcher(self.add_placeholder)
-        # and detokenize it to common tectual pattern
-        # pattern = Tokens.detokenize_row(Tokens.TOKENIZER, tokenized_pattern)
-        # pattern = re.sub('\((.*?)\)+[\S\s]*\((.*?)\)+', '(.*?)', pattern)
-        # pprint.pprint(gb['pattern'].values)
-        # pprint.pprint(gb['sequence'].values)
-        tokenized_pattern = gb['tokenized_pattern'].values[0]
-        #pattern =  Tokens.detokenize_row(Tokens.TOKENIZER, tokenized_pattern)
-
+        # Search for the most common patterns using LogCluster app (Perl)
         pattern = self.logcluster_clusterization(gb['pattern'].values)
-        #
-        # text = '. '.join([' '.join(row) for row in pattern])
-        # Search for the common sequence
-        matcher_sequence = Match(gb['sequence'].values)
-        sequence = matcher_sequence.sequence_matcher(False)
-
         # Generate text from all group sequences
         text = '. '.join([' '.join(row) for row in gb['sequence'].values])
         # Extract common phrases
-        phrases = phraser(text)
+        phrases_pyTextRank = phraser(text, 'pyTextRank')
+        phrases_RAKE = phraser(text, 'RAKE')
         # Get all indices for the group
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
         return {'pattern': pattern,
-                'sequence': sequence,
-                'tokenized_pattern': tokenized_pattern,
                 'indices': indices,
                 'cluster_size': size,
-                'common_phrases': phrases.extract_common_phrases()}
+                'common_phrases_pyTextRank': phrases_pyTextRank.extract_common_phrases(),
+                'common_phrases_RAKE': phrases_RAKE.extract_common_phrases()}
 
 
 
@@ -182,9 +159,9 @@ class MLClustering:
 
 
     def logcluster_clusterization(self, messages):
+        print(messages)
         if len(messages) == 1:
-            r = Regex(messages)
-            return r.process()
+            return clean_messages(messages)
         else:
             support = 1 if len(messages) > 1 and len(messages) < 20 else 2
             regex = [r'[^ ]+\.[^ ]+', r'(/[\w\./]*[\s]?)', r'([a-zA-Z0-9]+[_]+[\S]+)', r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)', r'[^\w\s]']

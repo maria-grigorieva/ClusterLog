@@ -10,3 +10,4 @@ from .phraser import *
 from .sequence_matching import *
 from .Drain import *
 from .LogCluster import *
+from .reporting import *

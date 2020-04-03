@@ -8,9 +8,10 @@ from .validation import Output
 from .tokenization import Tokens
 from .ml_clusterization import MLClustering
 from .similarity_clusterization import SClustering
-from .data_preparation import Regex
+from .data_preparation import *
 import hashlib
 from .sequence_matching import Match
+from .reporting import *
 
 
 def safe_run(method):
@@ -89,8 +90,7 @@ class Chain(object):
         self.tokens.process()
         self.df['tokenized_pattern'] = self.tokens.tokenized
 
-        data_preparation = Regex(self.df[self.target].values)
-        cleaned_strings = data_preparation.process()
+        cleaned_strings = clean_messages(self.df[self.target].values)
         cleaned_tokens = [row.split(' ') for row in cleaned_strings]
         # get frequence of cleaned tokens
         frequency = Tokens.get_term_frequencies(cleaned_tokens)
@@ -113,6 +113,9 @@ class Chain(object):
             self.tokens_vectorization()
             self.sentence_vectorization()
             self.ml_clusterization()
+
+        generate_html_report(self.result)
+
 
 
     def generateHash(self, sequences):
