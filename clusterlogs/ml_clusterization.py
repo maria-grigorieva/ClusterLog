@@ -162,7 +162,8 @@ class MLClustering:
             return clean_messages(messages)
         else:
             support = 1 if len(messages) > 1 and len(messages) < 20 else 2
-            regex = [r'[^ ]+\.[^ ]+', r'(/[\w\./]*[\s]?)', r'([a-zA-Z0-9]+[_]+[\S]+)', r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)', r'[^\w\s]']
+            regex = []
+            #regex = [r'[^ ]+\.[^ ]+', r'(/[\w\./]*[\s]?)', r'([a-zA-Z0-9]+[_]+[\S]+)', r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)', r'[^\w\s]']
             parser = LogParser(messages=messages, support=support, outdir='',rex=regex)
             patterns = parser.parse()
             if len(patterns) == 0:
