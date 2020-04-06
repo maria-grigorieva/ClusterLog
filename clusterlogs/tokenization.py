@@ -1,8 +1,8 @@
-from pyonmttok import Tokenizer
-from nltk.corpus import stopwords
 from string import punctuation
 from itertools import groupby
+from pyonmttok import Tokenizer
 from collections import defaultdict
+from nltk.corpus import stopwords
 
 
 # TOKENIZER = Tokenizer("space", spacer_annotate=True, preserve_placeholders=True, spacer_new=True)

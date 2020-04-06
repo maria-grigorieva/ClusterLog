@@ -1,9 +1,10 @@
+import re
 import pandas as pd
 import editdistance
-from .tokenization import detokenize_row
+
 from .phraser import Phraser
 from .sequence_matching import Match
-import re
+from .tokenization import detokenize_row
 
 
 class SClustering:
@@ -41,13 +42,13 @@ class SClustering:
         filtered = df[(df['ratio'] >= self.accuracy)]
         # Search common tokenized pattern and detokenize it
         pattern = Match(filtered['tokenized_pattern'].values)
-        tokenized_pattern = pattern.sequence_matcher(self.add_placeholder)
+        tokenized_pattern = pattern.sequence_matcher(add_placeholder=self.add_placeholder)
         textual_pattern = detokenize_row(tokenized_pattern, self.tokenizer_type)
         textual_pattern = re.sub(r'\((.*?)\)+[\S\s]*\((.*?)\)+', r'(.*?)', textual_pattern)
         # print(tokenized_pattern)
         # Search common sequence
         sequence = Match(filtered['sequence'].values)
-        common_sequence = sequence.sequence_matcher(False)
+        common_sequence = sequence.sequence_matcher(add_placeholder=False)
         # Detect indices for the group
         indices = [item for sublist in filtered['indices'].values for item in sublist]
         # Convert list of sequences to text
@@ -68,7 +69,8 @@ class SClustering:
         while df.shape[0] > 0:
             self.reclustering(df, result)
 
-    def levenshtein_similarity(self, top, rows):
+    @staticmethod
+    def levenshtein_similarity(top, rows):
         """
         Search similarities between top and all other sequences of tokens.
         May be used for strings as well.

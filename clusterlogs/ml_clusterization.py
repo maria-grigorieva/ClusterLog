@@ -1,15 +1,19 @@
+import math
+import numpy as np
+import pandas as pd
+
 from kneed import KneeLocator
+from hdbscan import HDBSCAN
 from sklearn.cluster import DBSCAN, AgglomerativeClustering
 from sklearn.neighbors import NearestNeighbors
 from sklearn.decomposition import PCA
-import math
-import numpy as np
-import editdistance
+
 from .phraser import Phraser
 from .LogCluster import LogParser
-from .data_preparation import clean_messages
 from .tokenization import get_vocabulary
-import pandas as pd
+from .data_preparation import clean_messages
+
+# import editdistance
 
 
 class MLClustering:
@@ -78,10 +82,9 @@ class MLClustering:
             orient='columns').sort_values(by=['cluster_size'], ascending=False)
 
     def hdbscan(self):
-        import hdbscan
         self.vectors.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 else self.dimensionality_reduction()
 
-        clusterer = hdbscan.HDBSCAN(min_cluster_size=100, min_samples=1)
+        clusterer = HDBSCAN(min_cluster_size=100, min_samples=1)
         self.cluster_labels = clusterer.fit_predict(self.vectors.sent2vec)
         self.groups['cluster'] = self.cluster_labels
         print('HDBSCAN finished with {} clusters'.format(len(set(self.cluster_labels))))
@@ -120,7 +123,7 @@ class MLClustering:
                 'common_phrases_pyTextRank': phrases_pyTextRank.extract_common_phrases(),
                 'common_phrases_RAKE': phrases_RAKE.extract_common_phrases()}
 
-    def levenshtein_similarity(self, top, rows):
+#     def levenshtein_similarity(self, top, rows):
         """
         Search similarities between top and all other sequences of tokens.
         May be used for strings as well.
@@ -129,12 +132,12 @@ class MLClustering:
         :param rows:
         :return:
         """
-        if len(rows) > 1:
-            return (
-                [(1 - editdistance.eval(top, rows[i]) / max(len(top), len(rows[i]))) for i in
-                 range(0, len(rows))])
-        else:
-            return [1]
+#         if len(rows) > 1:
+#             return (
+#                 [(1 - editdistance.eval(top, rows[i]) / max(len(top), len(rows[i]))) for i in
+#                  range(0, len(rows))])
+#         else:
+#             return [1]
 
     def drain_clusterization(self, messages):
         regex = [r'(/[\w\./]*[\s]?)', r'([a-zA-Z0-9]+[_]+[\S]+)', r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)', r'[^\w\s]']

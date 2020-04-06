@@ -2,9 +2,10 @@
 import sys
 import getopt
 import numpy as np
+
 from gensim.models import Word2Vec
-from clusterlogs.data_preparation import Regex
 from clusterlogs.tokenization import Tokens
+from clusterlogs.data_preparation import Regex
 
 
 def main(argv):

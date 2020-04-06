@@ -1,8 +1,10 @@
+import math
+import numpy as np
+
 from gensim.models import Word2Vec
 from gensim.models.doc2vec import Doc2Vec, TaggedDocument
-import numpy as np
+
 from .pipeline import Chain
-import math
 
 
 class Vector(Chain):

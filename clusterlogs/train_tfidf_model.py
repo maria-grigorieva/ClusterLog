@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import sys
 import getopt
+
 from gensim.models import TfidfModel
 from gensim.corpora import Dictionary
 from clusterlogs.tokenization import Tokens

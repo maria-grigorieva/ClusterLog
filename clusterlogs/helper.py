@@ -1,5 +1,6 @@
-from kneed import KneeLocator
 import matplotlib.pyplot as plt
+
+from kneed import KneeLocator
 
 
 def distance_curve(distances, mode='show'):

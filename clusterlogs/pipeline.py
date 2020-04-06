@@ -1,17 +1,19 @@
-from time import time
-import numpy as np
-import multiprocessing
-import pandas as pd
 import pprint
+import hashlib
+import multiprocessing
+import numpy as np
+import pandas as pd
+
+from time import time
 from string import punctuation
+
+from .reporting import report
 from .validation import Output
 from .tokenization import tokenize_messages, get_term_frequencies, detokenize_row
+from .data_preparation import clean_messages
+from .sequence_matching import Match
 from .ml_clusterization import MLClustering
 from .similarity_clusterization import SClustering
-from .data_preparation import clean_messages
-import hashlib
-from .sequence_matching import Match
-from .reporting import report
 
 
 def safe_run(method):

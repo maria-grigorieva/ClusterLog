@@ -1,11 +1,13 @@
 import math
+import pprint
 import numpy as np
+
+from .tokenization import get_term_frequencies, get_vocabulary
+
+# import warnings
 # from string import punctuation
 # from gensim.models import TfidfModel
 # from gensim.corpora import Dictionary
-from .tokenization import get_term_frequencies, get_vocabulary
-# import warnings
-import pprint
 
 
 class TermsAnalysis:
