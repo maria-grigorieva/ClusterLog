@@ -5,25 +5,24 @@ import pandas as pd
 import pprint
 from string import punctuation
 from .validation import Output
-from .tokenization import *
+from .tokenization import tokenize_messages, get_term_frequencies, detokenize_row
 from .ml_clusterization import MLClustering
 from .similarity_clusterization import SClustering
-from .data_preparation import *
+from .data_preparation import clean_messages
 import hashlib
 from .sequence_matching import Match
 from .reporting import report
 
 
 def safe_run(method):
-    def func_wrapper(self, *args, **kwargs):
 
+    def func_wrapper(self, *args, **kwargs):
         try:
             ts = time()
             result = method(self, *args, **kwargs)
             te = time()
             self.timings[method.__name__] = round((te - ts), 4)
             return result
-
         except Exception as e:
             print(e)
 
@@ -68,28 +67,23 @@ class Chain(object):
         self.algorithm = algorithm
         self.output_file = output_file
 
-
     @staticmethod
     def get_cpu_number():
         return multiprocessing.cpu_count()
 
-
     def set_cluster_settings(self, params):
-        for key,value in CLUSTERING_DEFAULTS.items():
+        for key, value in CLUSTERING_DEFAULTS.items():
             if params.get(key) is not None:
                 setattr(self, key, params.get(key))
             else:
                 setattr(self, key, value)
 
-
     @safe_run
     def process(self):
         """
         Chain of methods, providing data preparation, vectorization and clusterization
-        :return:
         """
         self.df['tokenized_pattern'] = tokenize_messages(self.df[self.target].values, self.tokenizer_type)
-
         cleaned_strings = clean_messages(self.df[self.target].values)
         cleaned_tokens = [row.split(' ') for row in cleaned_strings]
         # get frequence of cleaned tokens
@@ -106,9 +100,9 @@ class Chain(object):
         self.group_equals(self.df, 'hash')
 
         if self.clustering_type == 'SIMILARITY' and self.groups.shape[0] <= self.CLUSTERING_THRESHOLD:
-                clusters = SClustering(self.groups, self.matching_accuracy, self.add_placeholder, self.tokenizer_type)
-                self.result = clusters.process()
-                print('Finished with {} clusters'.format(self.result.shape[0]))
+            clusters = SClustering(self.groups, self.matching_accuracy, self.add_placeholder, self.tokenizer_type)
+            self.result = clusters.process()
+            print('Finished with {} clusters'.format(self.result.shape[0]))
         else:
             self.tokens_vectorization()
             self.sentence_vectorization()
@@ -116,11 +110,8 @@ class Chain(object):
 
         report.generate_html_report(self.result, self.output_file)
 
-
-
     def generateHash(self, sequences):
         return [hashlib.md5(repr(row).encode('utf-8')).hexdigest() for row in sequences]
-
 
     # @safe_run
     # def tfidf(self):
@@ -133,15 +124,11 @@ class Chain(object):
     #     print('Tokens TF-IDF cleaning finished')
     #     return cleaned_tokens
 
-
     @safe_run
     def group_equals(self, df, column):
-
         self.groups = df.groupby(column).apply(func=self.regroup)
         self.groups.reset_index(drop=True, inplace=True)
-
         print('Found {} equal groups'.format(self.groups.shape[0]))
-
 
     @safe_run
     def regroup(self, gr):
@@ -161,11 +148,10 @@ class Chain(object):
         matcher = Match(gr['tokenized_pattern'].values)
         tokenized_pattern = matcher.sequence_matcher(self.add_placeholder)
         return pd.DataFrame([{'indices': gr.index.values.tolist(),
-                       'pattern': detokenize_row(tokenized_pattern, self.tokenizer_type),
-                       'sequence': gr['sequence'].values[0],
-                       'tokenized_pattern': tokenized_pattern,
-                       'cluster_size': len(gr.index.values.tolist())}])
-
+                              'pattern': detokenize_row(tokenized_pattern, self.tokenizer_type),
+                              'sequence': gr['sequence'].values[0],
+                              'tokenized_pattern': tokenized_pattern,
+                              'cluster_size': len(gr.index.values.tolist())}])
 
     @safe_run
     def tokens_vectorization(self):
@@ -177,10 +163,10 @@ class Chain(object):
         """
         from .vectorization import Vector
         self.vectors = Vector(self.groups['sequence'].values,
-                                  self.w2v_size,
-                                  self.w2v_window,
-                                  self.cpu_number,
-                                  self.model_name)
+                              self.w2v_size,
+                              self.w2v_window,
+                              self.cpu_number,
+                              self.model_name)
         if self.mode == 'create':
             self.vectors.create_word2vec_model(min_count=1, iterations=10)
         if self.mode == 'update':
@@ -188,8 +174,6 @@ class Chain(object):
         if self.mode == 'process':
             self.vectors.load_word2vec_model()
         print('Vectorization of tokens finished')
-
-
 
     @safe_run
     def sentence_vectorization(self):
@@ -202,8 +186,6 @@ class Chain(object):
         print('Vectorization of sentences is finished')
         return self
 
-
-
     @safe_run
     def ml_clusterization(self):
 
@@ -212,16 +194,13 @@ class Chain(object):
                                      self.algorithm)
         self.result = self.clusters.process()
 
-
     def in_cluster(self, groups, cluster_label):
         indices = groups.loc[cluster_label, 'indices']
         return self.df.loc[indices][self.target].values
 
-
     @safe_run
     def validation(self, groups):
         return Output().statistics(self.df, self.target, groups)
-
 
     def garbage_collector(self, df):
         stop = list(punctuation) + ['｟*｠']
@@ -229,9 +208,9 @@ class Chain(object):
         for row in df.itertuples():
             elements = set(row.sequence)
             c = 0
-            for i,x in enumerate(elements):
+            for i, x in enumerate(elements):
                 if x in stop:
-                    c+=1
+                    c += 1
             if c == len(elements):
                 garbage.append(row)
                 print("Founded garbage")
@@ -239,15 +218,9 @@ class Chain(object):
                 df.drop([row.Index], axis=0, inplace=True)
         return garbage
 
-
     @staticmethod
     def split_clusters(df, column, threshold=100):
         if np.max(df[column].values) < threshold:
             return df, None
         else:
             return df[df[column] >= threshold], df[df[column] < threshold]
-
-
-
-
-

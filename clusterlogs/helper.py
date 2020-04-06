@@ -1,6 +1,7 @@
 from kneed import KneeLocator
 import matplotlib.pyplot as plt
 
+
 def distance_curve(distances, mode='show'):
     """
     Save distance curve with knee candidates in file.
@@ -15,7 +16,7 @@ def distance_curve(distances, mode='show'):
         kl = KneeLocator(distances, y, S=s)
         knees.append(kl.knee)
 
-    plt.style.use('ggplot');
+    plt.style.use('ggplot')
     plt.figure(figsize=(10, 10))
     plt.plot(distances, y)
     colors = ['r', 'g', 'k', 'm', 'c', 'b', 'y']

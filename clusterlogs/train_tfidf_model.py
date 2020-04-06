@@ -1,5 +1,6 @@
 #!/usr/bin/python
-import sys, getopt
+import sys
+import getopt
 from gensim.models import TfidfModel
 from gensim.corpora import Dictionary
 from clusterlogs.tokenization import Tokens
@@ -38,8 +39,6 @@ def main(argv):
     tfidf = TfidfModel(corpus, normalize=True)
 
     tfidf.save(outputfile)
-
-
 
 
 if __name__ == "__main__":

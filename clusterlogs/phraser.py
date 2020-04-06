@@ -3,12 +3,11 @@ import spacy
 import pytextrank
 
 
-class phraser:
+class Phraser:
 
     def __init__(self, text, type='RAKE'):
         self.text = text
         self.type = type
-
 
     def extract_common_phrases(self):
         if self.type == 'RAKE':
@@ -36,7 +35,3 @@ class phraser:
             for p in doc._.phrases:
                 phrases.append(p)
             return phrases
-
-
-
-

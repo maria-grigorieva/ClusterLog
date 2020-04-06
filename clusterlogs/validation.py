@@ -12,22 +12,20 @@ STATISTICS = ["cluster_name",
 
 CLUSTERING_ACCURACY = 0.8
 
+
 class Output:
 
     def __init__(self):
         self.patterns = None
         self.tokenizer = Tokenizer("conservative", spacer_annotate=True)
 
-
     def cluster_statistics(self, item, row, messages):
-
         similarity = self.levenshtein_similarity(messages, 0)
         return {'cluster_name': item,
                 'cluster_size': row['cluster_size'],
                 'pattern': row['pattern'],
                 'mean_similarity': np.mean(similarity),
                 'std_similarity': np.std(similarity)}
-
 
     def statistics(self, df, target, groups):
         """
@@ -41,10 +39,8 @@ class Output:
             messages = df.loc[row['indices'], target].values
             patterns.append(self.cluster_statistics(index, row, messages))
         return pd.DataFrame(patterns, columns=STATISTICS)\
-                            .round(2)\
-                            .sort_values(by='cluster_size', ascending=False)
-
-
+                        .round(2)\
+                        .sort_values(by='cluster_size', ascending=False)
 
     def levenshtein_similarity(self, rows, N):
         """

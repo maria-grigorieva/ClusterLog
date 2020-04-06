@@ -11,22 +11,19 @@ class Match:
     def __init__(self, sequences):
         self.sequences = sequences
 
-
     def matcher(self):
         if len(self.sequences) > 1:
             fdist = nltk.FreqDist([i for l in self.sequences for i in l])
-            #x = [token for token in lines[0] if (fdist[token] / len(lines) >= 1)]
-            x = [token if (fdist[token]/len(self.sequences) >= 1) else '(.*?)' for token in self.sequences[0]]
+            # x = [token for token in lines[0] if (fdist[token] / len(lines) >= 1)]
+            x = [token if (fdist[token] / len(self.sequences) >= 1) else '(.*?)' for token in self.sequences[0]]
             return [i[0] for i in groupby(x)]
         else:
             return self.sequences[0]
-
 
     def matrix_matching(self):
         x = list(map(list, zip(*self.sequences)))
         return [tokens[0] if len(tokens) == 1 else '(.*?)' for tokens in
                 [np.unique(line) for line in x]]
-
 
     def sequence_matcher(self, add_placeholder=False):
         # number of attempts
@@ -43,12 +40,16 @@ class Match:
                          in matches.get_matching_blocks() if m.size > 0]
                     pattern = [val for sublist in m for val in sublist]
                     if add_placeholder:
-                        x = [item + ['(.*?)'] if i < len(m)-1 else item for i,item in enumerate(m)]
+                        x = [item + ['(.*?)'] if i < len(m) - 1 else item for i, item in enumerate(m)]
                         pattern = [val for sublist in x for val in sublist]
             # TODO:
             # if pattern is empty - try to make it based on another sample message
-            is_empty = sum([True if token in list(punctuation) or token == '(.*?)' or
-                                    token == '▁' else False for token in pattern])
+            is_empty = 0
+            for token in pattern:
+                if token in list(punctuation) or token == '(.*?)' or token == '▁':
+                    is_empty += 1
+            # is_empty = sum([True if token in list(punctuation) or token == '(.*?)' or
+            #                         token == '▁' else False for token in pattern])
             if is_empty == len(pattern) and attempt <= max_attempts:
                 attempt += 1
                 print('Search for common pattern for {}. Next attempt...'.format(pattern))
@@ -57,7 +58,6 @@ class Match:
                 return pattern
         else:
             return unique[0]
-
 
     # def matching_clusters(self, sequences, patterns):
     #     if len(sequences) > 0:
