@@ -142,7 +142,7 @@ class Chain(object):
         cluster_size - number of messages in cluster/group
 
         The difference between sequence and tokenized_pattern is that tokenized_pattern is used for the
-        reconstruction of textual pattern (detokenization), sequence - is a set of cleaned tokens
+        reconstruction of textual pattern (detokenization), while sequence is a set of cleaned tokens
         and can be used for grouping/clusterization.
         :param gr:
         :return:

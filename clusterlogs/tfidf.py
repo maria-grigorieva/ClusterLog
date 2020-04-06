@@ -2,7 +2,7 @@ import math
 import pprint
 import numpy as np
 
-from .tokenization import get_term_frequencies, get_vocabulary
+from .tokenization import get_term_frequencies, get_vocabulary, to_lower, clean_tokenized
 
 # import warnings
 # from string import punctuation
@@ -22,9 +22,9 @@ class TermsAnalysis:
         unique_tokenized = np.unique(self.tokens.tokenized_pattern)
         print('Number of unique messages: {}'.format(len(unique_tokenized)))
         # convert all tokens to lower case
-        unique_tokenized = self.tokens.to_lower(unique_tokenized)
+        unique_tokenized = to_lower(unique_tokenized)
         # clean tokens from stop words and punctuation (it's necessary for the TF-IDF analysis)
-        unique_tokenized = self.tokens.clean_tokenized(unique_tokenized)
+        unique_tokenized = clean_tokenized(unique_tokenized, remove_stopwords=False)
         # get frequence of cleaned tokens
         frequency = get_term_frequencies(unique_tokenized)
         # remove tokens that appear only once and save tokens which are textual substrings
