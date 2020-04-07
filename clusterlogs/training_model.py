@@ -4,6 +4,7 @@ import getopt
 import numpy as np
 
 from gensim.models import Word2Vec
+
 from clusterlogs.tokenization import tokenize_messages
 from clusterlogs.data_preparation import clean_messages
 
