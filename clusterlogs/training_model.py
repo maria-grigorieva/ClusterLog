@@ -2,8 +2,8 @@
 import sys, getopt
 import numpy as np
 from gensim.models import Word2Vec
-from clusterlogs.data_preparation import Regex
-from clusterlogs.tokenization import Tokens
+from clusterlogs.data_preparation import *
+from clusterlogs.tokenization import *
 
 def main(argv):
 
@@ -29,16 +29,14 @@ def main(argv):
     messages = [line for line in open(inputfile)]
 
     print('Log file contains {} lines'.format(len(messages)))
-    data_preparation = Regex(messages)
-    cleaned_strings = data_preparation.process()
+    cleaned_strings = clean_messages(messages)
     unique = np.unique(cleaned_strings)
-    tokens = Tokens(unique, tokenizer_type='conservative')
-    tokens.process()
-    cleaned = [[token for token in row if token != u"\u2581"] for row in tokens.tokenized]
+    tokenized = tokenize_messages(unique, 'space')
     print('Number of unique lines after cleaning is {}'.format(len(unique)))
+    # cleaned = [[token for token in row if token != u"\u2581"] for row in tokens.tokenized]
 
     try:
-        word2vec = Word2Vec(cleaned,
+        word2vec = Word2Vec(tokenized,
                              size=300,
                              window=7,
                              min_count=1,
