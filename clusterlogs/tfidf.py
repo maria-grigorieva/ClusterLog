@@ -1,31 +1,30 @@
 import math
-import numpy as np
-from string import punctuation
-from gensim.models import TfidfModel
-from gensim.corpora import Dictionary
-from .tokenization import *
-import warnings
 import pprint
+import numpy as np
+
+from .tokenization import get_term_frequencies, get_vocabulary, to_lower, clean_tokenized
+
+# import warnings
+# from string import punctuation
+# from gensim.models import TfidfModel
+# from gensim.corpora import Dictionary
 
 
 class TermsAnalysis:
 
     def __init__(self, tokens, tokenizer_type):
-
         self.tokens = tokens
 
-
     def process(self):
-
         print('Initial number of error messages: {}'.format(len(self.tokens.tokenized_pattern)))
         print('Initial size of vocabulary: {}'.format(len(self.tokens.vocabulary_pattern)))
         # get only unique messages
         unique_tokenized = np.unique(self.tokens.tokenized_pattern)
         print('Number of unique messages: {}'.format(len(unique_tokenized)))
         # convert all tokens to lower case
-        unique_tokenized = self.tokens.to_lower(unique_tokenized)
+        unique_tokenized = to_lower(unique_tokenized)
         # clean tokens from stop words and punctuation (it's necessary for the TF-IDF analysis)
-        unique_tokenized = self.tokens.clean_tokenized(unique_tokenized)
+        unique_tokenized = clean_tokenized(unique_tokenized, remove_stopwords=False)
         # get frequence of cleaned tokens
         frequency = get_term_frequencies(unique_tokenized)
         # remove tokens that appear only once and save tokens which are textual substrings
@@ -50,7 +49,7 @@ class TermsAnalysis:
         # std = np.std(weights)
         # print(std)
         # top = round((max - std),1)
-        # #top = round((np.mean(weights) + np.std(weights)),1)
+        # # top = round((np.mean(weights) + np.std(weights)),1)
         # top = np.mean(weights)
         # print(top)
         # s = {k: v for k, v in sorted(d.items(), key=lambda item: item[1], reverse=True)}
@@ -80,12 +79,11 @@ class TermsAnalysis:
         # print('Size of vocabulary after removing rare tokens: {}'.format(
         #     len(vocab)))
         tokenized_tfidf = []
-        for i,row in enumerate(self.tokens.tokenized_pattern):
+        for i, row in enumerate(self.tokens.tokenized_pattern):
             tokenized_tfidf.append([token for token in row if
                                     token.lower() in get_vocabulary(unique_tokenized)])
         pprint.pprint(tokenized_tfidf)
         return tokenized_tfidf
-
 
     def create_frequency_matrix(self, tokenized):
         frequency_matrix = []
@@ -97,26 +95,21 @@ class TermsAnalysis:
                     freq_table[token] += 1
                 else:
                     freq_table[token] = 1
-
             frequency_matrix.append(freq_table)
 
         return frequency_matrix
-
 
     def create_tf_matrix(self, freq_matrix):
         tf_matrix = []
 
         for f_table in freq_matrix:
             tf_table = {}
-
             count_words_in_sentence = len(f_table)
             for word, count in f_table.items():
                 tf_table[word] = count / count_words_in_sentence
-
             tf_matrix.append(tf_table)
 
         return tf_matrix
-
 
     def create_documents_per_words(self, freq_matrix):
         word_per_doc_table = {}
@@ -130,36 +123,28 @@ class TermsAnalysis:
 
         return word_per_doc_table
 
-
     def create_idf_matrix(self, freq_matrix, count_doc_per_words, total_documents):
         idf_matrix = []
 
         for f_table in freq_matrix:
             idf_table = {}
-
             for word in f_table.keys():
                 idf_table[word] = math.log10(total_documents / float(count_doc_per_words[word]))
-
             idf_matrix.append(idf_table)
 
         return idf_matrix
-
 
     def create_tf_idf_matrix(self, tf_matrix, idf_matrix):
         tf_idf_matrix = []
 
         for f_table1, f_table2 in zip(tf_matrix, idf_matrix):
-
             tf_idf_table = {}
-
             for (word1, value1), (word2, value2) in zip(f_table1.items(),
                                                         f_table2.items()):  # here, keys are the same in both the table
                 tf_idf_table[word1] = float(value1 * value2)
-
             tf_idf_matrix.append(tf_idf_table)
 
         return tf_idf_matrix
-
 
     def remove_unnecessary(self, tokenized, tf_idf):
         tokenized_tfidf = []
@@ -169,11 +154,9 @@ class TermsAnalysis:
             print(weights)
             top = np.mean(weights) + np.std(weights)
             print(top)
-            tokenized_tfidf.append([v if weights[x] < top else '｟*｠' for x,v in enumerate(row)])
-            print([v for x,v in enumerate(row) if weights[x] < top ])
+            tokenized_tfidf.append([v if weights[j] < top else '｟*｠' for j, v in enumerate(row)])
+            print([v for j, v in enumerate(row) if weights[j] < top ])
         return tokenized_tfidf
-
-
 
         # f_matrix = self.create_frequency_matrix(tokenized)
         # tf_matrix = self.create_tf_matrix(f_matrix)

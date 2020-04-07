@@ -1,9 +1,13 @@
 #!/usr/bin/python
-import sys, getopt
+import sys
+import getopt
 import numpy as np
+
 from gensim.models import Word2Vec
-from clusterlogs.data_preparation import *
-from clusterlogs.tokenization import *
+
+from clusterlogs.tokenization import tokenize_messages
+from clusterlogs.data_preparation import clean_messages
+
 
 def main(argv):
 
@@ -37,15 +41,15 @@ def main(argv):
 
     try:
         word2vec = Word2Vec(tokenized,
-                             size=300,
-                             window=7,
-                             min_count=1,
-                             workers=4,
-                             iter=10)
+                            size=300,
+                            window=7,
+                            min_count=1,
+                            workers=4,
+                            iter=10)
 
         word2vec.save(outputfile)
     except Exception as e:
-        print('Training model error')
+        print('Training model error:', e)
 
 
 if __name__ == "__main__":
