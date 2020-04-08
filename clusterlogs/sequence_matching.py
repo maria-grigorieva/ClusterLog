@@ -5,9 +5,6 @@ import numpy as np
 from itertools import chain
 from string import punctuation
 
-# import nltk
-# from itertools import groupby
-
 
 class Match:
     '''
@@ -43,12 +40,14 @@ class Match:
 
         # TODO: if pattern is empty - try to make it based on another sample message
         junk = list(punctuation) + ['_', '(.*?)', '']
-        is_empty = any(token for token in pattern if token not in junk)
-        if not is_empty or self.attempt_number > self.max_attempts:
+        # if at least one of the items in sequence is not junk - return True
+        correct = any([token not in junk for token in pattern])
+        if correct or self.attempt_number > self.max_attempts:
             return pattern
-        self.attempt_number += 1
-        print('Search for common pattern for {}. Next attempt...'.format(pattern))
-        self.sequence_matcher(add_placeholder)
+        else:
+            self.attempt_number += 1
+            print('Search for common pattern for {}. Next attempt...'.format(pattern))
+            self.sequence_matcher(add_placeholder)
 
 #    def matcher(self):
 #        if len(self.sequences) > 1:

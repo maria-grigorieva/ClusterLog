@@ -49,7 +49,7 @@ class Chain(object):
                  model_name='word2vec.model',
                  mode='create',
                  output_file='report.html',
-                 add_placeholder=False,
+                 add_placeholder=True,
                  threshold=CLUSTERING_THRESHOLD,
                  matching_accuracy=MATCHING_ACCURACY,
                  clustering_type=CLUSTERING_TYPE,
@@ -148,6 +148,7 @@ class Chain(object):
         :return:
         """
         matcher = Match(gr['tokenized_pattern'].values)
+        #pprint.pprint(gr['tokenized_pattern'].values)
         tokenized_pattern = matcher.sequence_matcher(self.add_placeholder)
         return pd.DataFrame([{'indices': gr.index.values.tolist(),
                               'pattern': detokenize_row(tokenized_pattern, self.tokenizer_type),
@@ -193,7 +194,8 @@ class Chain(object):
 
         self.clusters = MLClustering(self.df, self.groups,
                                      self.vectors, self.cpu_number, self.add_placeholder,
-                                     self.algorithm)
+                                     self.algorithm,
+                                     self.tokenizer_type)
         self.result = self.clusters.process()
 
     def in_cluster(self, groups, cluster_label):

@@ -12,13 +12,18 @@ from .phraser import Phraser
 from .LogCluster import LogParser
 from .tokenization import get_vocabulary
 from .data_preparation import clean_messages
+from .sequence_matching import Match
+from .tokenization import *
+import re
 
 # import editdistance
+
+LIMIT = 30
 
 
 class MLClustering:
 
-    def __init__(self, df, groups, vectors, cpu_number, add_placeholder, method):
+    def __init__(self, df, groups, vectors, cpu_number, add_placeholder, method, tokenizer_type):
         self.groups = groups
         self.df = df
         self.method = method
@@ -28,6 +33,8 @@ class MLClustering:
         self.min_samples = 1
         self.cpu_number = cpu_number
         self.add_placeholder = add_placeholder
+        self.tokenizer_type = tokenizer_type
+        self.diversity_factor = 0
 
     def process(self):
         if self.method == 'dbscan':
@@ -68,7 +75,8 @@ class MLClustering:
         Returns cluster labels
         :return:
         """
-        self.vectors.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 else self.dimensionality_reduction()
+        self.vectors.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 \
+                else self.dimensionality_reduction()
         self.kneighbors()
         self.epsilon_search()
         self.cluster_labels = DBSCAN(eps=self.epsilon,
@@ -76,6 +84,10 @@ class MLClustering:
                                      n_jobs=self.cpu_number) \
             .fit_predict(self.vectors.sent2vec)
         self.groups['cluster'] = self.cluster_labels
+        if len(np.unique(self.cluster_labels)) >= LIMIT:
+            self.diversity_factor = 1
+        else:
+            self.diversity_factor = 0
         print('DBSCAN finished with {} clusters'.format(len(set(self.cluster_labels))))
         return pd.DataFrame.from_dict(
             [item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)],
@@ -97,7 +109,9 @@ class MLClustering:
         Agglomerative clusterization
         :return:
         """
-        self.vectors.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 else self.dimensionality_reduction()
+        if len(self.vectors.sent2vec) >= 5000:
+            self.vectors.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 \
+                else self.dimensionality_reduction()
         self.cluster_labels = AgglomerativeClustering(n_clusters=None,
                                                       distance_threshold=0.1) \
             .fit_predict(self.vectors.sent2vec)
@@ -107,37 +121,29 @@ class MLClustering:
             orient='columns').sort_values(by=['cluster_size'], ascending=False)
 
     def gb_regroup(self, gb):
-        # Search for the most common patterns using LogCluster app (Perl)
-        pattern = self.logcluster_clusterization(gb['pattern'].values)
+        if self.diversity_factor == 1:
+            # Search common tokenized pattern and detokenize it
+            p = Match(gb['tokenized_pattern'].values)
+            tokenized_pattern = p.sequence_matcher(add_placeholder=self.add_placeholder)
+            pattern = detokenize_row(tokenized_pattern, self.tokenizer_type)
+            pattern = re.sub(r'\((.*?)\)+[\S\s]*\((.*?)\)+', r'(.*?)', pattern)
+        elif self.diversity_factor == 0:
+            # Search for the most common patterns using LogCluster app (Perl)
+            pattern = self.logcluster_clusterization(gb['pattern'].values)
         # Generate text from all group sequences
         text = '. '.join([' '.join(row) for row in gb['sequence'].values])
         # Extract common phrases
-        phrases_pyTextRank = Phraser(text, 'pyTextRank')
+        #phrases_pyTextRank = Phraser(text, 'pyTextRank')
         phrases_RAKE = Phraser(text, 'RAKE')
         # Get all indices for the group
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
-        return {'pattern': pattern,
+        return {'pattern': [pattern],
                 'indices': indices,
                 'cluster_size': size,
-                'common_phrases_pyTextRank': phrases_pyTextRank.extract_common_phrases(),
+                #'common_phrases_pyTextRank': phrases_pyTextRank.extract_common_phrases(),
                 'common_phrases_RAKE': phrases_RAKE.extract_common_phrases()}
 
-#     def levenshtein_similarity(self, top, rows):
-        """
-        Search similarities between top and all other sequences of tokens.
-        May be used for strings as well.
-        top - most frequent sequence
-        rows - all sequences
-        :param rows:
-        :return:
-        """
-#         if len(rows) > 1:
-#             return (
-#                 [(1 - editdistance.eval(top, rows[i]) / max(len(top), len(rows[i]))) for i in
-#                  range(0, len(rows))])
-#         else:
-#             return [1]
 
     def drain_clusterization(self, messages):
         regex = [r'(/[\w\./]*[\s]?)', r'([a-zA-Z0-9]+[_]+[\S]+)', r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)', r'[^\w\s]']
@@ -151,8 +157,8 @@ class MLClustering:
             return clean_messages(messages)
         else:
             support = 1 if len(messages) > 1 and len(messages) < 20 else 2
-            regex = []
-            # regex = [r'[^ ]+\.[^ ]+', r'(/[\w\./]*[\s]?)', r'([a-zA-Z0-9]+[_]+[\S]+)', r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)', r'[^\w\s]']
+            #regex = []
+            regex = [r'[^ ]+\.[^ ]+', r'(/[\w\./]*[\s]?)', r'([a-zA-Z0-9]+[_]+[\S]+)', r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)', r'[^\w\s]']
             parser = LogParser(messages=messages, support=support, outdir='', rex=regex)
             patterns = parser.parse()
             if len(patterns) == 0:

@@ -18,7 +18,7 @@
         <tr>
             <th>Cluster Size</th>
             <th>Patterns</th>
-            <th>Key Phrases (pyTextRank)</th>
+<!--            <th>Key Phrases (pyTextRank)</th>-->
             <th>Key Phrases (RAKE)</th>
         </tr>
         {% for dict_item in values %}
@@ -31,13 +31,13 @@
                         {% endfor %}
                     </ul>
                 </td>
-                <td>
-                    <ul>
-                        {% for item in dict_item['common_phrases_pyTextRank'] %}
-                        <li>{{ item }}</li>
-                        {% endfor %}
-                    </ul>
-                </td>
+<!--                <td>-->
+<!--                    <ul>-->
+<!--                        {% for item in dict_item['common_phrases_pyTextRank'] %}-->
+<!--                        <li>{{ item }}</li>-->
+<!--                        {% endfor %}-->
+<!--                    </ul>-->
+<!--                </td>-->
                 <td>
                     <ul>
                         {% for item in dict_item['common_phrases_RAKE'] %}
