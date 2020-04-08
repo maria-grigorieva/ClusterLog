@@ -54,7 +54,7 @@ class SClustering:
         # Convert list of sequences to text
         text = '. '.join([' '.join(row) for row in filtered['sequence'].values])
         # Extract common phrases
-        phrases_pyTextRank = Phraser(text, 'pyTextRank')
+        # phrases_pyTextRank = Phraser(text, 'pyTextRank')
         phrases_RAKE = Phraser(text, 'RAKE')
 
         result.append({'pattern': [textual_pattern],
@@ -62,7 +62,7 @@ class SClustering:
                        'indices': indices,
                        'cluster_size': len(indices),
                        'sequence': common_sequence,
-                       'common_phrases_pyTextRank': phrases_pyTextRank.extract_common_phrases(),
+                       # 'common_phrases_pyTextRank': phrases_pyTextRank.extract_common_phrases(),
                        'common_phrases_RAKE': phrases_RAKE.extract_common_phrases()})
 
         df.drop(filtered.index, axis=0, inplace=True)
