@@ -126,7 +126,7 @@ class MLClustering:
             p = Match(gb['tokenized_pattern'].values)
             tokenized_pattern = p.sequence_matcher(add_placeholder=self.add_placeholder)
             pattern = detokenize_row(tokenized_pattern, self.tokenizer_type)
-            pattern = re.sub(r'\((.*?)\)+[\S\s]*\((.*?)\)+', r'(.*?)', pattern)
+            pattern = [re.sub(r'\((.*?)\)+[\S\s]*\((.*?)\)+', r'(.*?)', pattern)]
         elif self.diversity_factor == 0:
             # Search for the most common patterns using LogCluster app (Perl)
             pattern = self.logcluster_clusterization(gb['pattern'].values)
@@ -138,7 +138,7 @@ class MLClustering:
         # Get all indices for the group
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
-        return {'pattern': [pattern],
+        return {'pattern': pattern,
                 'indices': indices,
                 'cluster_size': size,
                 #'common_phrases_pyTextRank': phrases_pyTextRank.extract_common_phrases(),
