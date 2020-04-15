@@ -46,11 +46,9 @@ class SClustering:
         pattern = Match(filtered['tokenized_pattern'].values)
         tokenized_pattern = pattern.sequence_matcher(add_placeholder=self.add_placeholder)
         textual_pattern = detokenize_row(tokenized_pattern, self.tokenizer_type)
-        # Change the following pattern to '(.*?)':
-        # something in parens,
-        # then any combination of symbols other than digits, letters and '_',
-        # then another pair of parens, more symbols and so on
-        textual_pattern = re.sub(r'\(.*\)(?:[\W\s]*\(.*\))+', r'(.*?)', textual_pattern)
+        # '(.*?)' is a placeholder. If there are several in a row,
+        # possibly with punctuation or whitespace between them, change them to single one
+        textual_pattern = re.sub(r'(\(\.\*\?\))(?:[\W\s]*\1)+', r'(.*?)', textual_pattern)
         # Search common sequence
         sequence = Match(filtered['sequence'].values)
         common_sequence = sequence.sequence_matcher(add_placeholder=False)
