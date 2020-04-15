@@ -8,12 +8,12 @@ from sklearn.cluster import DBSCAN, AgglomerativeClustering
 from sklearn.neighbors import NearestNeighbors
 from sklearn.decomposition import PCA
 
-from .phraser import Phraser
+from .phraser import extract_common_phrases
 from .LogCluster import LogParser
 from .tokenization import get_vocabulary
 from .data_preparation import clean_messages
 from .sequence_matching import Match
-from .tokenization import *
+from .tokenization import detokenize_row
 import re
 
 # import editdistance
@@ -76,7 +76,7 @@ class MLClustering:
         :return:
         """
         self.vectors.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 \
-                else self.dimensionality_reduction()
+            else self.dimensionality_reduction()
         self.kneighbors()
         self.epsilon_search()
         self.cluster_labels = DBSCAN(eps=self.epsilon,
@@ -133,17 +133,16 @@ class MLClustering:
         # Generate text from all group sequences
         text = '. '.join([' '.join(row) for row in gb['sequence'].values])
         # Extract common phrases
-        #phrases_pyTextRank = Phraser(text, 'pyTextRank')
-        phrases_RAKE = Phraser(text, 'RAKE')
+        # phrases_pyTextRank = extract_common_phrases(text, 'pyTextRank')
+        phrases_RAKE = extract_common_phrases(text, 'RAKE')
         # Get all indices for the group
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
         return {'pattern': pattern,
                 'indices': indices,
                 'cluster_size': size,
-                #'common_phrases_pyTextRank': phrases_pyTextRank.extract_common_phrases(),
-                'common_phrases_RAKE': phrases_RAKE.extract_common_phrases()}
-
+                # common_phrases_pyTextRank': phrases_pyTextRank,
+                'common_phrases_RAKE': phrases_RAKE}
 
     def drain_clusterization(self, messages):
         regex = [r'(/[\w\./]*[\s]?)', r'([a-zA-Z0-9]+[_]+[\S]+)', r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)', r'[^\w\s]']
@@ -157,7 +156,7 @@ class MLClustering:
             return clean_messages(messages)
         else:
             support = 1 if len(messages) > 1 and len(messages) < 20 else 2
-            #regex = []
+            # regex = []
             regex = [r'[^ ]+\.[^ ]+', r'(/[\w\./]*[\s]?)', r'([a-zA-Z0-9]+[_]+[\S]+)', r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)', r'[^\w\s]']
             parser = LogParser(messages=messages, support=support, outdir='', rex=regex)
             patterns = parser.parse()

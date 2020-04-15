@@ -2,7 +2,7 @@ import re
 import pandas as pd
 import editdistance
 
-from .phraser import Phraser
+from .phraser import extract_common_phrases
 from .sequence_matching import Match
 from .tokenization import detokenize_row
 
@@ -54,16 +54,16 @@ class SClustering:
         # Convert list of sequences to text
         text = '. '.join([' '.join(row) for row in filtered['sequence'].values])
         # Extract common phrases
-        # phrases_pyTextRank = Phraser(text, 'pyTextRank')
-        phrases_RAKE = Phraser(text, 'RAKE')
+        # phrases_pyTextRank = extract_common_phrases(text, 'pyTextRank')
+        phrases_RAKE = extract_common_phrases(text, 'RAKE')
 
         result.append({'pattern': [textual_pattern],
                        'tokenized_pattern': tokenized_pattern,
                        'indices': indices,
                        'cluster_size': len(indices),
                        'sequence': common_sequence,
-                       # 'common_phrases_pyTextRank': phrases_pyTextRank.extract_common_phrases(),
-                       'common_phrases_RAKE': phrases_RAKE.extract_common_phrases()})
+                       # 'common_phrases_pyTextRank': phrases_pyTextRank,
+                       'common_phrases_RAKE': phrases_RAKE})
 
         df.drop(filtered.index, axis=0, inplace=True)
         while df.shape[0] > 0:
