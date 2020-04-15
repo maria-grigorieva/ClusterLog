@@ -1,10 +1,11 @@
 import re
 import pandas as pd
-import editdistance
+# import editdistance
 
 from .phraser import extract_common_phrases
 from .sequence_matching import Match
 from .tokenization import detokenize_row
+from .utility import levenshtein_similarity_1_to_n
 
 
 class SClustering:
@@ -37,15 +38,19 @@ class SClustering:
         top_sequence = df['sequence'].apply(tuple).describe().top
         # Calculate Levenshtein similarities between the most frequent and
         # all other textual sequences
-        df['ratio'] = self.levenshtein_similarity(top_sequence, df['sequence'].values)
+        # df['ratio'] = self.levenshtein_similarity(top_sequence, df['sequence'].values)
+        df['ratio'] = levenshtein_similarity_1_to_n(df['sequence'].values, top_sequence)
         # Filter the inistal DataFrame by accuracy values
         filtered = df[(df['ratio'] >= self.accuracy)]
         # Search common tokenized pattern and detokenize it
         pattern = Match(filtered['tokenized_pattern'].values)
         tokenized_pattern = pattern.sequence_matcher(add_placeholder=self.add_placeholder)
         textual_pattern = detokenize_row(tokenized_pattern, self.tokenizer_type)
-        textual_pattern = re.sub(r'\((.*?)\)+[\S\s]*\((.*?)\)+', r'(.*?)', textual_pattern)
-        # print(tokenized_pattern)
+        # Change the following pattern to '(.*?)':
+        # something in parens,
+        # then any combination of symbols other than digits, letters and '_',
+        # then another pair of parens, more symbols and so on
+        textual_pattern = re.sub(r'\(.*\)(?:[\W\s]*\(.*\))+', r'(.*?)', textual_pattern)
         # Search common sequence
         sequence = Match(filtered['sequence'].values)
         common_sequence = sequence.sequence_matcher(add_placeholder=False)
@@ -69,21 +74,21 @@ class SClustering:
         while df.shape[0] > 0:
             self.reclustering(df, result)
 
-    @staticmethod
-    def levenshtein_similarity(top, rows):
-        """
-        Search similarities between top and all other sequences of tokens.
-        May be used for strings as well.
-        top - most frequent sequence
-        rows - all sequences
-        """
-        if len(rows) > 1 and len(top) > 0:
-            try:
-                return (
-                    [(1 - editdistance.eval(top, rows[i]) / max(len(top), len(rows[i]))) for i in
-                     range(0, len(rows))])
-            except Exception:
-                print(rows)
-                print(top)
-        else:
-            return 1
+    # @staticmethod
+    # def levenshtein_similarity(top, rows):
+    #     """
+    #     Search similarities between top and all other sequences of tokens.
+    #     May be used for strings as well.
+    #     top - most frequent sequence
+    #     rows - all sequences
+    #     """
+    #     if len(rows) > 1 and len(top) > 0:
+    #         try:
+    #             return (
+    #                 [(1 - editdistance.eval(top, rows[i]) / max(len(top), len(rows[i]))) for i in
+    #                  range(0, len(rows))])
+    #         except Exception:
+    #             print(rows)
+    #             print(top)
+    #     else:
+    #         return 1

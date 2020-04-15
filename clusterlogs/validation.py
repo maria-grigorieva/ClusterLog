@@ -1,8 +1,10 @@
-import editdistance
+# import editdistance
 import numpy as np
 import pandas as pd
 
 from pyonmttok import Tokenizer
+
+from .utility import levenshtein_similarity_1_to_n
 
 STATISTICS = ["cluster_name",
               "cluster_size",
@@ -21,7 +23,8 @@ class Output:
         self.tokenizer = Tokenizer("conservative", spacer_annotate=True)
 
     def cluster_statistics(self, item, row, messages):
-        similarity = self.levenshtein_similarity(messages, 0)
+        # similarity = self.levenshtein_similarity(messages, 0)
+        similarity = levenshtein_similarity_1_to_n(messages)
         return {'cluster_name': item,
                 'cluster_size': row['cluster_size'],
                 'pattern': row['pattern'],
@@ -40,24 +43,20 @@ class Output:
             messages = df.loc[row['indices'], target].values
             patterns.append(self.cluster_statistics(index, row, messages))
         return pd.DataFrame(patterns, columns=STATISTICS)\
-                        .round(2)\
-                        .sort_values(by='cluster_size', ascending=False)
+                    .round(2)\
+                    .sort_values(by='cluster_size', ascending=False)
 
-    def levenshtein_similarity(self, rows, N):
-        """
-        :param rows:
-        :return:
-        """
-        if len(rows) > 1:
-            if N != 0:
-                return (
-                    [(1 - editdistance.eval(rows[0][:N], rows[i][:N]) / max(len(rows[0][:N]), len(rows[i][:N]))) for
-                     i in
-                     range(0, len(rows))])
-            else:
-                return (
-                    [(1 - editdistance.eval(rows[0], rows[i]) / max(len(rows[0]), len(rows[i]))) for i
-                     in
-                     range(0, len(rows))])
-        else:
-            return 1
+    # def levenshtein_similarity(self, rows, N):
+    #     if len(rows) > 1:
+    #         if N != 0:
+    #             return (
+    #                 [(1 - editdistance.eval(rows[0][:N], rows[i][:N]) / max(len(rows[0][:N]), len(rows[i][:N]))) for
+    #                  i in
+    #                  range(0, len(rows))])
+    #         else:
+    #             return (
+    #                 [(1 - editdistance.eval(rows[0], rows[i]) / max(len(rows[0]), len(rows[i]))) for i
+    #                  in
+    #                  range(0, len(rows))])
+    #     else:
+    #         return 1
