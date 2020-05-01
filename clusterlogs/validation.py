@@ -45,18 +45,3 @@ class Output:
         return pd.DataFrame(patterns, columns=STATISTICS)\
                     .round(2)\
                     .sort_values(by='cluster_size', ascending=False)
-
-    # def levenshtein_similarity(self, rows, N):
-    #     if len(rows) > 1:
-    #         if N != 0:
-    #             return (
-    #                 [(1 - editdistance.eval(rows[0][:N], rows[i][:N]) / max(len(rows[0][:N]), len(rows[i][:N]))) for
-    #                  i in
-    #                  range(0, len(rows))])
-    #         else:
-    #             return (
-    #                 [(1 - editdistance.eval(rows[0], rows[i]) / max(len(rows[0]), len(rows[i]))) for i
-    #                  in
-    #                  range(0, len(rows))])
-    #     else:
-    #         return 1

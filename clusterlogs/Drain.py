@@ -283,5 +283,4 @@ class LogParser:
     def preprocess(self, line):
         for currentRex in self.rex:
             line = re.sub(currentRex, '<*>', line)
-            # line = re.sub(' +', '<*>', line)
         return line

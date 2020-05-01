@@ -4,11 +4,11 @@ import pprint
 from clusterlogs import pipeline
 
 def main():
-    df = pd.read_csv('../samples/harvester_errors24.csv', sep=';')
-    #df = pd.read_csv('/Users/maria/cernbox/LogsClusterization/Harvester/data_sample30days.csv', sep='\t')
+    #df = pd.read_csv('../samples/Harvester/harv_1day.csv', sep='\t')
+    df = pd.read_csv('/Users/maria/cernbox/LogsClusterization/harvester_errors24.csv', sep=';')
     target = 'message'
-    cluster = pipeline.Chain(df, target, mode='create', model_name='../models/harvester.model',matching_accuracy=0.8,
-                             clustering_type='ML')
+    cluster = pipeline.Chain(df, target, mode='update', model_name='../models/harvester_30days.model',matching_accuracy=0.8,
+                             clustering_type='ML', output_file='../reports/harvester24_update.html')
     cluster.process()
 
     pprint.pprint(cluster.result)

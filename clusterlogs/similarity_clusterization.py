@@ -1,11 +1,12 @@
 import re
 import pandas as pd
-# import editdistance
+import editdistance
 
 from .phraser import extract_common_phrases
 from .sequence_matching import Match
 from .tokenization import detokenize_row
 from .utility import levenshtein_similarity_1_to_n
+
 
 
 class SClustering:
@@ -38,17 +39,17 @@ class SClustering:
         top_sequence = df['sequence'].apply(tuple).describe().top
         # Calculate Levenshtein similarities between the most frequent and
         # all other textual sequences
-        # df['ratio'] = self.levenshtein_similarity(top_sequence, df['sequence'].values)
         df['ratio'] = levenshtein_similarity_1_to_n(df['sequence'].values, top_sequence)
+        #df['ratio'] = self.levenshtein_similarity(top_sequence, df['sequence'].values)
         # Filter the inistal DataFrame by accuracy values
         filtered = df[(df['ratio'] >= self.accuracy)]
         # Search common tokenized pattern and detokenize it
         pattern = Match(filtered['tokenized_pattern'].values)
         tokenized_pattern = pattern.sequence_matcher(add_placeholder=self.add_placeholder)
         textual_pattern = detokenize_row(tokenized_pattern, self.tokenizer_type)
-        # '(.*?)' is a placeholder. If there are several in a row,
-        # possibly with punctuation or whitespace between them, change them to single one
         textual_pattern = re.sub(r'(\(\.\*\?\))(?:[\W\s]*\1)+', r'(.*?)', textual_pattern)
+        #textual_pattern = re.sub(r'\((.*?)\)+[\S\s]*\((.*?)\)+', r'(.*?)', textual_pattern)
+        # print(tokenized_pattern)
         # Search common sequence
         sequence = Match(filtered['sequence'].values)
         common_sequence = sequence.sequence_matcher(add_placeholder=False)
@@ -57,7 +58,7 @@ class SClustering:
         # Convert list of sequences to text
         text = '. '.join([' '.join(row) for row in filtered['sequence'].values])
         # Extract common phrases
-        # phrases_pyTextRank = extract_common_phrases(text, 'pyTextRank')
+        # phrases_pyTextRank = Phraser(text, 'pyTextRank')
         phrases_RAKE = extract_common_phrases(text, 'RAKE')
 
         result.append({'pattern': [textual_pattern],
@@ -65,28 +66,9 @@ class SClustering:
                        'indices': indices,
                        'cluster_size': len(indices),
                        'sequence': common_sequence,
-                       # 'common_phrases_pyTextRank': phrases_pyTextRank,
+                       # 'common_phrases_pyTextRank': phrases_pyTextRank.extract_common_phrases(),
                        'common_phrases_RAKE': phrases_RAKE})
 
         df.drop(filtered.index, axis=0, inplace=True)
         while df.shape[0] > 0:
             self.reclustering(df, result)
-
-    # @staticmethod
-    # def levenshtein_similarity(top, rows):
-    #     """
-    #     Search similarities between top and all other sequences of tokens.
-    #     May be used for strings as well.
-    #     top - most frequent sequence
-    #     rows - all sequences
-    #     """
-    #     if len(rows) > 1 and len(top) > 0:
-    #         try:
-    #             return (
-    #                 [(1 - editdistance.eval(top, rows[i]) / max(len(top), len(rows[i]))) for i in
-    #                  range(0, len(rows))])
-    #         except Exception:
-    #             print(rows)
-    #             print(top)
-    #     else:
-    #         return 1

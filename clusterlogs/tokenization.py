@@ -4,15 +4,15 @@ from pyonmttok import Tokenizer
 from collections import Counter
 from nltk.corpus import stopwords
 
-# from itertools import groupby
+from itertools import groupby
 
 
 # TOKENIZER = Tokenizer("space", spacer_annotate=True, preserve_placeholders=True, spacer_new=True)
 STOP = stopwords.words('english') + list(punctuation) + ["``", "''", u"\u2581"]
 
 
-def tokenize_messages(messages, tokenizer_type):
-    tokenizer = Tokenizer(tokenizer_type, spacer_annotate=True, preserve_placeholders=True, spacer_new=True)
+def tokenize_messages(messages, tokenizer_type, spacer_annontate=True, spacer_new=True):
+    tokenizer = Tokenizer(tokenizer_type, spacer_annotate=spacer_annontate, preserve_placeholders=True, spacer_new=spacer_new)
     return [tokenizer.tokenize(line)[0] for line in messages]
 
 
@@ -64,9 +64,9 @@ def clean_tokenized(tokenized_messages, remove_stopwords=False):
 #     return [elem for i, elem in enumerate(L) if i == 0 or L[i - 1] != elem]
 
 
-# def detokenize(tokenized_messages, tokenizer_type):
-#     TOKENIZER = Tokenizer(tokenizer_type, spacer_annotate=True, preserve_placeholders=True, spacer_new=True)
-#     return [TOKENIZER.detokenize([x for x, _ in groupby(row)]) for row in tokenized_messages]
+def detokenize_messages(tokenized_messages, tokenizer_type):
+    TOKENIZER = Tokenizer(tokenizer_type, spacer_annotate=True, preserve_placeholders=True, spacer_new=True)
+    return [TOKENIZER.detokenize([x for x, _ in groupby(row)]) for row in tokenized_messages]
 
 
 # def remove_neighboring_duplicates(tokenized):

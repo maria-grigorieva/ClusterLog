@@ -31,10 +31,9 @@ class TermsAnalysis:
         unique_tokenized = [
             [token for token in row if frequency[token] > 1]
             for row in unique_tokenized]
-        vocabulary = get_vocabulary(unique_tokenized)
         print('Size of vocabulary after removing stop tokens and tokens, that appear only once: {}'.
-              format(len(vocabulary)))
-        print(vocabulary)
+              format(len(get_vocabulary(unique_tokenized))))
+        print(get_vocabulary(unique_tokenized))
         # # TF-IDF Terms Analysis
         # dct = Dictionary(unique_tokenized)
         # corpus = [dct.doc2bow(line) for line in unique_tokenized]
@@ -82,7 +81,7 @@ class TermsAnalysis:
         tokenized_tfidf = []
         for i, row in enumerate(self.tokens.tokenized_pattern):
             tokenized_tfidf.append([token for token in row if
-                                    token.lower() in vocabulary])
+                                    token.lower() in get_vocabulary(unique_tokenized)])
         pprint.pprint(tokenized_tfidf)
         return tokenized_tfidf
 

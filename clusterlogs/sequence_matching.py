@@ -4,6 +4,7 @@ import numpy as np
 
 from itertools import chain
 from string import punctuation
+import editdistance
 
 
 class Match:
@@ -49,33 +50,67 @@ class Match:
             print('Search for common pattern for {}. Next attempt...'.format(pattern))
             self.sequence_matcher(add_placeholder)
 
-#    def matcher(self):
-#        if len(self.sequences) > 1:
-#            fdist = nltk.FreqDist([i for l in self.sequences for i in l])
-#            # x = [token for token in lines[0] if (fdist[token] / len(lines) >= 1)]
-#            x = [token if (fdist[token] / len(self.sequences) >= 1) else '(.*?)' for token in self.sequences[0]]
-#            return [i[0] for i in groupby(x)]
-#        else:
-#            return self.sequences[0]
 
-#    def matrix_matching(self):
-#        x = list(map(list, zip(*self.sequences)))
-#        return [tokens[0] if len(tokens) == 1 else '(.*?)' for tokens in
-#                [np.unique(line) for line in x]]
+    def matcher(self, a, b):
+        matches = difflib.SequenceMatcher(None, a, b)
+        match_ranges = matches.get_matching_blocks()[:-1]
+        matches = [a[m.a:m.a + m.size] for m in match_ranges]
+        matches = [match + ['(.*?)'] for match in matches]
+        matches[-1].pop()
+        return list(chain(*matches))  # concatenate inner lists
 
-#    def matching_clusters(self, sequences, patterns):
-#        if len(sequences) > 0:
-#            start = sequences[0]
-#            similarities = self.levenshtein_similarity(start, sequences)
-#            filtered = []
-#            to_remove = []
-#            for i, value in enumerate(similarities):
-#                if value >= 0.6:
-#                    filtered.append(sequences[i])
-#                    to_remove.append(i)
-#            sequences = np.delete(sequences, to_remove)
-#            patterns.append(self.sequence_matcher(filtered))
-#            while len(sequences) > 0:
-#                self.matching_clusters(sequences, patterns)
-#        else:
-#            patterns = sequences[0]
+
+    def matching_clusters(self, sequences, patterns):
+        while len(sequences) >= 2:
+            start = sequences[0]
+            similarities =  Match.levenshtein_similarity(start, sequences)
+            filtered = []
+            to_remove = []
+            for i, value in enumerate(similarities):
+                if value >= 0.9:
+                    filtered.append(sequences[i])
+                    to_remove.append(i)
+            patterns.append(self.matcher(start, random.choice(filtered)))
+            sequences = np.delete(sequences, to_remove)
+            if len(sequences) >= 2:
+                self.matching_clusters(sequences.tolist(), patterns)
+            elif len(sequences) == 1:
+                patterns.append(sequences[0])
+        else:
+            patterns.append(sequences[0])
+
+    @staticmethod
+    def levenshtein_similarity(top, rows):
+        """
+        Search similarities between top and all other sequences of tokens.
+        May be used for strings as well.
+        top - most frequent sequence
+        rows - all sequences
+        """
+        if len(rows) > 1 and len(top) > 0:
+            try:
+                return (
+                    [(1 - editdistance.eval(top, rows[i]) / max(len(top), len(rows[i]))) for i in
+                     range(0, len(rows))])
+            except Exception:
+                print(rows)
+                print(top)
+        else:
+            return 1
+    #
+    # def matrix_matching(self, sequences):
+    #     x = list(map(list, zip(*sequences)))
+    #     return [tokens[0] if len(tokens) == 1 else '(.*?)' for tokens in
+    #             [np.unique(line) for line in x]]
+    #
+    #
+    # def matcher(self, sequences):
+    #    if len(sequences) > 1:
+    #        fdist = nltk.FreqDist([i for l in self.sequences for i in l])
+    #        # x = [token for token in lines[0] if (fdist[token] / len(lines) >= 1)]
+    #        x = [token if (fdist[token] / len(self.sequences) >= 1) else '(.*?)' for token in self.sequences[0]]
+    #        return [i[0] for i in groupby(x)]
+    #    else:
+    #        return self.sequences[0]
+
+

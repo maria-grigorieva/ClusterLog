@@ -2,7 +2,9 @@ import math
 import numpy as np
 
 from gensim.models import Word2Vec
-from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+# from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+from sklearn.feature_extraction.text import TfidfVectorizer
+from collections import defaultdict
 
 from .pipeline import Chain
 
@@ -18,16 +20,20 @@ class Vector(Chain):
         self.model_name = model_name
         self.doc2vec = None
 
-    def create_doc2vec_model(self):
-        tagged_docs = [TaggedDocument(doc, [str(i)]) for i, doc in enumerate(self.tokenized)]
-        self.doc2vec = Doc2Vec(tagged_docs, vector_size=self.w2v_size, window=self.w2v_window, workers=self.cpu_number)
-        return self.doc2vec.docvecs.vectors_docs
+    # def create_doc2vec_model(self):
+    #     tagged_docs = [TaggedDocument(doc, [str(i)]) for i, doc in enumerate(self.tokenized)]
+    #     self.doc2vec = Doc2Vec(tagged_docs, vector_size=self.w2v_size,
+    #                            window=self.w2v_window, workers=self.cpu_number,
+    #                            min_count=2, epochs=40)
+    #
+    #     self.doc2vec.save(self.model_name)
+    #     self.sent2vec = self.doc2vec.docvecs.vectors_docs
 
-    def create_word2vec_model(self, min_count=1, iterations=10):
+    def create_word2vec_model(self, min_count=2, iterations=30):
         """
         Train new word2vec model
         :param iterations:
-        :param min_count: minimium frequency count of words (recommended value is 1)
+        :param min_count: minimium frequency count of words (recommended value is 2)
         """
         self.word2vec = Word2Vec(self.tokenized,
                                  size=self.w2v_size,
@@ -55,6 +61,10 @@ class Vector(Chain):
         """
         Load word2vec model from file
         """
+        # self.sent2vec = []
+        # model = Doc2Vec.load(self.model_name)
+        # for message in self.tokenized:
+        #     self.sent2vec.append(model.infer_vector(message))
         self.word2vec = Word2Vec.load(self.model_name)
 
     def get_w2v_vocabulary(self):
@@ -66,17 +76,36 @@ class Vector(Chain):
             w2c[item] = self.word2vec.wv.vocab[item].count
         return w2c
 
-    def vectorize_messages(self):
+    def vectorize_messages(self, tf_idf=False):
         """
         Calculates mathematical average of the word vector representations
         of all the words in each sentence
         """
         sent2vec = []
-        for sent in self.tokenized:
-            sent_vec = np.average([self.word2vec[w] if w in self.word2vec else np.zeros((self.w2v_size,), dtype=np.float32)
-                                   for w in sent], 0)
-            sent2vec.append(np.zeros((self.w2v_size,), dtype=np.float32) if np.isnan(np.sum(sent_vec)) else sent_vec)
-        self.sent2vec = np.array(sent2vec)
+        if tf_idf:
+            tfidf = TfidfVectorizer(analyzer=lambda x: x)
+            tfidf.fit(self.tokenized)
+            # if a word was never seen - it must be at least as infrequent
+            # as any of the known words - so the default idf is the max of
+            # known idf's
+            max_idf = max(tfidf.idf_)
+            self.word2weight = defaultdict(
+                lambda: max_idf,
+                [(w, tfidf.idf_[i]) for w, i in tfidf.vocabulary_.items()])
+            self.sent2vec = np.array([
+                np.mean([self.word2vec[w] * self.word2weight[w]
+                         for w in words if w in self.word2vec] or
+                        [np.zeros(self.dim)], axis=0)
+                for words in self.tokenized
+            ])
+        else:
+            for sent in self.tokenized:
+                sent2vec.append(np.average(self.word2vec[sent],0))
+            # sent_vec = np.average([self.word2vec[w] if w in self.word2vec else np.zeros((self.w2v_size,), dtype=np.float32)
+            #                        for w in sent], 0)
+            # sent2vec.append(np.zeros((self.w2v_size,), dtype=np.float32) if np.isnan(np.sum(sent_vec)) else sent_vec)
+            self.sent2vec = np.array(sent2vec)
+
 
     @staticmethod
     def detect_embedding_size(vocab):

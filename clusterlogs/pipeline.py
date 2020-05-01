@@ -10,7 +10,7 @@ from string import punctuation
 from .reporting import report
 from .validation import Output
 from .tokenization import tokenize_messages, get_term_frequencies, detokenize_row
-from .data_preparation import clean_messages
+from .data_preparation import clean_messages, alpha_cleaning
 from .sequence_matching import Match
 from .ml_clusterization import MLClustering
 from .similarity_clusterization import SClustering
@@ -44,7 +44,7 @@ class Chain(object):
     ALGORITHM = 'dbscan'
 
     def __init__(self, df, target,
-                 tokenizer_type='space',
+                 tokenizer_type='conservative',
                  cluster_settings=None,
                  model_name='word2vec.model',
                  mode='create',
@@ -86,15 +86,15 @@ class Chain(object):
         Chain of methods, providing data preparation, vectorization and clusterization
         """
         self.df['tokenized_pattern'] = tokenize_messages(self.df[self.target].values, self.tokenizer_type)
-        cleaned_strings = clean_messages(self.df[self.target].values)
+        cleaned_strings = alpha_cleaning(self.df[self.target].values)
         cleaned_tokens = [row.split(' ') for row in cleaned_strings]
         # get frequence of cleaned tokens
-        frequency = get_term_frequencies(cleaned_tokens)
+        # frequency = get_term_frequencies(cleaned_tokens)
         # remove tokens that appear only once and save tokens which are textual substrings
-        cleaned_tokens = [
-            [token for token in row if frequency[token] > 1]
-            for row in cleaned_tokens]
-        cleaned_strings = [' '.join(row) for row in cleaned_tokens]
+        # cleaned_tokens = [
+        #     [token for token in row if frequency[token] > 1]
+        #     for row in cleaned_tokens]
+        # cleaned_strings = [' '.join(row) for row in cleaned_tokens]
         self.df['hash'] = self.generateHash(cleaned_strings)
 
         self.df['sequence'] = cleaned_tokens
@@ -170,6 +170,11 @@ class Chain(object):
                               self.w2v_window,
                               self.cpu_number,
                               self.model_name)
+        # self.vectors = Vector(self.groups['tokenized_pattern'].values,
+        #                       self.w2v_size,
+        #                       self.w2v_window,
+        #                       self.cpu_number,
+        #                       self.model_name)
         if self.mode == 'create':
             self.vectors.create_word2vec_model(min_count=1, iterations=10)
         if self.mode == 'update':
@@ -185,7 +190,7 @@ class Chain(object):
         of all the words in each sentence
         :return:
         """
-        self.vectors.vectorize_messages()
+        self.vectors.vectorize_messages(tf_idf=True)
         print('Vectorization of sentences is finished')
         return self
 

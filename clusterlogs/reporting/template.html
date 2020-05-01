@@ -2,52 +2,77 @@
 
 
 <head>
-    <link href="bootstrap-3.4.1-dist/css/bootstrap.css" rel="stylesheet">
-    <script src="bootstrap-3.4.1-dist/js/bootstrap.js"></script>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <style>
+        table {
+          font-size: 12px;
+        }
+        .container {
+            width: 65%;
+            margin-top: 55px;
+        }
+    </style>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <title>ClusterLogs Report</title>
+  </head>
 </head>
+
 <body>
 
+<div class="container">
 
-<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
 
+        <h3>ClusterLogs Report</h3>
 
-    <h3>Report</h3>
-
-
-    <table class="table table-condensed table-striped">
-        <tr>
-            <th>Cluster Size</th>
-            <th>Patterns</th>
-<!--            <th>Key Phrases (pyTextRank)</th>-->
-            <th>Key Phrases (RAKE)</th>
-        </tr>
-        {% for dict_item in values %}
+        <table class="table table-sm table-condensed table-striped">
+            <thead class="thead-dark">
             <tr>
-                <td>{{ dict_item['cluster_size'] }}</td>
-                <td>
-                    <ul>
-                        {% for item in dict_item['pattern'] %}
-                        <li>{{ item }}</li>
-                        {% endfor %}
-                    </ul>
-                </td>
-<!--                <td>-->
-<!--                    <ul>-->
-<!--                        {% for item in dict_item['common_phrases_pyTextRank'] %}-->
-<!--                        <li>{{ item }}</li>-->
-<!--                        {% endfor %}-->
-<!--                    </ul>-->
-<!--                </td>-->
-                <td>
-                    <ul>
-                        {% for item in dict_item['common_phrases_RAKE'] %}
-                        <li>{{ item }}</li>
-                        {% endfor %}
-                    </ul>
-                </td>
+                <th>Cluster Size</th>
+                <th>Patterns</th>
+    <!--            <th>Drain Patterns</th>-->
+                <th>Key Phrases (RAKE)</th>
             </tr>
-        {% endfor %}
-    </table>
+            </thead>
+            <tbody>
+            {% for dict_item in values %}
+                <tr>
+                    <td>{{ dict_item['cluster_size'] }}</td>
+                    <td>
+                        <ul>
+                            {% for item in dict_item['pattern'] %}
+                            <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+    <!--                <td>-->
+    <!--                    <ul>-->
+    <!--                        {% for item in dict_item['drain_pattern'] %}-->
+    <!--                        <li>{{ item }}</li>-->
+    <!--                        {% endfor %}-->
+    <!--                    </ul>-->
+    <!--                </td>-->
+                    <td>
+                        <ul>
+                            {% for item in dict_item['common_phrases_RAKE'] %}
+                            <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+            </div>
+    </div>
 
 </div>
 
