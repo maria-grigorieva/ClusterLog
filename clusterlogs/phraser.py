@@ -12,11 +12,10 @@ def extract_common_phrases(text, algorithm):
 
 
 def _extract_common_phrases_rake(text):
-    Rake = RAKE.Rake(RAKE.GoogleSearchStopList())  # Google is the smallest built-in list
-    phrases = Rake.run(text, minFrequency=1, minCharacters=3, maxWords=5)
-    # Rake.run() already returns sorted pairs, this shouldn't be necessary
-    phrases = sorted(phrases, key=lambda x: x[1], reverse=True)
-    if not phrases:
+    Rake = RAKE.Rake(RAKE.GoogleSearchStopList())
+    phrases = sorted(Rake.run(text, minFrequency=1, minCharacters=3, maxWords=5),
+                     key=lambda x: x[1], reverse=True)
+    if len(phrases) == 0:
         return [text]
     else:
         return [item[0] for item in phrases]

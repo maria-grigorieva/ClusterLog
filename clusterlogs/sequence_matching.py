@@ -2,9 +2,11 @@ import random
 import difflib
 import numpy as np
 
-from itertools import chain
+from itertools import chain, groupby
 from string import punctuation
 import editdistance
+import nltk
+
 
 
 class Match:
@@ -51,33 +53,34 @@ class Match:
             self.sequence_matcher(add_placeholder)
 
 
-    def matcher(self, a, b):
-        matches = difflib.SequenceMatcher(None, a, b)
-        match_ranges = matches.get_matching_blocks()[:-1]
-        matches = [a[m.a:m.a + m.size] for m in match_ranges]
-        matches = [match + ['(.*?)'] for match in matches]
-        matches[-1].pop()
-        return list(chain(*matches))  # concatenate inner lists
+    def matcher(self, sequences):
+        pattern = sequences[0]
+        for s in sequences:
+            matches = difflib.SequenceMatcher(None, pattern, s)
+            match_ranges = matches.get_matching_blocks()[:-1]
+            matches = [pattern[m.a:m.a + m.size] for m in match_ranges]
+            matches = [match + ['(.*?)'] for match in matches]
+            matches[-1].pop()
+            pattern = list(chain(*matches))  # concatenate inner lists
+        return pattern
 
 
     def matching_clusters(self, sequences, patterns):
-        while len(sequences) >= 2:
-            start = sequences[0]
-            similarities =  Match.levenshtein_similarity(start, sequences)
-            filtered = []
-            to_remove = []
-            for i, value in enumerate(similarities):
-                if value >= 0.9:
-                    filtered.append(sequences[i])
-                    to_remove.append(i)
-            patterns.append(self.matcher(start, random.choice(filtered)))
-            sequences = np.delete(sequences, to_remove)
-            if len(sequences) >= 2:
-                self.matching_clusters(sequences.tolist(), patterns)
-            elif len(sequences) == 1:
-                patterns.append(sequences[0])
-        else:
+        start = sequences[0]
+        similarities = Match.levenshtein_similarity(start, sequences)
+        filtered, to_remove = [], []
+        for i, value in enumerate(similarities):
+            if value >= 0.7:
+                filtered.append(sequences[i])
+                to_remove.append(i)
+        patterns.append(self.matcher(filtered))
+        sequences = np.delete(sequences, to_remove)
+        if len(sequences) > 1:
+            self.matching_clusters(sequences, patterns)
+        elif len(sequences) == 1:
             patterns.append(sequences[0])
+            np.delete(sequences, 0)
+
 
     @staticmethod
     def levenshtein_similarity(top, rows):
@@ -97,20 +100,26 @@ class Match:
                 print(top)
         else:
             return 1
-    #
-    # def matrix_matching(self, sequences):
-    #     x = list(map(list, zip(*sequences)))
-    #     return [tokens[0] if len(tokens) == 1 else '(.*?)' for tokens in
-    #             [np.unique(line) for line in x]]
-    #
-    #
+
+
+    def matrix_matching(self, sequences):
+        if len(sequences) == 1:
+            return sequences[0]
+        else:
+            x = list(map(list, zip(*sequences)))
+            return [tokens[0] if len(tokens) == 1 else '(.*?)' for tokens in
+                    [np.unique(line) for line in x]]
+
+
     # def matcher(self, sequences):
     #    if len(sequences) > 1:
-    #        fdist = nltk.FreqDist([i for l in self.sequences for i in l])
+    #        fdist = nltk.FreqDist([token for row in sequences for token in row])
     #        # x = [token for token in lines[0] if (fdist[token] / len(lines) >= 1)]
-    #        x = [token if (fdist[token] / len(self.sequences) >= 1) else '(.*?)' for token in self.sequences[0]]
+    #        x = [token if (fdist[token] / len(sequences) >= 1) else '(.*?)' for token in sequences[0]]
+    #        print(x)
+    #        print([i[0] for i in groupby(x)])
     #        return [i[0] for i in groupby(x)]
     #    else:
-    #        return self.sequences[0]
+    #        return sequences[0]
 
 

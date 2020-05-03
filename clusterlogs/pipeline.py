@@ -44,7 +44,7 @@ class Chain(object):
     ALGORITHM = 'dbscan'
 
     def __init__(self, df, target,
-                 tokenizer_type='conservative',
+                 tokenizer_type='space',
                  cluster_settings=None,
                  model_name='word2vec.model',
                  mode='create',
@@ -86,7 +86,7 @@ class Chain(object):
         Chain of methods, providing data preparation, vectorization and clusterization
         """
         self.df['tokenized_pattern'] = tokenize_messages(self.df[self.target].values, self.tokenizer_type)
-        cleaned_strings = alpha_cleaning(self.df[self.target].values)
+        cleaned_strings = clean_messages(self.df[self.target].values)
         cleaned_tokens = [row.split(' ') for row in cleaned_strings]
         # get frequence of cleaned tokens
         # frequency = get_term_frequencies(cleaned_tokens)
@@ -95,6 +95,7 @@ class Chain(object):
         #     [token for token in row if frequency[token] > 1]
         #     for row in cleaned_tokens]
         # cleaned_strings = [' '.join(row) for row in cleaned_tokens]
+
         self.df['hash'] = self.generateHash(cleaned_strings)
 
         self.df['sequence'] = cleaned_tokens
@@ -176,7 +177,7 @@ class Chain(object):
         #                       self.cpu_number,
         #                       self.model_name)
         if self.mode == 'create':
-            self.vectors.create_word2vec_model(min_count=1, iterations=10)
+            self.vectors.create_word2vec_model(min_count=10, iterations=30)
         if self.mode == 'update':
             self.vectors.update_word2vec_model()
         if self.mode == 'process':
@@ -190,7 +191,7 @@ class Chain(object):
         of all the words in each sentence
         :return:
         """
-        self.vectors.vectorize_messages(tf_idf=True)
+        self.vectors.vectorize_messages(tf_idf=False)
         print('Vectorization of sentences is finished')
         return self
 

@@ -1,13 +1,10 @@
 #!/usr/bin/python
 import sys
 import getopt
-import numpy as np
-
 from gensim.models import Word2Vec
-
-from clusterlogs.tokenization import tokenize_messages
-from clusterlogs.data_preparation import clean_messages,alpha_cleaning
-from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+from clusterlogs.data_preparation import alpha_cleaning
+import pprint
+from clusterlogs.tokenization import get_term_frequencies
 
 
 def main(argv):
@@ -32,18 +29,29 @@ def main(argv):
 
     # Read messages from log file
     messages = [line for line in open(inputfile)]
+    pprint.pprint("First 10 messages: ")
+    pprint.pprint(messages[0:10])
+
     print('Log file contains {} lines'.format(len(messages)))
 
     cleaned_strings = alpha_cleaning(messages)
-    unique = np.unique(cleaned_strings)
-    # print(unique)
-    # tokenized = tokenize_messages(unique, 'space')
-    print('Number of unique lines after cleaning is {}'.format(len(unique)))
-    # cleaned = [[token for token in row if token != u"\u2581"] for row in tokens.tokenized]
-    tokenized = [row.split(' ') for row in unique]
+    tokenized = [row.split(' ') for row in cleaned_strings]
+
+    # get frequence of cleaned tokens
+    frequency = get_term_frequencies(tokenized)
+    # remove tokens that appear only once and save tokens which are textual substrings
+    tokenized = [
+        [token for token in row if frequency[token] > 1]
+        for row in tokenized]
+
+    pprint.pprint("First 100 cleaned messages: ")
+    pprint.pprint(cleaned_strings[0:100])
+    # unique = np.unique(cleaned_strings)
+    # print('Number of unique lines after cleaning is {}'.format(len(unique)))
+    # tokenized = [row.split(' ') for row in unique]
 
     #tokenized = tokenize_messages(unique, 'space', spacer_annontate=False, spacer_new=False)
-    print(tokenized)
+    #print(tokenized)
 
     print('Messages has been tokenized')
 
@@ -51,7 +59,7 @@ def main(argv):
         word2vec = Word2Vec(tokenized,
                             size=300,
                             window=7,
-                            min_count=2,
+                            min_count=10,
                             workers=4,
                             iter=30)
 

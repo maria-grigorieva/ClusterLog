@@ -1,7 +1,6 @@
 import re
 import pprint
 
-
 def clean_messages(messages):
     messages_cleaned = []
     for item in messages:

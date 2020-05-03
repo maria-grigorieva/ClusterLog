@@ -44,7 +44,7 @@ class LogParser:
             savePath : the output path stores the file containing structured logs
         """
         self.input = input
-        self.depth = depth
+        self.depth = depth - 2
         self.st = st
         self.maxChild = maxChild
 

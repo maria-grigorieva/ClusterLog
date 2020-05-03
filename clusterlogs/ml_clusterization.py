@@ -10,9 +10,9 @@ from sklearn.decomposition import PCA
 
 from .phraser import extract_common_phrases
 from .Drain import LogParser
-#from .LogCluster import LogParser
-from .tokenization import get_vocabulary
-from .data_preparation import clean_messages
+# from .LogCluster import LogParser
+from .tokenization import get_vocabulary, detokenize_messages
+from .data_preparation import clean_messages, alpha_cleaning
 from .sequence_matching import Match
 from .tokenization import detokenize_row
 import re
@@ -58,6 +58,7 @@ class MLClustering:
         :return:
         """
         k = round(math.sqrt(len(self.vectors.sent2vec)))
+        print('K-neighbours = {}'.format(k))
         nbrs = NearestNeighbors(n_neighbors=k, n_jobs=-1).fit(self.vectors.sent2vec)
         distances, indices = nbrs.kneighbors(self.vectors.sent2vec)
         self.distances = [np.mean(d) for d in np.sort(distances, axis=0)]
@@ -68,7 +69,9 @@ class MLClustering:
         :return:
         """
         kneedle = KneeLocator(self.distances, list(range(len(self.distances))))
-        self.epsilon = max(kneedle.all_elbows) if (len(kneedle.all_elbows) > 0) else 1
+        self.epsilon = np.max(list(kneedle.all_elbows)) if (len(kneedle.all_elbows) > 0) else 1
+        if self.epsilon == 0.0:
+            self.epsilon = np.mean(self.distances)
 
     def dbscan(self):
         """
@@ -91,10 +94,11 @@ class MLClustering:
             [item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)],
             orient='columns').sort_values(by=['cluster_size'], ascending=False)
 
+
     def hdbscan(self):
         self.vectors.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 else self.dimensionality_reduction()
 
-        clusterer = HDBSCAN(min_cluster_size=100, min_samples=1)
+        clusterer = HDBSCAN(min_cluster_size=10, min_samples=1)
         self.cluster_labels = clusterer.fit_predict(self.vectors.sent2vec)
         self.groups['cluster'] = self.cluster_labels
         print('HDBSCAN finished with {} clusters'.format(len(set(self.cluster_labels))))
@@ -119,34 +123,47 @@ class MLClustering:
             orient='columns').sort_values(by=['cluster_size'], ascending=False)
 
     def gb_regroup(self, gb):
-        # m = Match(gb['pattern'].values)
-        # tokenized_pattern = []
-        # print(len(gb['tokenized_pattern'].values))
-        # m.matching_clusters(gb['tokenized_pattern'].values, tokenized_pattern)
-        # pattern = detokenize_messages(tokenized_pattern, self.tokenizer_type)
+        print('Calculating group patterns for {} values'.format(gb.shape[0]))
+        m = Match(gb['tokenized_pattern'].values)
+        tokenized_pattern = []
+        sequences = gb['tokenized_pattern'].values
+        print(sequences)
+        if len(sequences) > 1:
+            m.matching_clusters(sequences, tokenized_pattern)
+        elif len(sequences) == 1:
+            tokenized_pattern.append(sequences[0])
+        pattern = detokenize_messages(tokenized_pattern, self.tokenizer_type)
+        print(pattern)
         # print(len(pattern))
         # Search for the most common patterns using LogCluster app (Perl)
-        drain_pattern = self.drain_clusterization(gb['pattern'].values)
+
+
+        # drain_pattern = self.drain_clusterization(gb['pattern'].values)
+
+        # logcluster_pattern = self.logcluster_clusterization(gb['pattern'].values)
         # Generate text from all group sequences
+        # text = '. '.join([row for row in pattern])
         text = '. '.join([' '.join(row) for row in gb['sequence'].values])
         # Extract common phrases
         #phrases_pyTextRank = Phraser(text, 'pyTextRank')
+        print('Extracting key phrases...')
         phrases_RAKE = extract_common_phrases(text, 'RAKE')
         # Get all indices for the group
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
-        return {'pattern': drain_pattern,
-                # 'drain_pattern': drain_pattern,
+        return {'pattern': pattern,
+                #'drain_pattern': drain_pattern,
                 'indices': indices,
                 'cluster_size': size,
-                #'common_phrases_pyTextRank': phrases_pyTextRank.extract_common_phrases(),
                 'common_phrases_RAKE': phrases_RAKE}
 
 
     def drain_clusterization(self, messages):
         #regex = [r'(/[\w\./]*[\s]?)', r'([a-zA-Z0-9]+[_]+[\S]+)', r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)', r'[^\w\s]']
+
+        cleaned_messages = clean_messages(messages)
         regex = []
-        parser = LogParser(input=messages, rex=regex, st=0.5)
+        parser = LogParser(input=cleaned_messages, rex=regex, st=0.2)
         result = parser.parse()
         cleaned = []
         for line in result:
