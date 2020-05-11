@@ -1,3 +1,4 @@
+import re
 import math
 import numpy as np
 import pandas as pd
@@ -10,12 +11,12 @@ from sklearn.decomposition import PCA
 
 from .phraser import extract_common_phrases
 from .Drain import LogParser
-# from .LogCluster import LogParser
+from .LogCluster import LogParser
 from .tokenization import get_vocabulary, detokenize_messages
 from .data_preparation import clean_messages, alpha_cleaning
 from .sequence_matching import Match
 from .tokenization import detokenize_row
-import re
+from .Drain import LogParser as Drain
 
 # import editdistance
 
@@ -163,7 +164,7 @@ class MLClustering:
 
         cleaned_messages = clean_messages(messages)
         regex = []
-        parser = LogParser(input=cleaned_messages, rex=regex, st=0.2)
+        parser = Drain(input=cleaned_messages, rex=regex, st=0.2)
         result = parser.parse()
         cleaned = []
         for line in result:

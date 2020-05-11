@@ -23,7 +23,10 @@ def safe_run(method):
             ts = time()
             result = method(self, *args, **kwargs)
             te = time()
-            self.timings[method.__name__] = round((te - ts), 4)
+            if method.__name__ in self.timings:
+                self.timings[method.__name__] += round((te - ts), 4)
+            else:
+                self.timings[method.__name__] = round((te - ts), 4)
             return result
         except Exception as e:
             print(e)
@@ -88,30 +91,31 @@ class Chain(object):
         self.df['tokenized_pattern'] = tokenize_messages(self.df[self.target].values, self.tokenizer_type)
         cleaned_strings = clean_messages(self.df[self.target].values)
         cleaned_tokens = [row.split(' ') for row in cleaned_strings]
-        # get frequence of cleaned tokens
-        # frequency = get_term_frequencies(cleaned_tokens)
-        # remove tokens that appear only once and save tokens which are textual substrings
-        # cleaned_tokens = [
-        #     [token for token in row if frequency[token] > 1]
-        #     for row in cleaned_tokens]
+        # cleaned_tokens = self.remove_unique_tokens(cleaned_tokens)
         # cleaned_strings = [' '.join(row) for row in cleaned_tokens]
 
         self.df['hash'] = self.generateHash(cleaned_strings)
-
         self.df['sequence'] = cleaned_tokens
 
         self.group_equals(self.df, 'hash')
 
         if self.clustering_type == 'SIMILARITY' and self.groups.shape[0] <= self.CLUSTERING_THRESHOLD:
-            clusters = SClustering(self.groups, self.matching_accuracy, self.add_placeholder, self.tokenizer_type)
-            self.result = clusters.process()
-            print('Finished with {} clusters'.format(self.result.shape[0]))
+            self.similarity_clustering()
         else:
             self.tokens_vectorization()
             self.sentence_vectorization()
-            self.ml_clusterization()
+            self.ml_clustering()
 
         report.generate_html_report(self.result, self.output_file)
+
+    @safe_run
+    def remove_unique_tokens(self, tokens):
+        frequency = get_term_frequencies(tokens)
+        # remove tokens that appear only once
+        cleaned_tokens = [
+            [token for token in row if frequency[token] > 1]
+            for row in tokens]
+        return cleaned_tokens
 
     def generateHash(self, sequences):
         return [hashlib.md5(repr(row).encode('utf-8')).hexdigest() for row in sequences]
@@ -133,7 +137,6 @@ class Chain(object):
         self.groups.reset_index(drop=True, inplace=True)
         print('Found {} equal groups'.format(self.groups.shape[0]))
 
-    @safe_run
     def regroup(self, gr):
         """
         tokenized_pattern - common sequence of tokens, generated based on all tokens
@@ -149,7 +152,7 @@ class Chain(object):
         :return:
         """
         matcher = Match(gr['tokenized_pattern'].values)
-        #pprint.pprint(gr['tokenized_pattern'].values)
+        # pprint.pprint(gr['tokenized_pattern'].values)
         tokenized_pattern = matcher.sequence_matcher(self.add_placeholder)
         return pd.DataFrame([{'indices': gr.index.values.tolist(),
                               'pattern': detokenize_row(tokenized_pattern, self.tokenizer_type),
@@ -196,7 +199,7 @@ class Chain(object):
         return self
 
     @safe_run
-    def ml_clusterization(self):
+    def ml_clustering(self):
 
         self.clusters = MLClustering(self.df, self.groups,
                                      self.vectors, self.cpu_number, self.add_placeholder,
@@ -207,6 +210,12 @@ class Chain(object):
     def in_cluster(self, groups, cluster_label):
         indices = groups.loc[cluster_label, 'indices']
         return self.df.loc[indices][self.target].values
+
+    @safe_run
+    def similarity_clustering(self):
+        clusters = SClustering(self.groups, self.matching_accuracy, self.add_placeholder, self.tokenizer_type)
+        self.result = clusters.process()
+        print('Finished with {} clusters'.format(self.result.shape[0]))
 
     @safe_run
     def validation(self, groups):
