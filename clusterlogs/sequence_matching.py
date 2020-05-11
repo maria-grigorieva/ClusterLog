@@ -2,11 +2,10 @@ import random
 import difflib
 import numpy as np
 
-from itertools import chain, groupby
+from itertools import chain
 from string import punctuation
-import editdistance
-import nltk
 
+from .utility import levenshtein_similarity_1_to_n
 
 
 class Match:
@@ -52,7 +51,6 @@ class Match:
             print('Search for common pattern for {}. Next attempt...'.format(pattern))
             self.sequence_matcher(add_placeholder)
 
-
     def matcher(self, sequences):
         pattern = sequences[0]
         for s in sequences:
@@ -64,10 +62,10 @@ class Match:
             pattern = list(chain(*matches))  # concatenate inner lists
         return pattern
 
-
     def matching_clusters(self, sequences, patterns):
-        start = sequences[0]
-        similarities = Match.levenshtein_similarity(start, sequences)
+        # start = sequences[0]
+        # similarities = Match.levenshtein_similarity(start, sequences)
+        similarities = levenshtein_similarity_1_to_n(sequences)
         filtered, to_remove = [], []
         for i, value in enumerate(similarities):
             if value >= 0.7:
@@ -81,27 +79,6 @@ class Match:
             patterns.append(sequences[0])
             np.delete(sequences, 0)
 
-
-    @staticmethod
-    def levenshtein_similarity(top, rows):
-        """
-        Search similarities between top and all other sequences of tokens.
-        May be used for strings as well.
-        top - most frequent sequence
-        rows - all sequences
-        """
-        if len(rows) > 1 and len(top) > 0:
-            try:
-                return (
-                    [(1 - editdistance.eval(top, rows[i]) / max(len(top), len(rows[i]))) for i in
-                     range(0, len(rows))])
-            except Exception:
-                print(rows)
-                print(top)
-        else:
-            return 1
-
-
     def matrix_matching(self, sequences):
         if len(sequences) == 1:
             return sequences[0]
@@ -109,7 +86,6 @@ class Match:
             x = list(map(list, zip(*sequences)))
             return [tokens[0] if len(tokens) == 1 else '(.*?)' for tokens in
                     [np.unique(line) for line in x]]
-
 
     # def matcher(self, sequences):
     #    if len(sequences) > 1:
@@ -121,5 +97,3 @@ class Match:
     #        return [i[0] for i in groupby(x)]
     #    else:
     #        return sequences[0]
-
-

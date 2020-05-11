@@ -10,7 +10,7 @@ from string import punctuation
 from .reporting import report
 from .validation import Output
 from .tokenization import tokenize_messages, get_term_frequencies, detokenize_row
-from .data_preparation import clean_messages, alpha_cleaning
+from .data_preparation import clean_messages  # , alpha_cleaning
 from .sequence_matching import Match
 from .ml_clusterization import MLClustering
 from .similarity_clusterization import SClustering
