@@ -29,7 +29,7 @@ def safe_run(method):
                 self.timings[method.__name__] = round((te - ts), 4)
             return result
         except Exception as e:
-            print(e)
+            print(f"{method.__name__} threw an exception: {e}")
 
     return func_wrapper
 
