@@ -18,6 +18,7 @@ from .tokenization import detokenize_row
 import re
 
 # import editdistance
+import pprint
 
 LIMIT = 30
 
@@ -123,17 +124,17 @@ class MLClustering:
             orient='columns').sort_values(by=['cluster_size'], ascending=False)
 
     def gb_regroup(self, gb):
-        print('Calculating group patterns for {} values'.format(gb.shape[0]))
+        #print('Calculating group patterns for {} values'.format(gb.shape[0]))
         m = Match(gb['tokenized_pattern'].values)
         tokenized_pattern = []
         sequences = gb['tokenized_pattern'].values
-        print(sequences)
+        #print(sequences)
         if len(sequences) > 1:
             m.matching_clusters(sequences, tokenized_pattern)
         elif len(sequences) == 1:
             tokenized_pattern.append(sequences[0])
         pattern = detokenize_messages(tokenized_pattern, self.tokenizer_type)
-        print(pattern)
+        #print(pattern)
         # print(len(pattern))
         # Search for the most common patterns using LogCluster app (Perl)
 
@@ -143,14 +144,25 @@ class MLClustering:
         # logcluster_pattern = self.logcluster_clusterization(gb['pattern'].values)
         # Generate text from all group sequences
         # text = '. '.join([row for row in pattern])
-        text = '. '.join([' '.join(row) for row in gb['sequence'].values])
-        # Extract common phrases
-        #phrases_pyTextRank = Phraser(text, 'pyTextRank')
-        print('Extracting key phrases...')
-        phrases_RAKE = extract_common_phrases(text, 'RAKE')
+        # print(len(gb['sequence'].values))
+        # text = '. '.join([' '.join(row) for row in gb['sequence'].values])
+        # #Extract common phrases
+        # #phrases_pyTextRank = Phraser(text, 'pyTextRank')
+        # print('Extracting key phrases...')
+        # pprint.pprint(text)
+        # phrases_RAKE = extract_common_phrases(text, 'pyTextRank')
+        # pprint.pprint(phrases_RAKE)
         # Get all indices for the group
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
+
+        text = '. '.join([' '.join(row) for row in self.df.loc[indices]['sequence'].values])
+        # text = ''.join(self.df.loc[indices]['message'].values)
+        # print('Extracting key phrases...')
+        # pprint.pprint(text)
+        phrases_RAKE = extract_common_phrases(text, 'rake_nltk')
+        #phrases_RAKE = extract_common_phrases(text, 'pyTextRank')
+        # pprint.pprint(phrases_RAKE)
         return {'pattern': pattern,
                 #'drain_pattern': drain_pattern,
                 'indices': indices,

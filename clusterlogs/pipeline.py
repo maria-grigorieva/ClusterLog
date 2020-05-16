@@ -14,7 +14,7 @@ from .data_preparation import clean_messages, alpha_cleaning
 from .sequence_matching import Match
 from .ml_clusterization import MLClustering
 from .similarity_clusterization import SClustering
-
+from .categorization import execute_categorization
 
 def safe_run(method):
 
@@ -53,7 +53,9 @@ class Chain(object):
                  threshold=CLUSTERING_THRESHOLD,
                  matching_accuracy=MATCHING_ACCURACY,
                  clustering_type=CLUSTERING_TYPE,
-                 algorithm=ALGORITHM):
+                 algorithm=ALGORITHM,
+                 categorization=False,
+                 generate_html_report=False):
         self.df = df
         self.target = target
         self.tokenizer_type = tokenizer_type
@@ -68,6 +70,8 @@ class Chain(object):
         self.add_placeholder = add_placeholder
         self.algorithm = algorithm
         self.output_file = output_file
+        self.categorization = categorization
+        self.generate_html_report = generate_html_report
 
     @staticmethod
     def get_cpu_number():
@@ -111,7 +115,14 @@ class Chain(object):
             self.sentence_vectorization()
             self.ml_clusterization()
 
-        report.generate_html_report(self.result, self.output_file)
+        #report.generate_html_report(self.result, self.output_file)
+        # Categorization
+        if self.generate_html_report:
+            if self.categorization:
+                categories = execute_categorization(self.result)
+                report.categorized_report(categories, self.output_file)
+            else:
+                report.generate_html_report(self.result, self.output_file)
 
     def generateHash(self, sequences):
         return [hashlib.md5(repr(row).encode('utf-8')).hexdigest() for row in sequences]

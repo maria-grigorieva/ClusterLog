@@ -1,12 +1,14 @@
 import RAKE
 import spacy
 import pytextrank
+from rake_nltk import Rake, Metric
 
 
 def extract_common_phrases(text, algorithm):
     dispatch = {
         "RAKE": _extract_common_phrases_rake,
-        "pyTextRank": _extract_common_phrases_pytextrank
+        "pyTextRank": _extract_common_phrases_pytextrank,
+        "rake_nltk": _extract_common_phrases_rake_nltk
     }
     return dispatch[algorithm](text)
 
@@ -34,5 +36,14 @@ def _extract_common_phrases_pytextrank(text):
     phrases = []
     # examine the top-ranked phrases in the document
     for p in doc._.phrases:
-        phrases.append(p)
+        phrases.append(str(p))
     return phrases
+
+
+def _extract_common_phrases_rake_nltk(text):
+    r = Rake(min_length=2, max_length=5, ranking_metric=Metric.WORD_FREQUENCY)  # Uses stopwords for english from NLTK, and all puntuation characters.
+    # r = Rake(ranking_metric=Metric.DEGREE_TO_FREQUENCY_RATIO)
+    # r = Rake(ranking_metric=Metric.WORD_DEGREE)
+    # r = Rake(ranking_metric=Metric.WORD_FREQUENCY)
+    r.extract_keywords_from_text(text)
+    return r.get_ranked_phrases()  # To get keyword phrases ranked highest to lowest.
