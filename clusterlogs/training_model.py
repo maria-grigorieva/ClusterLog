@@ -2,7 +2,7 @@
 import sys
 import getopt
 from gensim.models import Word2Vec
-from clusterlogs.data_preparation import alpha_cleaning
+from clusterlogs.data_preparation import alpha_cleaning, clean_messages
 import pprint
 from clusterlogs.tokenization import get_term_frequencies
 
@@ -34,7 +34,7 @@ def main(argv):
 
     print('Log file contains {} lines'.format(len(messages)))
 
-    cleaned_strings = alpha_cleaning(messages)
+    cleaned_strings = clean_messages(messages)
     tokenized = [row.split(' ') for row in cleaned_strings]
 
     # get frequence of cleaned tokens
