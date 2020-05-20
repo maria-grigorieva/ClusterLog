@@ -12,7 +12,10 @@ def main():
     target = 'message'
     cluster = pipeline.Chain(df, target, model_name='../models/fts.model', mode='update',
                              add_placeholder=True, matching_accuracy=0.8,
-                             clustering_type='ML', output_file='../reports/fts_categorized.html')
+                             clustering_type='ML', output_file='../reports/fts_categorized.html',
+                             categorization=True,
+                             generate_html_report=True
+                             )
 
     # cluster = pipeline.Chain(df, target, model_name='../models/fts_new.model', mode='create',
     #                          add_placeholder=True, matching_accuracy=0.8,

@@ -4,6 +4,7 @@ import getopt
 from gensim.models import Word2Vec
 from clusterlogs.data_preparation import alpha_cleaning, clean_messages
 import pprint
+import numpy as np
 from clusterlogs.tokenization import get_term_frequencies
 
 
@@ -35,18 +36,21 @@ def main(argv):
     print('Log file contains {} lines'.format(len(messages)))
 
     cleaned_strings = clean_messages(messages)
-    tokenized = [row.split(' ') for row in cleaned_strings]
+    unique = np.unique(cleaned_strings)
+    pprint.pprint("Unique: ")
+    pprint.pprint(unique)
+    tokenized = [row.lower().split(' ') for row in unique]
 
     # get frequence of cleaned tokens
-    frequency = get_term_frequencies(tokenized)
+    # frequency = get_term_frequencies(tokenized)
     # remove tokens that appear only once and save tokens which are textual substrings
-    tokenized = [
-        [token for token in row if frequency[token] > 1]
-        for row in tokenized]
+    # tokenized = [
+    #     [token for token in row if frequency[token] > 1]
+    #     for row in tokenized]
 
-    pprint.pprint("First 100 cleaned messages: ")
-    pprint.pprint(cleaned_strings[0:100])
-    # unique = np.unique(cleaned_strings)
+    # pprint.pprint("First 100 cleaned messages: ")
+    # pprint.pprint(cleaned_strings[0:100])
+
     # print('Number of unique lines after cleaning is {}'.format(len(unique)))
     # tokenized = [row.split(' ') for row in unique]
 
