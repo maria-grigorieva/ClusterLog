@@ -91,14 +91,7 @@ class Chain(object):
         """
         self.df['tokenized_pattern'] = tokenize_messages(self.df[self.target].values, self.tokenizer_type)
         cleaned_strings = clean_messages(self.df[self.target].values)
-        cleaned_tokens = [row.split(' ') for row in cleaned_strings]
-        # get frequence of cleaned tokens
-        # frequency = get_term_frequencies(cleaned_tokens)
-        # remove tokens that appear only once and save tokens which are textual substrings
-        # cleaned_tokens = [
-        #     [token for token in row if frequency[token] > 1]
-        #     for row in cleaned_tokens]
-        # cleaned_strings = [' '.join(row) for row in cleaned_tokens]
+        cleaned_tokens = tokenize_messages(cleaned_strings, self.tokenizer_type, spacer_annontate=False, spacer_new=False)
 
         self.df['hash'] = self.generateHash(cleaned_strings)
 
@@ -115,28 +108,17 @@ class Chain(object):
             self.sentence_vectorization()
             self.ml_clusterization()
 
-        #report.generate_html_report(self.result, self.output_file)
         # Categorization
         if self.generate_html_report:
             if self.categorization:
-                categories = execute_categorization(self.result)
-                report.categorized_report(categories, self.output_file)
+                self.categories = execute_categorization(self.result)
+                report.categorized_report(self.categories, self.output_file)
             else:
                 report.generate_html_report(self.result, self.output_file)
 
     def generateHash(self, sequences):
         return [hashlib.md5(repr(row).encode('utf-8')).hexdigest() for row in sequences]
 
-    # @safe_run
-    # def tfidf(self):
-    #     """
-    #     Generate TF-IDF model and remove tokens with max weights
-    #     :return:
-    #     """
-    #     self.tfidf = TermsAnalysis(self.tokens)
-    #     cleaned_tokens = self.tfidf.process()
-    #     print('Tokens TF-IDF cleaning finished')
-    #     return cleaned_tokens
 
     @safe_run
     def group_equals(self, df, column):
@@ -182,11 +164,7 @@ class Chain(object):
                               self.w2v_window,
                               self.cpu_number,
                               self.model_name)
-        # self.vectors = Vector(self.groups['tokenized_pattern'].values,
-        #                       self.w2v_size,
-        #                       self.w2v_window,
-        #                       self.cpu_number,
-        #                       self.model_name)
+
         if self.mode == 'create':
             self.vectors.create_word2vec_model(min_count=10, iterations=30)
         if self.mode == 'update':

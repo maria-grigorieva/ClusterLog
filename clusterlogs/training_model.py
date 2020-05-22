@@ -6,6 +6,7 @@ from clusterlogs.data_preparation import alpha_cleaning, clean_messages
 import pprint
 import numpy as np
 from clusterlogs.tokenization import get_term_frequencies
+from .tokenization import tokenize_messages, get_term_frequencies, detokenize_row
 
 
 def main(argv):
@@ -29,7 +30,8 @@ def main(argv):
             outputfile = arg
 
     # Read messages from log file
-    messages = [line for line in open(inputfile)]
+    messages = [line[:-1] for line in open(inputfile)]
+
     pprint.pprint("First 10 messages: ")
     pprint.pprint(messages[0:10])
 
@@ -39,23 +41,8 @@ def main(argv):
     unique = np.unique(cleaned_strings)
     pprint.pprint("Unique: ")
     pprint.pprint(unique)
-    tokenized = [row.lower().split(' ') for row in unique]
 
-    # get frequence of cleaned tokens
-    # frequency = get_term_frequencies(tokenized)
-    # remove tokens that appear only once and save tokens which are textual substrings
-    # tokenized = [
-    #     [token for token in row if frequency[token] > 1]
-    #     for row in tokenized]
-
-    # pprint.pprint("First 100 cleaned messages: ")
-    # pprint.pprint(cleaned_strings[0:100])
-
-    # print('Number of unique lines after cleaning is {}'.format(len(unique)))
-    # tokenized = [row.split(' ') for row in unique]
-
-    #tokenized = tokenize_messages(unique, 'space', spacer_annontate=False, spacer_new=False)
-    #print(tokenized)
+    tokenized = tokenize_messages(unique, 'space', spacer_annontate=False, spacer_new=False)
 
     print('Messages has been tokenized')
 
@@ -69,12 +56,6 @@ def main(argv):
 
         word2vec.save(outputfile)
 
-        # tagged_docs = [TaggedDocument(doc, [str(i)]) for i, doc in enumerate(tokenized)]
-        # doc2vec = Doc2Vec(tagged_docs, vector_size=200,
-        #                        window=7, workers=4,
-        #                        min_count=2, epochs=10)
-        #
-        # doc2vec.save(outputfile)
         print('Training has finished. Model saved in file. Thanks for coming :)')
     except Exception as e:
         print('Training model error:', e)
