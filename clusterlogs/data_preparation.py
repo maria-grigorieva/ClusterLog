@@ -16,7 +16,8 @@ def clean_messages(messages):
         # Changes every symbol other than letters, whitespace and '_' to ' '
         item = re.sub(r'[^\w\s]', ' ', item)
         item = re.sub(r' +', r' ', item)
-        messages_cleaned.append(item)
+        messages_cleaned.append(item.lower())
+        # print(item)
     # pprint.pprint(messages_cleaned)
     return messages_cleaned
 

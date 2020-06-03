@@ -15,3 +15,15 @@ def generate_html_report(df, output_file):
     f = open(output_file, "w")
     f.write(html_out)
     f.close()
+
+
+def categorized_report(grouped, output_file):
+    env = Environment(loader=FileSystemLoader(os.path.join(os.path.dirname(__file__))))
+    template = env.get_template("categorized_template.html")
+    groups = [v.to_dict('records') for k,v in grouped]
+    template_vars = {"groups": groups}
+    print(template_vars)
+    html_out = template.render(template_vars)
+    f= open(output_file,"w")
+    f.write(html_out)
+    f.close()
