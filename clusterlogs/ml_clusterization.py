@@ -125,13 +125,13 @@ class MLClustering:
         m = Match(gb['tokenized_pattern'].values)
         tokenized_pattern = []
         sequences = gb['tokenized_pattern'].values
-        print(sequences)
+        # print(sequences)
         if len(sequences) > 1:
             m.matching_clusters(sequences, tokenized_pattern)
         elif len(sequences) == 1:
             tokenized_pattern.append(sequences[0])
         pattern = detokenize_messages(tokenized_pattern, self.tokenizer_type)
-        print(pattern)
+        # print(pattern)
         # print(len(pattern))
         # Search for the most common patterns using LogCluster app (Perl)
 

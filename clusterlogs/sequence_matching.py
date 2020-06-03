@@ -71,6 +71,9 @@ class Match:
             if value >= 0.7:
                 filtered.append(sequences[i])
                 to_remove.append(i)
+        if not filtered:
+            patterns = sequences
+            return
         patterns.append(self.matcher(filtered))
         sequences = np.delete(sequences, to_remove)
         if len(sequences) > 1:

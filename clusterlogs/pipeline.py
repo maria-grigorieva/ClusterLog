@@ -99,7 +99,7 @@ class Chain(object):
 
         self.group_equals(self.df, 'hash')
 
-        if self.clustering_type == 'SIMILARITY' and self.groups.shape[0] <= self.CLUSTERING_THRESHOLD:
+        if self.clustering_type == 'SIMILARITY' and self.groups.shape[0] <= self.threshold:
             self.similarity_clustering()
         else:
             self.tokens_vectorization()

@@ -11,8 +11,8 @@ from itertools import groupby
 STOP = stopwords.words('english') + list(punctuation) + ["``", "''", u"\u2581"]
 
 
-def tokenize_messages(messages, tokenizer_type, spacer_annontate=True, spacer_new=True):
-    tokenizer = Tokenizer(tokenizer_type, spacer_annotate=spacer_annontate, preserve_placeholders=True, spacer_new=spacer_new)
+def tokenize_messages(messages, tokenizer_type, spacer_annotate=True, spacer_new=True):
+    tokenizer = Tokenizer(tokenizer_type, spacer_annotate=spacer_annotate, preserve_placeholders=True, spacer_new=spacer_new)
     return [tokenizer.tokenize(line)[0] for line in messages]
 
 
