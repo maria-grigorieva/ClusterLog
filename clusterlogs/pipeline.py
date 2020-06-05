@@ -16,6 +16,7 @@ from .ml_clusterization import MLClustering
 from .similarity_clusterization import SClustering
 from .categorization import execute_categorization
 
+
 def safe_run(method):
 
     def func_wrapper(self, *args, **kwargs):
@@ -94,7 +95,7 @@ class Chain(object):
         """
         self.df['tokenized_pattern'] = tokenize_messages(self.df[self.target].values, self.tokenizer_type)
         cleaned_strings = clean_messages(self.df[self.target].values)
-        cleaned_tokens = tokenize_messages(cleaned_strings, self.tokenizer_type, spacer_annontate=False, spacer_new=False)
+        cleaned_tokens = tokenize_messages(cleaned_strings, self.tokenizer_type, spacer_annotate=False, spacer_new=False)
 
         self.df['hash'] = self.generateHash(cleaned_strings)
         self.df['sequence'] = cleaned_tokens
@@ -107,6 +108,8 @@ class Chain(object):
             self.tokens_vectorization()
             self.sentence_vectorization()
             self.ml_clustering()
+
+        print(f"Timings:\n{self.timings}")
 
         # Categorization
         if self.generate_html_report:
@@ -127,7 +130,6 @@ class Chain(object):
 
     def generateHash(self, sequences):
         return [hashlib.md5(repr(row).encode('utf-8')).hexdigest() for row in sequences]
-
 
     @safe_run
     def group_equals(self, df, column):

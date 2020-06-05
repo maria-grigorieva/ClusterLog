@@ -1,12 +1,11 @@
 import re
 import pandas as pd
-import editdistance
+# import editdistance
 
 from .phraser import extract_common_phrases
 from .sequence_matching import Match
 from .tokenization import detokenize_row
 from .utility import levenshtein_similarity_1_to_n
-
 
 
 class SClustering:
@@ -40,7 +39,7 @@ class SClustering:
         # Calculate Levenshtein similarities between the most frequent and
         # all other textual sequences
         df['ratio'] = levenshtein_similarity_1_to_n(df['sequence'].values, top_sequence)
-        #df['ratio'] = self.levenshtein_similarity(top_sequence, df['sequence'].values)
+        # df['ratio'] = self.levenshtein_similarity(top_sequence, df['sequence'].values)
         # Filter the inistal DataFrame by accuracy values
         filtered = df[(df['ratio'] >= self.accuracy)]
         # Search common tokenized pattern and detokenize it
@@ -48,7 +47,7 @@ class SClustering:
         tokenized_pattern = pattern.sequence_matcher(add_placeholder=self.add_placeholder)
         textual_pattern = detokenize_row(tokenized_pattern, self.tokenizer_type)
         textual_pattern = re.sub(r'(\(\.\*\?\))(?:[\W\s]*\1)+', r'(.*?)', textual_pattern)
-        #textual_pattern = re.sub(r'\((.*?)\)+[\S\s]*\((.*?)\)+', r'(.*?)', textual_pattern)
+        # textual_pattern = re.sub(r'\((.*?)\)+[\S\s]*\((.*?)\)+', r'(.*?)', textual_pattern)
         # print(tokenized_pattern)
         # Search common sequence
         sequence = Match(filtered['sequence'].values)

@@ -17,7 +17,7 @@ from .data_preparation import clean_messages  # , alpha_cleaning
 from .sequence_matching import Match
 # from .tokenization import detokenize_row
 # import editdistance
-import pprint
+# import pprint
 
 LIMIT = 30
 
@@ -37,7 +37,6 @@ class MLClustering:
         self.tokenizer_type = tokenizer_type
         self.diversity_factor = 0
 
-
     def process(self):
         if self.method == 'dbscan':
             return self.dbscan()
@@ -46,14 +45,12 @@ class MLClustering:
         if self.method == 'hierarchical':
             return self.hierarchical()
 
-
     def dimensionality_reduction(self):
         n = self.vectors.detect_embedding_size(get_vocabulary(self.groups['sequence']))
         print('Number of dimensions is {}'.format(n))
         pca = PCA(n_components=n, svd_solver='full')
         pca.fit(self.vectors.sent2vec)
         return pca.transform(self.vectors.sent2vec)
-
 
     def kneighbors(self):
         """
@@ -66,7 +63,6 @@ class MLClustering:
         distances, indices = nbrs.kneighbors(self.vectors.sent2vec)
         self.distances = [np.mean(d) for d in np.sort(distances, axis=0)]
 
-
     def epsilon_search(self):
         """
         Search epsilon for the DBSCAN clusterization
@@ -76,7 +72,6 @@ class MLClustering:
         self.epsilon = np.max(list(kneedle.all_elbows)) if (len(kneedle.all_elbows) > 0) else 1
         if self.epsilon == 0.0:
             self.epsilon = np.mean(self.distances)
-
 
     def dbscan(self):
         """
@@ -127,7 +122,7 @@ class MLClustering:
             orient='columns').sort_values(by=['cluster_size'], ascending=False)
 
     def gb_regroup(self, gb):
-        #print('Calculating group patterns for {} values'.format(gb.shape[0]))
+        # print('Calculating group patterns for {} values'.format(gb.shape[0]))
         m = Match(gb['tokenized_pattern'].values)
         tokenized_pattern = []
         sequences = gb['tokenized_pattern'].values
@@ -148,12 +143,6 @@ class MLClustering:
         # text = '. '.join([row for row in pattern])
         # print(len(gb['sequence'].values))
         # text = '. '.join([' '.join(row) for row in gb['sequence'].values])
-        # #Extract common phrases
-        # #phrases_pyTextRank = Phraser(text, 'pyTextRank')
-        # print('Extracting key phrases...')
-        # pprint.pprint(text)
-        # phrases_RAKE = extract_common_phrases(text, 'pyTextRank')
-        # pprint.pprint(phrases_RAKE)
         # Get all indices for the group
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
@@ -162,14 +151,13 @@ class MLClustering:
         # text = ''.join(self.df.loc[indices]['message'].values)
         # print('Extracting key phrases...')
         # pprint.pprint(text)
-        phrases_RAKE = extract_common_phrases(text, 'rake_nltk')
-        #phrases_RAKE = extract_common_phrases(text, 'pyTextRank')
-        # pprint.pprint(phrases_RAKE)
+        phrases = extract_common_phrases(text, 'MultipartiteRank')
+        # pprint.pprint(phrases)
         return {'pattern': pattern,
                 # 'drain_pattern': drain_pattern,
                 'indices': indices,
                 'cluster_size': size,
-                'common_phrases_RAKE': phrases_RAKE}
+                'common_phrases': phrases}
 
     def drain_clusterization(self, messages):
         # regex = [r'(/[\w\./]*[\s]?)', r'([a-zA-Z0-9]+[_]+[\S]+)', r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)', r'[^\w\s]']
