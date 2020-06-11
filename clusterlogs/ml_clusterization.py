@@ -70,15 +70,8 @@ class MLClustering:
         Search epsilon for the DBSCAN clusterization
         :return:
         """
-        max = round(np.max(self.distances) - np.std(self.distances),2)
-        sensitivity = np.round(np.arange(0.0, max, round(max/10,2)),2).tolist()
-        print(sensitivity)
-        knees = []
-        y = list(range(len(self.distances)))
-        for s in sensitivity:
-            kneedle = KneeLocator(self.distances, y, S=s, interp_method='interp1d')
-            knees.append(kneedle.knee)
-        self.epsilon = np.mean(knees)
+        kneedle = KneeLocator(self.distances, list(range(len(self.distances))), online=True)
+        self.epsilon = np.mean(list(kneedle.all_elbows))
         if self.epsilon == 0.0:
             self.epsilon = np.mean(self.distances)
 
