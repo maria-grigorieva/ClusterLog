@@ -19,11 +19,11 @@ class Vector(Chain):
         self.model_name = model_name
 
 
-    def create_word2vec_model(self, min_count=10, iterations=30):
+    def create_word2vec_model(self, min_count=1, iterations=30):
         """
         Train new word2vec model
         :param iterations:
-        :param min_count: minimium frequency count of words (recommended value is 2)
+        :param min_count: minimum frequency count of words (recommended value is 10)
         """
         self.word2vec = Word2Vec(self.tokenized,
                                  size=self.w2v_size,

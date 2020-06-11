@@ -10,22 +10,18 @@ from sklearn.decomposition import PCA
 
 from .phraser import extract_common_phrases
 from .Drain import LogParser
-# from .LogCluster import LogParser
 from .tokenization import get_vocabulary, detokenize_messages
-from .data_preparation import clean_messages, alpha_cleaning
+from .data_preparation import clean_messages
 from .sequence_matching import Match
-from .tokenization import detokenize_row
-import re
-
-# import editdistance
-import pprint
+import spacy
+nlp = spacy.load("en_core_web_sm")
 
 LIMIT = 30
 
 
 class MLClustering:
 
-    def __init__(self, df, groups, vectors, cpu_number, add_placeholder, method, tokenizer_type):
+    def __init__(self, df, groups, vectors, cpu_number, add_placeholder, method, tokenizer_type, pca):
         self.groups = groups
         self.df = df
         self.method = method
@@ -37,6 +33,7 @@ class MLClustering:
         self.add_placeholder = add_placeholder
         self.tokenizer_type = tokenizer_type
         self.diversity_factor = 0
+        self.pca = pca
 
 
     def process(self):
@@ -63,7 +60,7 @@ class MLClustering:
         """
         k = round(math.sqrt(len(self.vectors.sent2vec)))
         print('K-neighbours = {}'.format(k))
-        nbrs = NearestNeighbors(n_neighbors=k, n_jobs=-1).fit(self.vectors.sent2vec)
+        nbrs = NearestNeighbors(n_neighbors=k, n_jobs=-1, algorithm='auto').fit(self.vectors.sent2vec)
         distances, indices = nbrs.kneighbors(self.vectors.sent2vec)
         self.distances = [np.mean(d) for d in np.sort(distances, axis=0)]
 
@@ -73,8 +70,15 @@ class MLClustering:
         Search epsilon for the DBSCAN clusterization
         :return:
         """
-        kneedle = KneeLocator(self.distances, list(range(len(self.distances))))
-        self.epsilon = np.max(list(kneedle.all_elbows)) if (len(kneedle.all_elbows) > 0) else 1
+        max = round(np.max(self.distances) - np.std(self.distances),2)
+        sensitivity = np.round(np.arange(0.0, max, round(max/10,2)),2).tolist()
+        print(sensitivity)
+        knees = []
+        y = list(range(len(self.distances)))
+        for s in sensitivity:
+            kneedle = KneeLocator(self.distances, y, S=s, interp_method='interp1d')
+            knees.append(kneedle.knee)
+        self.epsilon = np.mean(knees)
         if self.epsilon == 0.0:
             self.epsilon = np.mean(self.distances)
 
@@ -85,9 +89,8 @@ class MLClustering:
         Returns cluster labels
         :return:
         """
-        if len(self.vectors.sent2vec) > 10000:
-            self.vectors.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 \
-                    else self.dimensionality_reduction()
+        if self.pca:
+            self.vectors.sent2vec = self.dimensionality_reduction()
         self.kneighbors()
         self.epsilon_search()
         self.cluster_labels = DBSCAN(eps=self.epsilon,
@@ -112,6 +115,7 @@ class MLClustering:
             [item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)],
             orient='columns').sort_values(by=['cluster_size'], ascending=False)
 
+
     def hierarchical(self):
         """
         Agglomerative clusterization
@@ -128,80 +132,41 @@ class MLClustering:
             [item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)],
             orient='columns').sort_values(by=['cluster_size'], ascending=False)
 
+
     def gb_regroup(self, gb):
-        #print('Calculating group patterns for {} values'.format(gb.shape[0]))
-        m = Match(gb['tokenized_pattern'].values)
+        m = Match(gb['tokenized_pattern'].values, add_placeholder=self.add_placeholder)
         tokenized_pattern = []
         sequences = gb['tokenized_pattern'].values
-        #print(sequences)
         if len(sequences) > 1:
             m.matching_clusters(sequences, tokenized_pattern)
         elif len(sequences) == 1:
             tokenized_pattern.append(sequences[0])
         pattern = detokenize_messages(tokenized_pattern, self.tokenizer_type)
-        #print(pattern)
-        # print(len(pattern))
-        # Search for the most common patterns using LogCluster app (Perl)
-
-
-        # drain_pattern = self.drain_clusterization(gb['pattern'].values)
-
-        # logcluster_pattern = self.logcluster_clusterization(gb['pattern'].values)
-        # Generate text from all group sequences
-        # text = '. '.join([row for row in pattern])
-        # print(len(gb['sequence'].values))
-        # text = '. '.join([' '.join(row) for row in gb['sequence'].values])
-        # #Extract common phrases
-        # #phrases_pyTextRank = Phraser(text, 'pyTextRank')
+        text = '. '.join(clean_messages(pattern))
+        # phrases_pyTextRank = Phraser(text, 'pyTextRank')
         # print('Extracting key phrases...')
-        # pprint.pprint(text)
-        # phrases_RAKE = extract_common_phrases(text, 'pyTextRank')
-        # pprint.pprint(phrases_RAKE)
+        # phrases_RAKE = extract_common_phrases(text, 'rake_nltk')
         # Get all indices for the group
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
 
-        text = '. '.join([' '.join(row) for row in self.df.loc[indices]['sequence'].values])
-        # text = ''.join(self.df.loc[indices]['message'].values)
-        # print('Extracting key phrases...')
-        # pprint.pprint(text)
         phrases_RAKE = extract_common_phrases(text, 'rake_nltk')
-        #phrases_RAKE = extract_common_phrases(text, 'pyTextRank')
-        # pprint.pprint(phrases_RAKE)
+
+        # doc = nlp(text)
+        # print("Noun phrases:", [chunk.text for chunk in doc.noun_chunks])
+        # print("Verbs:", [token.lemma_ for token in doc if token.pos_ == "VERB"])
+        # for entity in doc.ents:
+        #     print(entity.text, entity.label_)
+
+        # return {'pattern': pattern,
+        #         'indices': indices,
+        #         'cluster_size': size,
+        #         'common_phrases_RAKE': phrases_RAKE,
+        #         'verbs': np.unique([token.lemma_ for token in doc if token.pos_ == "VERB"]).tolist(),
+        #         'noun_phrases': np.unique([chunk.text for chunk in doc.noun_chunks]).tolist(),
+        #         'entities': np.unique([entity.text for entity in doc.ents]).tolist()}
+
         return {'pattern': pattern,
-                #'drain_pattern': drain_pattern,
                 'indices': indices,
                 'cluster_size': size,
                 'common_phrases_RAKE': phrases_RAKE}
-
-
-    def drain_clusterization(self, messages):
-        #regex = [r'(/[\w\./]*[\s]?)', r'([a-zA-Z0-9]+[_]+[\S]+)', r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)', r'[^\w\s]']
-
-        cleaned_messages = clean_messages(messages)
-        regex = []
-        parser = LogParser(input=cleaned_messages, rex=regex, st=0.2)
-        result = parser.parse()
-        cleaned = []
-        for line in result:
-            cleaned.append(line[0])
-        # for line in result:
-        #     l = line[0].replace('<*> ', '<*>')
-        #     l = re.sub(r'[(<*>)]+', '(.*?)', l)
-        #     cleaned.append(l)
-        return cleaned
-
-
-    def logcluster_clusterization(self, messages):
-        if len(messages) == 1:
-            return clean_messages(messages)
-        else:
-            support = 1 if len(messages) > 1 and len(messages) < 20 else 2
-            #regex = []
-            regex = [r'[^ ]+\.[^ ]+', r'(/[\w\./]*[\s]?)', r'([a-zA-Z0-9]+[_]+[\S]+)', r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)', r'[^\w\s]']
-            parser = LogParser(messages=messages, support=support, outdir='', rex=regex)
-            patterns = parser.parse()
-            if len(patterns) == 0:
-                parser = LogParser(messages=messages, support=1, outdir='', rex=regex)
-                patterns = parser.parse()
-            return patterns

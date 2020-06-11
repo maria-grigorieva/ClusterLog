@@ -14,13 +14,14 @@ class Match:
     This class allows to extract the common pattern from a list of sequences.
     Create a new Match object for every pattern extraction task.
     '''
-    def __init__(self, sequences, match_threshhold=0.5, max_attempts=3):
+    def __init__(self, sequences, match_threshhold=0.8, max_attempts=10, add_placeholder=False):
         self.sequences = sequences
         self.match_threshhold = match_threshhold
         self.max_attempts = max_attempts
         self.attempt_number = 1
+        self.add_placeholder = add_placeholder
 
-    def sequence_matcher(self, add_placeholder=False):
+    def sequence_matcher(self):
         unique = np.unique(self.sequences)
         if len(unique) <= 1:
             return unique[0]
@@ -36,8 +37,8 @@ class Match:
             # In the end this gives us a common part of all the sequences.
             match_ranges = matches.get_matching_blocks()[:-1]
             matches = [pattern[m.a:m.a + m.size] for m in match_ranges]
-            if add_placeholder:  # Add a placeholder between matching subsequences
-                matches = [match + ['(.*?)'] for match in matches]
+            if self.add_placeholder:  # Add a placeholder between matching subsequences
+                [match + ['(.*?)'] for match in matches]
                 matches[-1].pop()
             pattern = list(chain(*matches))  # concatenate inner lists
 
@@ -50,7 +51,7 @@ class Match:
         else:
             self.attempt_number += 1
             print('Search for common pattern for {}. Next attempt...'.format(pattern))
-            self.sequence_matcher(add_placeholder)
+            self.sequence_matcher()
 
 
     def matcher(self, sequences):
@@ -59,8 +60,9 @@ class Match:
             matches = difflib.SequenceMatcher(None, pattern, s)
             match_ranges = matches.get_matching_blocks()[:-1]
             matches = [pattern[m.a:m.a + m.size] for m in match_ranges]
-            matches = [match + ['(.*?)'] for match in matches]
-            matches[-1].pop()
+            if self.add_placeholder:
+                matches = [match + ['(.*?)'] for match in matches]
+                matches[-1].pop()
             pattern = list(chain(*matches))  # concatenate inner lists
         return pattern
 
@@ -70,7 +72,7 @@ class Match:
         similarities = Match.levenshtein_similarity(start, sequences)
         filtered, to_remove = [], []
         for i, value in enumerate(similarities):
-            if value >= 0.7:
+            if value >= 0.6:
                 filtered.append(sequences[i])
                 to_remove.append(i)
         patterns.append(self.matcher(filtered))

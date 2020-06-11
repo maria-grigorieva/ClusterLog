@@ -4,25 +4,22 @@ import pprint
 from clusterlogs import pipeline
 
 def main():
-    df = pd.read_csv('../samples/exeerror_jobs_24hours.csv')
+    df = pd.read_csv('../samples/exeerror_1week.csv')
     df = df[['pandaid','exeerrordiag']]
     df.set_index('pandaid', inplace=True)
-
-    #df = pd.read_csv('/Users/maria/cernbox/LogsClusterization/Harvester/data_sample30days.csv', sep='\t')
     target = 'exeerrordiag'
-    cluster = pipeline.Chain(df, target, mode='update', model_name='../models/exeerror_90days.model',matching_accuracy=0.8,
-                             clustering_type='ML', output_file='../reports/panda_update.html')
 
-    # cluster = pipeline.Chain(df, target, mode='create', model_name='../models/exeerror_tmp.model',matching_accuracy=0.8,
-    #                          clustering_type='ML')
-
-    # cluster = pipeline.Chain(df, target, mode='process', model_name='../models/exeerror_docs_90days.model',
+    # UPDATE
+    cluster = pipeline.Chain(df, target, mode='process', model_name='../models/exeerrors_01-01-20_05-20-20.model',matching_accuracy=0.8,
+                             clustering_type='ML', output_file='../reports/exeerror_week.html', categorization=False,
+                             generate_html_report=False)
+    # CREATE
+    # cluster = pipeline.Chain(df, target, mode='create', model_name='../models/exeerrors_tmp.model',
     #                          matching_accuracy=0.8,
     #                          clustering_type='ML')
     cluster.process()
 
     pprint.pprint(cluster.result)
-    pprint.pprint(cluster.result['pattern'].values)
 
 
 

@@ -36,11 +36,12 @@
         <table class="table table-sm table-condensed table-striped">
             <thead class="thead-dark">
             <tr>
-                <th>Cluster Size</th>
-                <th>Patterns</th>
-<!--                <th>Drain Patterns</th>-->
-<!--                <th>LogCluster Patterns</th>-->
-                <th>Key Phrases (RAKE)</th>
+                <th style="width: 10%">Cluster Size</th>
+                <th style="width: 60%">Patterns</th>
+<!--                <th>Verbs</th>-->
+<!--                <th>Noun Phrases</th>-->
+<!--                <th>Entities</th>-->
+                <th style="width: 30%">Key Phrases (RAKE)</th>
             </tr>
             </thead>
             <tbody>
@@ -56,7 +57,21 @@
                     </td>
 <!--                    <td>-->
 <!--                        <ul>-->
-<!--                            {% for item in dict_item['drain_pattern'] %}-->
+<!--                            {% for item in dict_item['verbs'] %}-->
+<!--                            <li>{{ item }}</li>-->
+<!--                            {% endfor %}-->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            {% for item in dict_item['noun_phrases'] %}-->
+<!--                            <li>{{ item }}</li>-->
+<!--                            {% endfor %}-->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            {% for item in dict_item['entities'] %}-->
 <!--                            <li>{{ item }}</li>-->
 <!--                            {% endfor %}-->
 <!--                        </ul>-->

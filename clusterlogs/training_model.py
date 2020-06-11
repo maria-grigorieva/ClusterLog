@@ -6,7 +6,7 @@ from clusterlogs.data_preparation import alpha_cleaning, clean_messages
 import pprint
 import numpy as np
 from clusterlogs.tokenization import get_term_frequencies
-from .tokenization import tokenize_messages, get_term_frequencies, detokenize_row
+from clusterlogs.tokenization import tokenize_messages, get_term_frequencies, detokenize_row
 
 
 def main(argv):
@@ -38,9 +38,12 @@ def main(argv):
     print('Log file contains {} lines'.format(len(messages)))
 
     cleaned_strings = clean_messages(messages)
+    pprint.pprint(cleaned_strings)
     unique = np.unique(cleaned_strings)
     pprint.pprint("Unique: ")
-    pprint.pprint(unique)
+    print(len(unique))
+    # pprint.pprint("Unique: ")
+    # pprint.pprint(unique)
 
     tokenized = tokenize_messages(unique, 'space', spacer_annontate=False, spacer_new=False)
 
@@ -50,7 +53,7 @@ def main(argv):
         word2vec = Word2Vec(tokenized,
                             size=300,
                             window=7,
-                            min_count=10,
+                            min_count=1,
                             workers=4,
                             iter=30)
 

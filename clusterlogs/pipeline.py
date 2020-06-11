@@ -50,6 +50,7 @@ class Chain(object):
                  mode='create',
                  output_file='report.html',
                  add_placeholder=True,
+                 dimensionality_reduction=False,
                  threshold=CLUSTERING_THRESHOLD,
                  matching_accuracy=MATCHING_ACCURACY,
                  clustering_type=CLUSTERING_TYPE,
@@ -72,6 +73,7 @@ class Chain(object):
         self.output_file = output_file
         self.categorization = categorization
         self.generate_html_report = generate_html_report
+        self.dimensionality_reduction = dimensionality_reduction
 
     @staticmethod
     def get_cpu_number():
@@ -141,9 +143,9 @@ class Chain(object):
         :param gr:
         :return:
         """
-        matcher = Match(gr['tokenized_pattern'].values)
+        matcher = Match(gr['tokenized_pattern'].values, add_placeholder=self.add_placeholder)
         #pprint.pprint(gr['tokenized_pattern'].values)
-        tokenized_pattern = matcher.sequence_matcher(self.add_placeholder)
+        tokenized_pattern = matcher.sequence_matcher()
         return pd.DataFrame([{'indices': gr.index.values.tolist(),
                               'pattern': detokenize_row(tokenized_pattern, self.tokenizer_type),
                               'sequence': gr['sequence'].values[0],
@@ -166,7 +168,7 @@ class Chain(object):
                               self.model_name)
 
         if self.mode == 'create':
-            self.vectors.create_word2vec_model(min_count=10, iterations=30)
+            self.vectors.create_word2vec_model()
         if self.mode == 'update':
             self.vectors.update_word2vec_model()
         if self.mode == 'process':
@@ -190,7 +192,8 @@ class Chain(object):
         self.clusters = MLClustering(self.df, self.groups,
                                      self.vectors, self.cpu_number, self.add_placeholder,
                                      self.algorithm,
-                                     self.tokenizer_type)
+                                     self.tokenizer_type,
+                                     self.dimensionality_reduction)
         self.result = self.clusters.process()
 
     def in_cluster(self, groups, cluster_label):

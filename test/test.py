@@ -32,31 +32,5 @@ def main():
     stat = cluster.validation(cluster.result)
     pprint.pprint(stat)
 
-    # cluster.split_clusters(stat, 'cluster_size')
-    #
-    # pprint.pprint(cluster.clusters.shape)
-    # pprint.pprint(cluster.outliers.shape)
-    #pprint.pprint(cluster.in_cluster(cluster.result, 0))
-
-    #pprint.pprint(cluster.clusters[['pattern']].values)
-
-
-    # pprint.pprint(cluster.in_cluster(0, 2))
-
-    # output = cluster.clustered_output(mode)
-    # stats = cluster.statistics(output_mode='dict')
-
-    # pprint.pprint(cluster.cluster_labels)
-    # pprint.pprint(output)
-    # pprint.pprint(stats)
-    #
-
-    #
-    # pprint.pprint(cluster.messages_cleaned)
-    # pprint.pprint(cluster.tokenized)
-    # pprint.pprint(cluster.epsilon)
-    # pprint.pprint(cluster.timings)
-    # cluster.distance_curve(cluster.distances, 'save')
-
 if __name__ == "__main__":
     sys.exit(main())
