@@ -4,7 +4,7 @@ import getopt
 
 from gensim.models import TfidfModel
 from gensim.corpora import Dictionary
-from clusterlogs.tokenization import Tokens
+from .tokenization import tokenize_messages, clean_tokenized
 
 
 def main(argv):
@@ -32,8 +32,7 @@ def main(argv):
 
     print('Log file contains {} lines'.format(len(messages)))
 
-    tokens = Tokens(messages)
-    tokenized = Tokens.clean_tokenized(tokens.pyonmttok(Tokens.TOKENIZER, messages))
+    tokenized = clean_tokenized(tokenize_messages(messages, 'space'))
 
     dct = Dictionary(tokenized)
     corpus = [dct.doc2bow(line) for line in tokenized]

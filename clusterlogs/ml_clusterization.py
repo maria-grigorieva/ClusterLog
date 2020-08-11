@@ -1,4 +1,3 @@
-# import re
 import math
 import numpy as np
 import pandas as pd
@@ -10,14 +9,11 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.decomposition import PCA
 
 from .phraser import extract_common_phrases
-from .LogCluster import LogParser
-from .Drain import LogParser as Drain
 from .tokenization import get_vocabulary, detokenize_messages
-from .data_preparation import clean_messages
 from .sequence_matching import Match
 import spacy
-nlp = spacy.load("en_core_web_sm")
 
+nlp = spacy.load("en_core_web_sm")
 LIMIT = 30
 
 
@@ -55,7 +51,6 @@ class MLClustering:
     def kneighbors(self):
         """
         Calculates average distances for k-nearest neighbors
-        :return:
         """
         k = round(math.sqrt(len(self.vectors.sent2vec)))
         print('K-neighbours = {}'.format(k))
@@ -66,7 +61,6 @@ class MLClustering:
     def epsilon_search(self):
         """
         Search epsilon for the DBSCAN clusterization
-        :return:
         """
         kneedle = KneeLocator(self.distances, list(range(len(self.distances))), online=True)
         self.epsilon = np.mean(list(kneedle.all_elbows))
@@ -75,9 +69,8 @@ class MLClustering:
 
     def dbscan(self):
         """
-        Execution of the DBSCAN clusterization algorithm.
+        Execution of the DBSCAN clustering algorithm.
         Returns cluster labels
-        :return:
         """
         if self.pca:
             self.vectors.sent2vec = self.dimensionality_reduction()
@@ -106,8 +99,7 @@ class MLClustering:
 
     def hierarchical(self):
         """
-        Agglomerative clusterization
-        :return:
+        Agglomerative clustering
         """
         if len(self.vectors.sent2vec) >= 5000:
             self.vectors.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 \
@@ -124,64 +116,21 @@ class MLClustering:
         m = Match(gb['tokenized_pattern'].values, add_placeholder=self.add_placeholder)
         tokenized_pattern = []
         sequences = gb['tokenized_pattern'].values
+
         if len(sequences) > 1:
             m.matching_clusters(sequences, tokenized_pattern)
         elif len(sequences) == 1:
             tokenized_pattern.append(sequences[0])
         pattern = detokenize_messages(tokenized_pattern, self.tokenizer_type)
-        # print(pattern)
-        # print(len(pattern))
-        # Search for the most common patterns using LogCluster app (Perl)
 
-        # drain_pattern = self.drain_clusterization(gb['pattern'].values)
-
-        # logcluster_pattern = self.logcluster_clusterization(gb['pattern'].values)
-        # Generate text from all group sequences
-        # text = '. '.join([row for row in pattern])
-        # print(len(gb['sequence'].values))
-        # text = '. '.join([' '.join(row) for row in gb['sequence'].values])
         # Get all indices for the group
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
 
         text = '. '.join([' '.join(row) for row in self.df.loc[indices]['sequence'].values])
-        # text = ''.join(self.df.loc[indices]['message'].values)
-        # print('Extracting key phrases...')
-        # pprint.pprint(text)
-        phrases = extract_common_phrases(text, 'MultipartiteRank')
-        # pprint.pprint(phrases)
+        phrases = extract_common_phrases(text, 'rake_nltk')
+
         return {'pattern': pattern,
-                # 'drain_pattern': drain_pattern,
                 'indices': indices,
                 'cluster_size': size,
                 'common_phrases': phrases}
-
-    def drain_clusterization(self, messages):
-        # regex = [r'(/[\w\./]*[\s]?)', r'([a-zA-Z0-9]+[_]+[\S]+)', r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)', r'[^\w\s]']
-
-        cleaned_messages = clean_messages(messages)
-        regex = []
-        parser = Drain(input=cleaned_messages, rex=regex, st=0.2)
-        result = parser.parse()
-        cleaned = []
-        for line in result:
-            cleaned.append(line[0])
-        # for line in result:
-        #     l = line[0].replace('<*> ', '<*>')
-        #     l = re.sub(r'[(<*>)]+', '(.*?)', l)
-        #     cleaned.append(l)
-        return cleaned
-
-    def logcluster_clusterization(self, messages):
-        if len(messages) == 1:
-            return clean_messages(messages)
-        else:
-            support = 1 if len(messages) > 1 and len(messages) < 20 else 2
-            # regex = []
-            regex = [r'[^ ]+\.[^ ]+', r'(/[\w\./]*[\s]?)', r'([a-zA-Z0-9]+[_]+[\S]+)', r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)', r'[^\w\s]']
-            parser = LogParser(messages=messages, support=support, outdir='', rex=regex)
-            patterns = parser.parse()
-            if len(patterns) == 0:
-                parser = LogParser(messages=messages, support=1, outdir='', rex=regex)
-                patterns = parser.parse()
-            return patterns

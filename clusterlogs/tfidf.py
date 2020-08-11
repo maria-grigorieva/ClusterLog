@@ -4,11 +4,6 @@ import numpy as np
 
 from .tokenization import get_term_frequencies, get_vocabulary, to_lower, clean_tokenized
 
-# import warnings
-# from string import punctuation
-# from gensim.models import TfidfModel
-# from gensim.corpora import Dictionary
-
 
 class TermsAnalysis:
 

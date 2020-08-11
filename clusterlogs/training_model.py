@@ -2,11 +2,11 @@
 import sys
 import getopt
 from gensim.models import Word2Vec
-from clusterlogs.data_preparation import clean_messages
+from .data_preparation import clean_messages
 import pprint
 import numpy as np
-# from clusterlogs.tokenization import get_term_frequencies
-from .tokenization import tokenize_messages  # , get_term_frequencies, detokenize_row
+
+from .tokenization import tokenize_messages
 
 
 def main(argv):

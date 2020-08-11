@@ -65,8 +65,6 @@ class Match:
         return pattern
 
     def matching_clusters(self, sequences, patterns):
-        # start = sequences[0]
-        # similarities = Match.levenshtein_similarity(start, sequences)
         similarities = levenshtein_similarity_1_to_n(sequences)
         filtered, to_remove = [], []
         for i, value in enumerate(similarities):
@@ -91,14 +89,3 @@ class Match:
             x = list(map(list, zip(*sequences)))
             return [tokens[0] if len(tokens) == 1 else '(.*?)' for tokens in
                     [np.unique(line) for line in x]]
-
-    # def matcher(self, sequences):
-    #    if len(sequences) > 1:
-    #        fdist = nltk.FreqDist([token for row in sequences for token in row])
-    #        # x = [token for token in lines[0] if (fdist[token] / len(lines) >= 1)]
-    #        x = [token if (fdist[token] / len(sequences) >= 1) else '(.*?)' for token in sequences[0]]
-    #        print(x)
-    #        print([i[0] for i in groupby(x)])
-    #        return [i[0] for i in groupby(x)]
-    #    else:
-    #        return sequences[0]
