@@ -1,14 +1,28 @@
+import pke
 import RAKE
 import spacy
 import pytextrank
 from rake_nltk import Rake, Metric
+from functools import partial
 
 
 def extract_common_phrases(text, algorithm):
     dispatch = {
         "RAKE": _extract_common_phrases_rake,
         "pyTextRank": _extract_common_phrases_pytextrank,
-        "rake_nltk": _extract_common_phrases_rake_nltk
+        "rake_nltk": _extract_common_phrases_rake_nltk,
+
+        "tfidf": partial(_extract_common_phrases_pke, algorithm="tfidf"),
+        "KPMiner": partial(_extract_common_phrases_pke, algorithm="KPMiner"),
+        "YAKE": partial(_extract_common_phrases_pke, algorithm="YAKE"),
+        "TextRank": partial(_extract_common_phrases_pke, algorithm="TextRank"),
+        "SingleRank": partial(_extract_common_phrases_pke, algorithm="SingleRank"),
+        "TopicRank": partial(_extract_common_phrases_pke, algorithm="TopicRank"),
+        "TopicalPageRank": partial(_extract_common_phrases_pke, algorithm="TopicalPageRank"),
+        "PositionRank": partial(_extract_common_phrases_pke, algorithm="PositionRank"),
+        "MultipartiteRank": partial(_extract_common_phrases_pke, algorithm="MultipartiteRank"),
+        "Kea": partial(_extract_common_phrases_pke, algorithm="Kea"),
+        "WINGNUS": partial(_extract_common_phrases_pke, algorithm="WINGNUS"),
     }
     return dispatch[algorithm](text)
 
@@ -47,3 +61,54 @@ def _extract_common_phrases_rake_nltk(text):
     # r = Rake(ranking_metric=Metric.WORD_FREQUENCY)
     r.extract_keywords_from_text(text)
     return r.get_ranked_phrases()  # To get keyword phrases ranked highest to lowest.
+
+
+def _extract_common_phrases_pke(text, algorithm):
+    dispatch = {
+        "tfidf": pke.unsupervised.TfIdf,
+        "KPMiner": pke.unsupervised.KPMiner,
+        "YAKE": pke.unsupervised.YAKE,
+        "TextRank": pke.unsupervised.TextRank,
+        "SingleRank": pke.unsupervised.SingleRank,
+        "TopicRank": pke.unsupervised.TopicRank,
+        "TopicalPageRank": pke.unsupervised.TopicalPageRank,
+        "PositionRank": pke.unsupervised.PositionRank,
+        "MultipartiteRank": pke.unsupervised.MultipartiteRank,
+        "Kea": pke.supervised.Kea,
+        "WINGNUS": pke.supervised.WINGNUS
+    }
+    extractor = dispatch[algorithm]()
+    extractor.load_document(input=text, language='en')
+
+    selection_arguments = {
+        "tfidf": {"n": 3, "stoplist": None},
+        "KPMiner": {"lasf": 3, "cutoff": 400, "stoplist": None},
+        "YAKE": {"n": 3, "stoplist": None},
+        "TextRank": {"pos": None},
+        "SingleRank": {"pos": None},
+        "TopicRank": {"pos": None, "stoplist": None},
+        "TopicalPageRank": {"grammar": None},
+        "PositionRank": {"grammar": None, "maximum_word_number": 3},
+        "MultipartiteRank": {"pos": None, "stoplist": None},
+        "Kea": {"stoplist": None},
+        "WINGNUS": {"grammar": None}
+    }
+    extractor.candidate_selection(**selection_arguments[algorithm])
+
+    weighting_arguments = {
+        "tfidf": {"df": None},
+        "KPMiner": {"df": None, "sigma": 3.0, "alpha": 2.3},
+        "YAKE": {"window": 2, "stoplist": None, "use_stems": False},
+        "TextRank": {"window": 2, "pos": None, "top_percent": None, "normalized": False},
+        "SingleRank": {"window": 2, "pos": None, "normalized": False},
+        "TopicRank": {"threshold": 0.74, "method": 'average', "heuristic": None},
+        "TopicalPageRank": {"window": 10, "pos": None, "lda_model": None, "stoplist": None, "normalized": False},
+        "PositionRank": {"window": 2, "pos": None, "normalized": False},
+        "MultipartiteRank": {"threshold": 0.74, "method": 'average', "alpha": 1.1},
+        "Kea": {"model_file": None, "df": None},
+        "WINGNUS": {"model_file": None, "df": None}
+    }
+    extractor.candidate_weighting(**weighting_arguments[algorithm])
+
+    keyphrases = extractor.get_n_best(n=10)
+    return [item[0] for item in keyphrases]

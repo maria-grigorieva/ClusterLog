@@ -155,7 +155,7 @@ class TermsAnalysis:
             top = np.mean(weights) + np.std(weights)
             print(top)
             tokenized_tfidf.append([v if weights[j] < top else '｟*｠' for j, v in enumerate(row)])
-            print([v for j, v in enumerate(row) if weights[j] < top ])
+            print([v for j, v in enumerate(row) if weights[j] < top])
         return tokenized_tfidf
 
         # f_matrix = self.create_frequency_matrix(tokenized)

@@ -36,12 +36,11 @@
         <table class="table table-sm table-condensed table-striped">
             <thead class="thead-dark">
             <tr>
-                <th style="width: 10%">Cluster Size</th>
-                <th style="width: 60%">Patterns</th>
-<!--                <th>Verbs</th>-->
-<!--                <th>Noun Phrases</th>-->
-<!--                <th>Entities</th>-->
-                <th style="width: 30%">Key Phrases (RAKE)</th>
+                <th>Cluster Size</th>
+                <th>Patterns</th>
+<!--                <th>Drain Patterns</th>-->
+<!--                <th>LogCluster Patterns</th>-->
+                <th>Key Phrases</th>
             </tr>
             </thead>
             <tbody>
@@ -78,7 +77,7 @@
 <!--                    </td>-->
                     <td>
                         <ul>
-                            {% for item in dict_item['common_phrases_RAKE'] %}
+                            {% for item in dict_item['common_phrases'] %}
                             <li>{{ item }}</li>
                             {% endfor %}
                         </ul>

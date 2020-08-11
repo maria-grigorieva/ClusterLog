@@ -2,11 +2,11 @@
 import sys
 import getopt
 from gensim.models import Word2Vec
-from clusterlogs.data_preparation import alpha_cleaning, clean_messages
+from clusterlogs.data_preparation import clean_messages
 import pprint
 import numpy as np
-from clusterlogs.tokenization import get_term_frequencies
-from clusterlogs.tokenization import tokenize_messages, get_term_frequencies, detokenize_row
+# from clusterlogs.tokenization import get_term_frequencies
+from .tokenization import tokenize_messages  # , get_term_frequencies, detokenize_row
 
 
 def main(argv):
@@ -45,7 +45,7 @@ def main(argv):
     # pprint.pprint("Unique: ")
     # pprint.pprint(unique)
 
-    tokenized = tokenize_messages(unique, 'space', spacer_annontate=False, spacer_new=False)
+    tokenized = tokenize_messages(unique, 'space', spacer_annotate=False, spacer_new=False)
 
     print('Messages has been tokenized')
 
