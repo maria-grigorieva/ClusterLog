@@ -55,7 +55,7 @@ def _extract_common_phrases_pytextrank(text):
 
 
 def _extract_common_phrases_rake_nltk(text):
-    r = Rake(min_length=2, max_length=5, ranking_metric=Metric.WORD_FREQUENCY)  # Uses stopwords for english from NLTK, and all puntuation characters.
+    r = Rake(min_length=2, max_length=5, ranking_metric=Metric.WORD_DEGREE)  # Uses stopwords for english from NLTK, and all puntuation characters.
     # r = Rake(ranking_metric=Metric.DEGREE_TO_FREQUENCY_RATIO)
     # r = Rake(ranking_metric=Metric.WORD_DEGREE)
     # r = Rake(ranking_metric=Metric.WORD_FREQUENCY)
