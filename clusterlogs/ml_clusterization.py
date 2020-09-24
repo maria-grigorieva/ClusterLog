@@ -8,9 +8,7 @@ from sklearn.cluster import DBSCAN, AgglomerativeClustering
 from sklearn.neighbors import NearestNeighbors
 from sklearn.decomposition import PCA
 
-from .phraser import extract_common_phrases
-from .tokenization import get_vocabulary, detokenize_messages
-from .sequence_matching import Match
+from .tokenization import get_vocabulary
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -19,7 +17,7 @@ LIMIT = 30
 
 class MLClustering:
 
-    def __init__(self, df, groups, vectors, cpu_number, add_placeholder, method, tokenizer_type, pca, keywords_extraction):
+    def __init__(self, df, groups, vectors, cpu_number, add_placeholder, method, tokenizer_type, pca):
         self.groups = groups
         self.df = df
         self.method = method
@@ -32,15 +30,14 @@ class MLClustering:
         self.tokenizer_type = tokenizer_type
         self.diversity_factor = 0
         self.pca = pca
-        self.keywords_extraction = keywords_extraction
 
     def process(self):
         if self.method == 'dbscan':
-            return self.dbscan()
+            self.dbscan()
         if self.method == 'hdbscan':
-            return self.hdbscan()
+            self.hdbscan()
         if self.method == 'hierarchical':
-            return self.hierarchical()
+            self.hierarchical()
 
     def dimensionality_reduction(self):
         n = self.vectors.detect_embedding_size(get_vocabulary(self.groups['sequence']))
@@ -83,9 +80,7 @@ class MLClustering:
             .fit_predict(self.vectors.sent2vec)
         self.groups['cluster'] = self.cluster_labels
         print('DBSCAN finished with {} clusters'.format(len(set(self.cluster_labels))))
-        return pd.DataFrame.from_dict(
-            [item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)],
-            orient='columns').sort_values(by=['cluster_size'], ascending=False)
+
 
     def hdbscan(self):
         self.vectors.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 else self.dimensionality_reduction()
@@ -94,9 +89,6 @@ class MLClustering:
         self.cluster_labels = clusterer.fit_predict(self.vectors.sent2vec)
         self.groups['cluster'] = self.cluster_labels
         print('HDBSCAN finished with {} clusters'.format(len(set(self.cluster_labels))))
-        return pd.DataFrame.from_dict(
-            [item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)],
-            orient='columns').sort_values(by=['cluster_size'], ascending=False)
 
     def hierarchical(self):
         """
@@ -109,29 +101,3 @@ class MLClustering:
                                                       distance_threshold=0.1) \
             .fit_predict(self.vectors.sent2vec)
         self.groups['cluster'] = self.cluster_labels
-        self.result = pd.DataFrame.from_dict(
-            [item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)],
-            orient='columns').sort_values(by=['cluster_size'], ascending=False)
-
-    def gb_regroup(self, gb):
-        m = Match(gb['tokenized_pattern'].values, add_placeholder=self.add_placeholder)
-        tokenized_pattern = []
-        sequences = gb['tokenized_pattern'].values
-
-        if len(sequences) > 1:
-            m.matching_clusters(sequences, tokenized_pattern)
-        elif len(sequences) == 1:
-            tokenized_pattern.append(sequences[0])
-        pattern = detokenize_messages(tokenized_pattern, self.tokenizer_type)
-
-        # Get all indices for the group
-        indices = [i for sublist in gb['indices'].values for i in sublist]
-        size = len(indices)
-
-        text = '. '.join([' '.join(row) for row in self.df.loc[indices]['sequence'].values])
-        phrases = extract_common_phrases(text, self.keywords_extraction)
-
-        return {'pattern': pattern,
-                'indices': indices,
-                'cluster_size': size,
-                'common_phrases': phrases}

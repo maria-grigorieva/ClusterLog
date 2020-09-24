@@ -9,12 +9,13 @@ from string import punctuation
 
 from .reporting import report
 from .validation import Output
-from .tokenization import tokenize_messages, get_term_frequencies, detokenize_row
+from .tokenization import tokenize_messages, detokenize_messages, get_term_frequencies, detokenize_row
 from .data_preparation import clean_messages
 from .sequence_matching import Match
 from .ml_clusterization import MLClustering
 from .similarity_clusterization import SClustering
 from .categorization import execute_categorization
+from .phraser import extract_common_phrases
 
 
 def safe_run(method):
@@ -100,6 +101,7 @@ class Chain(object):
             self.tokens_vectorization()
             self.sentence_vectorization()
             self.ml_clustering()
+            self.clusters_description()
 
         print(f"Timings:\n{self.timings}")
 
@@ -212,9 +214,46 @@ class Chain(object):
                                      self.add_placeholder,
                                      self.clustering_type,
                                      self.tokenizer_type,
-                                     self.dimensionality_reduction,
-                                     self.keywords_extraction)
-        self.result = self.clusters.process()
+                                     self.dimensionality_reduction)
+        self.clusters.process()
+
+
+    def clusters_description(self):
+        self.result = pd.DataFrame.from_dict(
+            [item for item in self.groups.groupby('cluster').apply(func=self.clusters_regroup)],
+            orient='columns').sort_values(by=['cluster_size'], ascending=False)
+
+
+    def clusters_regroup(self, gb):
+        pattern = self.search_common_patterns(gb)
+
+        # Get all indices for the group
+        indices = [i for sublist in gb['indices'].values for i in sublist]
+        size = len(indices)
+
+        phrases = self.search_keyphrases(indices)
+
+        return {'pattern': pattern,
+                'indices': indices,
+                'cluster_size': size,
+                'common_phrases': phrases[:5]}
+
+    @safe_run
+    def search_common_patterns(self, gb):
+        m = Match(gb['tokenized_pattern'].values, add_placeholder=self.add_placeholder)
+        tokenized_pattern = []
+        sequences = gb['tokenized_pattern'].values
+
+        if len(sequences) > 1:
+            m.matching_clusters(sequences, tokenized_pattern)
+        elif len(sequences) == 1:
+            tokenized_pattern.append(sequences[0])
+        return detokenize_messages(tokenized_pattern, self.tokenizer_type)
+
+    @safe_run
+    def search_keyphrases(self, indices):
+        text = '. '.join([' '.join(row) for row in self.df.loc[indices]['sequence'].values])
+        return extract_common_phrases(text, self.keywords_extraction)
 
     def in_cluster(self, groups, cluster_label):
         indices = groups.loc[cluster_label, 'indices']
