@@ -64,6 +64,7 @@ class Match:
             pattern = list(chain(*matches))  # concatenate inner lists
         return pattern
 
+
     def matching_clusters(self, sequences, patterns):
         similarities = levenshtein_similarity_1_to_n(sequences)
         filtered, to_remove = [], []
@@ -81,6 +82,7 @@ class Match:
         elif len(sequences) == 1:
             patterns.append(sequences[0])
             np.delete(sequences, 0)
+
 
     def matrix_matching(self, sequences):
         if len(sequences) == 1:

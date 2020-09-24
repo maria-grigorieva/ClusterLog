@@ -5,7 +5,6 @@ import pytextrank
 from rake_nltk import Rake, Metric
 from functools import partial
 
-
 def extract_common_phrases(text, algorithm):
     dispatch = {
         "RAKE": _extract_common_phrases_rake,
@@ -40,6 +39,7 @@ def _extract_common_phrases_rake(text):
 def _extract_common_phrases_pytextrank(text):
     # load a spaCy model, depending on language, scale, etc.
     nlp = spacy.load("en_core_web_sm")
+    #nlp = en_core_web_sm.load()
 
     # add PyTextRank to the spaCy pipeline
     tr = pytextrank.TextRank()

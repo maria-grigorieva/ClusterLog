@@ -46,6 +46,7 @@ class Chain(object):
     MATCHING_ACCURACY = 0.8
     CLUSTERING_TYPE = 'SIMILARITY'
     ALGORITHM = 'dbscan'
+    KEYWORDS_EXTRACTION = 'rake_nltk'
 
     def __init__(self, df, target,
                  tokenizer_type='space',
@@ -59,6 +60,7 @@ class Chain(object):
                  matching_accuracy=MATCHING_ACCURACY,
                  clustering_type=CLUSTERING_TYPE,
                  algorithm=ALGORITHM,
+                 keywords_extraction=KEYWORDS_EXTRACTION,
                  categorization=False,
                  generate_html_report=False):
         self.df = df
@@ -78,6 +80,7 @@ class Chain(object):
         self.categorization = categorization
         self.generate_html_report = generate_html_report
         self.dimensionality_reduction = dimensionality_reduction
+        self.keywords_extraction = keywords_extraction
 
     @staticmethod
     def get_cpu_number():
@@ -199,11 +202,15 @@ class Chain(object):
     @safe_run
     def ml_clustering(self):
 
-        self.clusters = MLClustering(self.df, self.groups,
-                                     self.vectors, self.cpu_number, self.add_placeholder,
+        self.clusters = MLClustering(self.df,
+                                     self.groups,
+                                     self.vectors,
+                                     self.cpu_number,
+                                     self.add_placeholder,
                                      self.algorithm,
                                      self.tokenizer_type,
-                                     self.dimensionality_reduction)
+                                     self.dimensionality_reduction,
+                                     self.keywords_extraction)
         self.result = self.clusters.process()
 
     def in_cluster(self, groups, cluster_label):

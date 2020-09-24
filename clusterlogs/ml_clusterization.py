@@ -19,7 +19,7 @@ LIMIT = 30
 
 class MLClustering:
 
-    def __init__(self, df, groups, vectors, cpu_number, add_placeholder, method, tokenizer_type, pca):
+    def __init__(self, df, groups, vectors, cpu_number, add_placeholder, method, tokenizer_type, pca, keywords_extraction):
         self.groups = groups
         self.df = df
         self.method = method
@@ -32,6 +32,7 @@ class MLClustering:
         self.tokenizer_type = tokenizer_type
         self.diversity_factor = 0
         self.pca = pca
+        self.keywords_extraction = keywords_extraction
 
     def process(self):
         if self.method == 'dbscan':
@@ -128,7 +129,7 @@ class MLClustering:
         size = len(indices)
 
         text = '. '.join([' '.join(row) for row in self.df.loc[indices]['sequence'].values])
-        phrases = extract_common_phrases(text, 'rake_nltk')
+        phrases = extract_common_phrases(text, self.keywords_extraction)
 
         return {'pattern': pattern,
                 'indices': indices,
