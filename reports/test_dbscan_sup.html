@@ -1,0 +1,1989 @@
+<html>
+
+
+<head>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <style>
+        table {
+          font-size: 12px;
+        }
+        .container {
+            width: 65%;
+            margin-top: 55px;
+        }
+    </style>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <title>ClusterLogs Report</title>
+  </head>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-md-12">
+
+        <h3>ClusterLogs Report</h3>
+
+        <table class="table table-sm table-condensed table-striped">
+            <thead class="thead-dark">
+            <tr>
+                <th>Cluster Size</th>
+                <th>Patterns</th>
+<!--                <th>Drain Patterns</th>-->
+<!--                <th>LogCluster Patterns</th>-->
+                <th>Key Phrases</th>
+            </tr>
+            </thead>
+            <tbody>
+            
+                <tr>
+                    <td>32132</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : LRMS error: (-1) (.*?) (.*?) </li>
+                            
+                            <li>worker (.*?) LRMS error: (.*?) (.*?) (.*?) </li>
+                            
+                            <li>Diag from worker : Job submission to LRMS failed</li>
+                            
+                            <li>Diag from worker : LRMS error: (271) job killed: wall</li>
+                            
+                            <li>worker already failed at 2020-04-06 09:23:30 with LRMS error: (271) Job timeout</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>lrms error job timeout</li>
+                            
+                            <li>worker job submission</li>
+                            
+                            <li>worker lrms error</li>
+                            
+                            <li>worker already failed</li>
+                            
+                            <li>lrms failed</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>31892</td>
+                    <td>
+                        <ul>
+                            
+                            <li>worker (.*?) Condor HoldReason: (.*?) (.*?) (.*?) ; Worker canceled by harvester due to held too long or not </li>
+                            
+                            <li>Diag from worker : Condor HoldReason: Job not found ; Worker canceled by harvester due to held too long or not found</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker condor holdreason worker canceled</li>
+                            
+                            <li>held too long</li>
+                            
+                            <li>harvester due</li>
+                            
+                            <li>not found</li>
+                            
+                            <li>not</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>26857</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : (.*?) (.*?) (.*?) RemoveReason: (.*?) (.*?) (.*?) (.*?) </li>
+                            
+                            <li>Diag from worker : LRMS error: (-1) RemoveReason: Job removed by SYSTEM_PERIODIC_REMOVE due to (.*?)more than </li>
+                            
+                            <li>Diag from worker : LRMS error: (-1) RemoveReason: Job removed by SYSTEM_PERIODIC_REMOVE due to exceeding the requested </li>
+                            
+                            <li>Diag from worker : Condor HoldReason: None ; Condor RemoveReason: removed by SYSTEM_PERIODIC_REMOVE due to job restarted undesirably.</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>job restarted undesirably</li>
+                            
+                            <li>worker removereason</li>
+                            
+                            <li>system_periodic_remove due</li>
+                            
+                            <li>diag</li>
+                            
+                            <li>than</li>
+                            
+                            <li>exceeding</li>
+                            
+                            <li>requested</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>7834</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : LRMS error: (-1) RemoveReason: The system macro SYSTEM_PERIODIC_REMOVE expression '( RemoteWallClockTime > 168 * 60 * 60 ) || ( RemoteSysCpu + RemoteUserCpu > 336 * 60 * 60 ) || ( ( JobStatus == 5 && ( CurrentTime - EnteredCurrentS</li>
+                            
+                            <li>Diag from worker : Condor HoldReason: None ; Condor RemoveReason: The job attribute PeriodicRemove expression '(JobStatus == 2 && (CurrentTime - EnteredCurrentStatus) > 604800)' evaluated to TRUE</li>
+                            
+                            <li>Diag from worker : LRMS error: (-1) RemoveReason: The system macro SYSTEM_PERIODIC_REMOVE expression '( regexp(\".*lcg-wn(09|10|11|12|13|14|15|16).*\",RemoteHost) && ( ResidentSetSize_RAW > 1000 * RequestMemory ) ) || ( RemoteWallClockTime > 168 * 60</li>
+                            
+                            <li>Diag from worker : Condor HoldReason: The system macro SYSTEM_PERIODIC_HOLD expression '(x509userproxysubject =?= undefined) || (x509UserProxyExpiration =?= undefined) || ((time() > x509UserProxyExpiration) && JobStatus =!= 3 && JobStatus =!= 4) || (</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker lrms error removereason</li>
+                            
+                            <li>worker condor holdreason</li>
+                            
+                            <li>diag</li>
+                            
+                            <li>true</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>5057</td>
+                    <td>
+                        <ul>
+                            
+                            <li>got an update request with invalid</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>update request</li>
+                            
+                            <li>got</li>
+                            
+                            <li>invalid</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>4316</td>
+                    <td>
+                        <ul>
+                            
+                            <li>worker (.*?) Condor HoldReason: CREAM error:(.*?) Job has been terminated (got SIGTERM) ; Worker canceled by harvester due to held too long or not </li>
+                            
+                            <li>Diag from worker : Condor HoldReason: CREAM error: Job has been terminated (got SIGTERM); pbs_reason=-10 ; Worker canceled by harvester due to held too long or not found</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>held too long</li>
+                            
+                            <li>harvester due</li>
+                            
+                            <li>not found</li>
+                            
+                            <li>not</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>4291</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker :(.*?) Failed in data staging: Failed checking source replica </li>
+                            
+                            <li>Diag from worker : Failed in data staging: Failed to prepare source srm://srm.ndgf.org:8443/srm/managerv2?SFN=/atlas/disk/atlasscratchdisk/rucio/panda/27/88/panda.um.user.sbartkow.20940052._000012.output.root: Failed to prepare source: Resource tempo</li>
+                            
+                            <li>Diag from worker : Failed in data staging: Failed checking source replica Failed to obtain information about file: </li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>prepare source resource tempo</li>
+                            
+                            <li>prepare source failed</li>
+                            
+                            <li>data staging failed</li>
+                            
+                            <li>worker failed</li>
+                            
+                            <li>obtain information</li>
+                            
+                            <li>diag</li>
+                            
+                            <li>file</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>2696</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Condor HoldReason: CREAM error: Transfer failed: globus_ftp_client: the server responded with an error 500 500-Command failed. : globus_l_gfs_file_open failed. 500-globus_xio: Unable to open file </li>
+                            
+                            <li>Diag from worker : Condor HoldReason: CREAM error: Transfer failed: globus_ftp_client: the server responded with an error 500 500-Command failed. : globus_l_gfs_file_open failed. 500-globus_xio: Unable to open file /var/glite/cream_sandbox/atlas/CN_</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>error failed globus_l_gfs_file_open failed unable</li>
+                            
+                            <li>server responded</li>
+                            
+                            <li>open file</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>2429</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Condor HoldReason: None ; Condor RemoveReason: Python-initiated action. (by user atlpan)</li>
+                            
+                            <li>Diag from worker : Condor HoldReason: Unspecified gridmanager error ; Condor RemoveReason: Python-initiated action. (by user atlpan)</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>user atlpan</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>1554</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Error reading user generated output file list</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>771</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : LRMS error: (.*?) (.*?) (.*?) with(.*?) exit code</li>
+                            
+                            <li>Diag from worker : LRMS error: (2) Job failed with exit code </li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker lrms error job failed</li>
+                            
+                            <li>worker lrms error exit code</li>
+                            
+                            <li>exit code</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>762</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Failed in data staging: Could not resolve any source replicas for (.*?) Resolving of index service for source failed: No such file or directory: </li>
+                            
+                            <li>Diag from worker : Failed in data staging: Could not resolve any source replicas for Resolving of index service for source failed: No such file </li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>source failed no such file</li>
+                            
+                            <li>worker failed</li>
+                            
+                            <li>index service</li>
+                            
+                            <li>diag</li>
+                            
+                            <li>resolving</li>
+                            
+                            <li>directory</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>648</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : condor job submissionHost=LOCAL not found. </li>
+                            
+                            <li>Diag from worker : PODs= ; JOB not </li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker pods job not</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>386</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Condor HoldReason: (.*?)Failed to (.*?) (.*?) ; Worker canceled by harvester due to held too long or not found</li>
+                            
+                            <li>Diag from worker : Condor HoldReason: an end-of-file was reached globus_xio: An end of file occurred ; Worker canceled by harvester due to held too long or not found</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>file occurred worker canceled</li>
+                            
+                            <li>worker condor holdreason</li>
+                            
+                            <li>held too long</li>
+                            
+                            <li>worker canceled</li>
+                            
+                            <li>harvester due</li>
+                            
+                            <li>not found</li>
+                            
+                            <li>reached globus_xio</li>
+                            
+                            <li>file</li>
+                            
+                            <li>diag</li>
+                            
+                            <li>end</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>249</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Failed in data staging: Could not resolve any source replicas for (.*?) Failed in data staging: Could not resolve any source replicas for</li>
+                            
+                            <li>Diag from worker : Failed in data staging: Could not resolve any source replicas for</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker failed</li>
+                            
+                            <li>failed</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>219</td>
+                    <td>
+                        <ul>
+                            
+                            <li>worker already finished at with </li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker already finished</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>179</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Condor HoldReason: CREAM error: CREAM_Job_Register Error: MethodName=[jobRegister] ErrorCode=[0] Description=[The CREAM service cannot accept jobs at the moment] FaultCause=[Threshold for FTP Connection: 30 => Detected value for FT</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>cream service cannot accept jobs</li>
+                            
+                            <li>ftp connection detected value</li>
+                            
+                            <li>moment faultcause threshold</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>167</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : cannot get JobStatus of job submissionHost=LOCAL </li>
+                            
+                            <li>Diag from worker : cannot get ExitCode of job Regard the worker as </li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker cannot get jobstatus</li>
+                            
+                            <li>worker cannot get exitcode</li>
+                            
+                            <li>job submissionhost local</li>
+                            
+                            <li>job regard</li>
+                            
+                            <li>worker</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>113</td>
+                    <td>
+                        <ul>
+                            
+                            <li>worker already cancelled at with Condor HoldReason: The system macro SYSTEM_PERIODIC_HOLD expression '(x509userproxysubject =?= undefined) || (x509UserProxyExpiration =?= undefined) || ((time() > x509UserProxyExpiration) && </li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker already cancelled</li>
+                            
+                            <li>condor holdreason</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>105</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : LRMS error: (126) Job missing from SLURM, exitcode recovered from session </li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker lrms error job missing</li>
+                            
+                            <li>slurm exitcode recovered</li>
+                            
+                            <li>diag</li>
+                            
+                            <li>session</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>96</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Failed in data staging: Failed writing to destination: : Can't write to destination: No space left on device: </li>
+                            
+                            <li>Diag from worker : Failed in data staging: Failed writing to destination: : Can't write to destination: No space left on device: Failed to </li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>destination can t write</li>
+                            
+                            <li>destination no space left</li>
+                            
+                            <li>data staging failed writing</li>
+                            
+                            <li>worker failed</li>
+                            
+                            <li>device failed</li>
+                            
+                            <li>device</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>50</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : User file: /agis_schedconf.json - Delivered file is bigger than </li>
+                            
+                            <li>Diag from worker : User file: /runpilot2-wrapper.sh - Timeout </li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker user file delivered file</li>
+                            
+                            <li>worker user file timeout</li>
+                            
+                            <li>bigger than</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>44</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Condor HoldReason: CREAM error: Cannot upload into</li>
+                            
+                            <li>Diag from worker : Condor HoldReason: CREAM error: Cannot move ISB (retry_copy ${globus_transfer_cmd}</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>39</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Failed in data staging: Failed writing to destination: (.*?) : Can't write to destination: File exists: Failed to create file</li>
+                            
+                            <li>Diag from worker : Failed in data staging: Failed writing to destination: file:/storage/nordugrid/cache/data/50/04c3c719663afaff4203351997afb9ea456e39 : Can't write to destination: Resource temporarily unavailable: Failed to create file /storage/nord</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>destination resource temporarily unavailable failed</li>
+                            
+                            <li>destination can t write</li>
+                            
+                            <li>data staging failed writing</li>
+                            
+                            <li>destination file exists failed</li>
+                            
+                            <li>create file storage nord</li>
+                            
+                            <li>create file</li>
+                            
+                            <li>worker failed</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>34</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Condor HoldReason: Error receiving files from schedd aipanda025.cern.ch: DCSchedd::receiveJobSandbox:7003:File transfer failed for target job C_GAHP_WORKER_THREAD at 188.184.94.139 failed to write to file </li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>target job c_gahp_worker_thread</li>
+                            
+                            <li>schedd transfer failed</li>
+                            
+                            <li>failed</li>
+                            
+                            <li>diag</li>
+                            
+                            <li>write</li>
+                            
+                            <li>file</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>31</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Condor HoldReason: Unspecified gridmanager error</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>25</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Condor HoldReason: CREAM error: CREAM_Job_Register Error: MethodName=[jobRegister] Timestamp=[Tue 07 Apr 2020 ErrorCode=[0] Description=[system error] FaultCause=[database error occurred] ; Worker canceled by harvester </li>
+                            
+                            <li>Diag from worker : Condor HoldReason: CREAM error: CREAM_Job_Register Error: MethodName=[jobRegister] Timestamp=[Wed 01 Apr 2020 10:13:38] ErrorCode=[0] Description=[system error] FaultCause=[database error occurred] ; Worker canceled by harvester d</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>harvester d</li>
+                            
+                            <li>harvester</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>24</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Condor HoldReason: CREAM error: Job has been terminated (got (.*?) Cannot upload (.*?) into</li>
+                            
+                            <li>Diag from worker : Condor HoldReason: CREAM error: Job has been terminated (got SIGTERM)</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>17</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Condor HoldReason: HTCondor-CE held job due to no matching routes, route job limit, or route failure threshold; see 'HTCondor-CE Troubleshooting Guide' ; Condor RemoveReason: Python-initiated action. (by user atlpan)</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>user atlpan</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>10</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Condor HoldReason: Error from Failed to execute '/cvmfs/atlas.cern.ch/repo/sw/PandaPilotWrapper/latest/runpilot2-wrapper.sh' with arguments -s BNL_PROD_CONTR_TEST -r BNL_PROD_CONTR_TEST -q </li>
+                            
+                            <li>Diag from worker : Condor HoldReason: Error from Failed to execute '/cvmfs/atlas.cern.ch/repo/sw/PandaPilotWrapper/latest/runpilot2-wrapper.sh' with arguments -s BNL_PROD_CONTR_TEST -r BNL_PROD_CONTR_TEST -q </li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker condor holdreason error</li>
+                            
+                            <li>diag</li>
+                            
+                            <li>failed</li>
+                            
+                            <li>execute</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>10</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Condor HoldReason: CREAM error: </li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker condor holdreason cream error</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>7</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Failed in data staging: Metadata of replica and index service differ for</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>replica and index service differ</li>
+                            
+                            <li>data staging metadata</li>
+                            
+                            <li>worker failed</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>6</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Condor HoldReason: CREAM error: BLAH error: submission command failed (exit code = 143) (stdout:) (stderr: <blah> execute_cmd: 200 seconds timeout expired, killing child process.-) N/A (jobId = ; Worker canceled </li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>jobid worker canceled</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>5</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Condor HoldReason: CREAM error: Transfer failed: globus_xio: Unable to connect to llrcream.in2p3.fr:2811 globus_xio: System error in connect: Connection refused globus_xio: A system call failed: Connection refused ; Worker cancele</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>connect connection refused globus_xio</li>
+                            
+                            <li>globus_xio system error</li>
+                            
+                            <li>connect</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>5</td>
+                    <td>
+                        <ul>
+                            
+                            <li>worker already cancelled at with condor job submissionHost=LOCAL not found. </li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker already cancelled</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>4</td>
+                    <td>
+                        <ul>
+                            
+                            <li>worker already cancelled at 2020-04-03 with Condor HoldReason: The job attribute PeriodicHold expression '(NumJobStarts >= 2 && JobStatus == 1) || (JobRunCount >= 2 && JobStatus == 1)' evaluated to TRUE ; Worker canceled by harvester due </li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker already cancelled</li>
+                            
+                            <li>true worker canceled</li>
+                            
+                            <li>condor holdreason</li>
+                            
+                            <li>harvester due</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>4</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Failed to clean up session dir before downloading inputs</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker failed</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>3</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Failed in data staging: Connection with delivery process lost</li>
+                            
+                            <li>Diag from worker : Failed in data staging: Error with post-transfer destination handling of</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>post transfer destination handling</li>
+                            
+                            <li>data staging connection</li>
+                            
+                            <li>delivery process lost</li>
+                            
+                            <li>data staging error</li>
+                            
+                            <li>worker failed</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>3</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Condor HoldReason: CREAM error: reason=1; connect: Connection timed out at -e line 23. connect: Connection timed out at -e line 23. Cannot move ISB (retry_copy ${globus_transfer_cmd} gsiftp://cccreamceli03.in2p3.fr/var/glite/cream_</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>3</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Condor HoldReason: Error receiving files from schedd gk04.swt2.uta.edu: DCSchedd::receiveJobSandbox:6004:Can't receive JobAdsArrayLen from the schedd (<129.107.255.5:9619?addrs=129.107.255.5-9619&noUDP&sock=663440_6f3a_3>) ; Worke</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>schedd t receive jobadsarraylen</li>
+                            
+                            <li>schedd worke</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>3</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Condor HoldReason: CREAM error: reason=1; connect: Connection timed out at -e line 23. mkdir: cannot create directory CREAM166862743: File exists mv: cannot stat /var/cream_sandbox/atlpr/CN_Robot__ATLAS_Pilot1_CN_614260_CN_atlpi</li>
+                            
+                            <li>Diag from worker : Condor HoldReason: CREAM error: reason=1; connect: Connection timed out at -e line 23. mkdir: cannot create directory File exists mv: cannot stat </li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>2</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : PODs=grid-job-214847-6xh95,grid-job-214847-g8cvt ; container not terminated yet (waiting) while pod Succeeded;</li>
+                            
+                            <li>Diag from worker : PODs=grid-job-214694-5rvpd,grid-job-214694-tqmmb ; ;container not terminated yet (waiting) while pod Succeeded</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>2</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Failed reading status of the job</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker failed reading status</li>
+                            
+                            <li>diag</li>
+                            
+                            <li>job</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>1</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Job is canceled by external request</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker job</li>
+                            
+                            <li>external request</li>
+                            
+                            <li>diag</li>
+                            
+                            <li>canceled</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>1</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : Condor HoldReason: Error receiving files from schedd cccondorce01.in2p3.fr: SECMAN:2007:Failed to received post-auth ClassAd</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>received post auth classad</li>
+                            
+                            <li>diag</li>
+                            
+                            <li>schedd</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>1</td>
+                    <td>
+                        <ul>
+                            
+                            <li>worker already failed at 2020-04-02 15:24:53 with Payload execution error: returned non-zero</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker already failed</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>1</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : LRMS error: (-1) ExitReason: died on signal 15 (Terminated)</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker lrms error exitreason died</li>
+                            
+                            <li>signal terminated</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>1</td>
+                    <td>
+                        <ul>
+                            
+                            <li>worker already cancelled at 2020-04-06 07:36:37 with cannot get JobStatus of job submissionHost=LOCAL batchID=434450.4. Skipped</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>job submissionhost local skipped</li>
+                            
+                            <li>worker already cancelled</li>
+                            
+                            <li>cannot get jobstatus</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+                <tr>
+                    <td>1</td>
+                    <td>
+                        <ul>
+                            
+                            <li>Diag from worker : PODs=grid-job-196569-9hmvj,grid-job-196569-fq6t8 ; ;container termiated by k8s for reason Error</li>
+                            
+                        </ul>
+                    </td>
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+<!--                    <td>-->
+<!--                        <ul>-->
+<!--                            -->
+<!--                        </ul>-->
+<!--                    </td>-->
+                    <td>
+                        <ul>
+                            
+                            <li>worker pods container termiated</li>
+                            
+                            <li>reason error</li>
+                            
+                            <li>diag</li>
+                            
+                        </ul>
+                    </td>
+                </tr>
+            
+            </tbody>
+        </table>
+            </div>
+    </div>
+
+</div>
+
+</body>
+</html>
