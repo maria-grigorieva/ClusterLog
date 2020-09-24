@@ -3,6 +3,7 @@ import sys
 import pprint
 from clusterlogs import pipeline
 
+
 def main():
     # with open("../samples/SSH.log") as f:
     #     big_data = [s[33:].lstrip("]: ") for s in f.readlines()]
@@ -15,11 +16,11 @@ def main():
     #     data = [s[33:].lstrip("]: ") for s in f.readlines()]
     #
     # df = pd.DataFrame(data=data, columns=['message'])
-    #big_df = pd.DataFrame(data=big_data, columns=['message'])
+    # big_df = pd.DataFrame(data=big_data, columns=['message'])
 
-    #big_df.to_csv('../samples/SSH.csv')
-    #df.to_csv('../samples/SSH_2k.csv')
-    #df = pd.read_csv('../samples/SSH_2k.log.txt')
+    # big_df.to_csv('../samples/SSH.csv')
+    # df.to_csv('../samples/SSH_2k.csv')
+    # df = pd.read_csv('../samples/SSH_2k.log.txt')
 
     # CREATE MODE
     # with open("../samples/SSH_2k.log.txt") as f:
@@ -50,7 +51,6 @@ def main():
                              clustering_type='ML', output_file='../reports/SSH_create_10K.html')
     cluster.process()
 
-#
-#
+
 if __name__ == "__main__":
     sys.exit(main())

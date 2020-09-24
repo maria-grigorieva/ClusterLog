@@ -10,11 +10,12 @@ from string import punctuation
 from .reporting import report
 from .validation import Output
 from .tokenization import tokenize_messages, get_term_frequencies, detokenize_row
-from .data_preparation import clean_messages, alpha_cleaning
+from .data_preparation import clean_messages
 from .sequence_matching import Match
 from .ml_clusterization import MLClustering
 from .similarity_clusterization import SClustering
 from .categorization import execute_categorization
+
 
 def safe_run(method):
 
@@ -23,10 +24,13 @@ def safe_run(method):
             ts = time()
             result = method(self, *args, **kwargs)
             te = time()
-            self.timings[method.__name__] = round((te - ts), 4)
+            if method.__name__ in self.timings:
+                self.timings[method.__name__] += round((te - ts), 4)
+            else:
+                self.timings[method.__name__] = round((te - ts), 4)
             return result
         except Exception as e:
-            print(e)
+            print(f"{method.__name__} threw an exception: {e}")
 
     return func_wrapper
 
@@ -42,6 +46,7 @@ class Chain(object):
     MATCHING_ACCURACY = 0.8
     CLUSTERING_TYPE = 'SIMILARITY'
     ALGORITHM = 'dbscan'
+    KEYWORDS_EXTRACTION = 'rake_nltk'
 
     def __init__(self, df, target,
                  tokenizer_type='space',
@@ -55,6 +60,7 @@ class Chain(object):
                  matching_accuracy=MATCHING_ACCURACY,
                  clustering_type=CLUSTERING_TYPE,
                  algorithm=ALGORITHM,
+                 keywords_extraction=KEYWORDS_EXTRACTION,
                  categorization=False,
                  generate_html_report=False):
         self.df = df
@@ -74,6 +80,7 @@ class Chain(object):
         self.categorization = categorization
         self.generate_html_report = generate_html_report
         self.dimensionality_reduction = dimensionality_reduction
+        self.keywords_extraction = keywords_extraction
 
     @staticmethod
     def get_cpu_number():
@@ -93,22 +100,21 @@ class Chain(object):
         """
         self.df['tokenized_pattern'] = tokenize_messages(self.df[self.target].values, self.tokenizer_type)
         cleaned_strings = clean_messages(self.df[self.target].values)
-        cleaned_tokens = tokenize_messages(cleaned_strings, self.tokenizer_type, spacer_annontate=False, spacer_new=False)
+        cleaned_tokens = tokenize_messages(cleaned_strings, self.tokenizer_type, spacer_annotate=False, spacer_new=False)
 
         self.df['hash'] = self.generateHash(cleaned_strings)
-
         self.df['sequence'] = cleaned_tokens
 
         self.group_equals(self.df, 'hash')
 
-        if self.clustering_type == 'SIMILARITY' and self.groups.shape[0] <= self.CLUSTERING_THRESHOLD:
-            clusters = SClustering(self.groups, self.matching_accuracy, self.add_placeholder, self.tokenizer_type)
-            self.result = clusters.process()
-            print('Finished with {} clusters'.format(self.result.shape[0]))
+        if self.clustering_type == 'SIMILARITY' and self.groups.shape[0] <= self.threshold:
+            self.similarity_clustering()
         else:
             self.tokens_vectorization()
             self.sentence_vectorization()
-            self.ml_clusterization()
+            self.ml_clustering()
+
+        print(f"Timings:\n{self.timings}")
 
         # Categorization
         if self.generate_html_report:
@@ -118,9 +124,17 @@ class Chain(object):
             else:
                 report.generate_html_report(self.result, self.output_file)
 
+    @safe_run
+    def remove_unique_tokens(self, tokens):
+        frequency = get_term_frequencies(tokens)
+        # remove tokens that appear only once
+        cleaned_tokens = [
+            [token for token in row if frequency[token] > 1]
+            for row in tokens]
+        return cleaned_tokens
+
     def generateHash(self, sequences):
         return [hashlib.md5(repr(row).encode('utf-8')).hexdigest() for row in sequences]
-
 
     @safe_run
     def group_equals(self, df, column):
@@ -128,7 +142,6 @@ class Chain(object):
         self.groups.reset_index(drop=True, inplace=True)
         print('Found {} equal groups'.format(self.groups.shape[0]))
 
-    @safe_run
     def regroup(self, gr):
         """
         tokenized_pattern - common sequence of tokens, generated based on all tokens
@@ -144,7 +157,7 @@ class Chain(object):
         :return:
         """
         matcher = Match(gr['tokenized_pattern'].values, add_placeholder=self.add_placeholder)
-        #pprint.pprint(gr['tokenized_pattern'].values)
+        # pprint.pprint(gr['tokenized_pattern'].values)
         tokenized_pattern = matcher.sequence_matcher()
         return pd.DataFrame([{'indices': gr.index.values.tolist(),
                               'pattern': detokenize_row(tokenized_pattern, self.tokenizer_type),
@@ -187,18 +200,28 @@ class Chain(object):
         return self
 
     @safe_run
-    def ml_clusterization(self):
+    def ml_clustering(self):
 
-        self.clusters = MLClustering(self.df, self.groups,
-                                     self.vectors, self.cpu_number, self.add_placeholder,
+        self.clusters = MLClustering(self.df,
+                                     self.groups,
+                                     self.vectors,
+                                     self.cpu_number,
+                                     self.add_placeholder,
                                      self.algorithm,
                                      self.tokenizer_type,
-                                     self.dimensionality_reduction)
+                                     self.dimensionality_reduction,
+                                     self.keywords_extraction)
         self.result = self.clusters.process()
 
     def in_cluster(self, groups, cluster_label):
         indices = groups.loc[cluster_label, 'indices']
         return self.df.loc[indices][self.target].values
+
+    @safe_run
+    def similarity_clustering(self):
+        clusters = SClustering(self.groups, self.matching_accuracy, self.add_placeholder, self.tokenizer_type)
+        self.result = clusters.process()
+        print('Finished with {} clusters'.format(self.result.shape[0]))
 
     @safe_run
     def validation(self, groups):

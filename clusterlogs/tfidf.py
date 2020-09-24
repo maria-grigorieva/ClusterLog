@@ -4,11 +4,6 @@ import numpy as np
 
 from .tokenization import get_term_frequencies, get_vocabulary, to_lower, clean_tokenized
 
-# import warnings
-# from string import punctuation
-# from gensim.models import TfidfModel
-# from gensim.corpora import Dictionary
-
 
 class TermsAnalysis:
 
@@ -155,7 +150,7 @@ class TermsAnalysis:
             top = np.mean(weights) + np.std(weights)
             print(top)
             tokenized_tfidf.append([v if weights[j] < top else '｟*｠' for j, v in enumerate(row)])
-            print([v for j, v in enumerate(row) if weights[j] < top ])
+            print([v for j, v in enumerate(row) if weights[j] < top])
         return tokenized_tfidf
 
         # f_matrix = self.create_frequency_matrix(tokenized)
