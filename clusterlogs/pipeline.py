@@ -231,22 +231,6 @@ class Chain(object):
     def validation(self, groups):
         return Output().statistics(self.df, self.target, groups)
 
-    def garbage_collector(self, df):
-        stop = list(punctuation) + ['｟*｠']
-        garbage = []
-        for row in df.itertuples():
-            elements = set(row.sequence)
-            c = 0
-            for i, x in enumerate(elements):
-                if x in stop:
-                    c += 1
-            if c == len(elements):
-                garbage.append(row)
-                print("Founded garbage")
-                pprint.pprint(garbage)
-                df.drop([row.Index], axis=0, inplace=True)
-        return garbage
-
     @staticmethod
     def split_clusters(df, column, threshold=100):
         if np.max(df[column].values) < threshold:
