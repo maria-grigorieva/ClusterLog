@@ -7,6 +7,7 @@ from hdbscan import HDBSCAN
 from sklearn.cluster import DBSCAN, AgglomerativeClustering
 from sklearn.neighbors import NearestNeighbors
 from sklearn.decomposition import PCA
+from sklearn.cluster import OPTICS
 
 from .tokenization import get_vocabulary
 import spacy
@@ -38,6 +39,8 @@ class MLClustering:
             self.hdbscan()
         if self.method == 'hierarchical':
             self.hierarchical()
+        if self.method == 'optics':
+            self.optics()
 
     def dimensionality_reduction(self):
         n = self.vectors.detect_embedding_size(get_vocabulary(self.groups['sequence']))
@@ -82,10 +85,23 @@ class MLClustering:
         print('DBSCAN finished with {} clusters'.format(len(set(self.cluster_labels))))
 
 
-    def hdbscan(self):
-        self.vectors.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 else self.dimensionality_reduction()
+    def optics(self):
+        """
+        Execution of the DBSCAN clustering algorithm.
+        Returns cluster labels
+        """
+        if self.pca:
+            self.vectors.sent2vec = self.dimensionality_reduction()
+        self.cluster_labels = OPTICS(min_samples=2,
+                                     n_jobs=self.cpu_number) \
+            .fit_predict(self.vectors.sent2vec)
+        self.groups['cluster'] = self.cluster_labels
+        print('OPTICS finished with {} clusters'.format(len(set(self.cluster_labels))))
 
-        clusterer = HDBSCAN(min_cluster_size=10, min_samples=1)
+    def hdbscan(self):
+        if self.pca:
+            self.vectors.sent2vec = self.dimensionality_reduction()
+        clusterer = HDBSCAN(min_cluster_size=2, min_samples=self.min_samples)
         self.cluster_labels = clusterer.fit_predict(self.vectors.sent2vec)
         self.groups['cluster'] = self.cluster_labels
         print('HDBSCAN finished with {} clusters'.format(len(set(self.cluster_labels))))

@@ -144,7 +144,7 @@ class Chain(object):
     def group_equals(self, df, column):
         self.groups = df.groupby(column).apply(func=self.regroup)
         self.groups.reset_index(drop=True, inplace=True)
-        print('Found {} equal groups'.format(self.groups.shape[0]))
+        print('Found {} equal groups of cleaned messages'.format(self.groups.shape[0]))
 
     @safe_run
     def regroup(self, gr):
@@ -201,7 +201,7 @@ class Chain(object):
         :return:
         """
         self.vectors.vectorize_messages(tf_idf=False)
-        print('Vectorization of sentences is finished')
+        print('Vectorization of messages is finished')
         return self
 
     @safe_run
