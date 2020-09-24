@@ -11,15 +11,10 @@ def main():
     # df = pd.DataFrame(data, columns=['message'])
     target = 'message'
     cluster = pipeline.Chain(df, target, model_name='../models/fts.model', mode='update',
-                             add_placeholder=True, matching_accuracy=0.8,
-                             clustering_type='ML', output_file='../reports/fts_non_cat.html',
-                             categorization=False,
-                             generate_html_report=True
-                             )
+                             add_placeholder=True, matching_accuracy=0.8)
 
     # cluster = pipeline.Chain(df, target, model_name='../models/fts_new.model', mode='create',
-    #                          add_placeholder=True, matching_accuracy=0.8,
-    #                          clustering_type='ML', output_file='../reports/fts_bigdata_create.html')
+    #                          add_placeholder=True, matching_accuracy=0.8)
 
     cluster.process()
     #

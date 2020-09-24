@@ -14,8 +14,7 @@ def main():
                              matching_accuracy=0.8)
     # CREATE
     # cluster = pipeline.Chain(df, target, mode='create', model_name='../models/exeerrors_tmp.model',
-    #                          matching_accuracy=0.8,
-    #                          clustering_type='ML', output_file='../reports/exeerror_week_create.html')
+    #                          matching_accuracy=0.8)
     cluster.process()
 
     pprint.pprint(cluster.result)
