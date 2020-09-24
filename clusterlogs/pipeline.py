@@ -44,7 +44,8 @@ class Chain(object):
 
     CLUSTERING_THRESHOLD = 5000
     MATCHING_ACCURACY = 0.8
-    CLUSTERING_TYPE = 'SIMILARITY'
+    CLUSTERING_TYPE = 'dbscan'
+    # 'similarity', 'hdbscan', 'hierarchical'
     ALGORITHM = 'dbscan'
     KEYWORDS_EXTRACTION = 'rake_nltk'
 
@@ -59,7 +60,6 @@ class Chain(object):
                  threshold=CLUSTERING_THRESHOLD,
                  matching_accuracy=MATCHING_ACCURACY,
                  clustering_type=CLUSTERING_TYPE,
-                 algorithm=ALGORITHM,
                  keywords_extraction=KEYWORDS_EXTRACTION,
                  categorization=False,
                  generate_html_report=False):
@@ -75,7 +75,6 @@ class Chain(object):
         self.matching_accuracy = matching_accuracy
         self.clustering_type = clustering_type
         self.add_placeholder = add_placeholder
-        self.algorithm = algorithm
         self.output_file = output_file
         self.categorization = categorization
         self.generate_html_report = generate_html_report
@@ -107,7 +106,7 @@ class Chain(object):
 
         self.group_equals(self.df, 'hash')
 
-        if self.clustering_type == 'SIMILARITY' and self.groups.shape[0] <= self.threshold:
+        if self.clustering_type == 'similarity' and self.groups.shape[0] <= self.threshold:
             self.similarity_clustering()
         else:
             self.tokens_vectorization()
@@ -207,7 +206,7 @@ class Chain(object):
                                      self.vectors,
                                      self.cpu_number,
                                      self.add_placeholder,
-                                     self.algorithm,
+                                     self.clustering_type,
                                      self.tokenizer_type,
                                      self.dimensionality_reduction,
                                      self.keywords_extraction)
@@ -219,7 +218,10 @@ class Chain(object):
 
     @safe_run
     def similarity_clustering(self):
-        clusters = SClustering(self.groups, self.matching_accuracy, self.add_placeholder, self.tokenizer_type)
+        clusters = SClustering(self.groups,
+                               self.matching_accuracy,
+                               self.add_placeholder,
+                               self.tokenizer_type)
         self.result = clusters.process()
         print('Finished with {} clusters'.format(self.result.shape[0]))
 
