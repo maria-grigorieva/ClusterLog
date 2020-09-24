@@ -72,7 +72,7 @@ class Match:
         similarities = Match.levenshtein_similarity(start, sequences)
         filtered, to_remove = [], []
         for i, value in enumerate(similarities):
-            if value >= 0.6:
+            if value >= 0.7:
                 filtered.append(sequences[i])
                 to_remove.append(i)
         patterns.append(self.matcher(filtered))

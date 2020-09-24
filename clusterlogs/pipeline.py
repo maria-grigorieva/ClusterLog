@@ -143,7 +143,7 @@ class Chain(object):
         :param gr:
         :return:
         """
-        matcher = Match(gr['tokenized_pattern'].values, add_placeholder=self.add_placeholder)
+        matcher = Match(gr['tokenized_pattern'].values, matching_threshold=self.matching_accuracy, add_placeholder=self.add_placeholder)
         #pprint.pprint(gr['tokenized_pattern'].values)
         tokenized_pattern = matcher.sequence_matcher()
         return pd.DataFrame([{'indices': gr.index.values.tolist(),

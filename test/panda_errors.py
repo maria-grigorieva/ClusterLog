@@ -10,13 +10,13 @@ def main():
     target = 'exeerrordiag'
 
     # UPDATE
-    cluster = pipeline.Chain(df, target, mode='process', model_name='../models/exeerrors_01-01-20_05-20-20.model',matching_accuracy=0.8,
-                             clustering_type='ML', output_file='../reports/exeerror_week.html', categorization=False,
-                             generate_html_report=False)
+    # cluster = pipeline.Chain(df, target, mode='process', model_name='../models/exeerrors_01-01-20_05-20-20.model',matching_accuracy=0.8,
+    #                          clustering_type='ML', output_file='../reports/exeerror_week_create.html', categorization=False,
+    #                          generate_html_report=False)
     # CREATE
-    # cluster = pipeline.Chain(df, target, mode='create', model_name='../models/exeerrors_tmp.model',
-    #                          matching_accuracy=0.8,
-    #                          clustering_type='ML')
+    cluster = pipeline.Chain(df, target, mode='create', model_name='../models/exeerrors_tmp.model',
+                             matching_accuracy=0.8,
+                             clustering_type='ML', output_file='../reports/exeerror_week_create.html')
     cluster.process()
 
     pprint.pprint(cluster.result)
