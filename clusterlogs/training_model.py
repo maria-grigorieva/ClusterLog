@@ -2,11 +2,11 @@
 import sys
 import getopt
 from gensim.models import Word2Vec
-from .data_preparation import clean_messages
+from clusterlogs.data_preparation import clean_messages
 import pprint
 import numpy as np
 
-from .tokenization import tokenize_messages
+from clusterlogs.tokenization import tokenize_messages
 
 
 def main(argv):
@@ -42,8 +42,6 @@ def main(argv):
     unique = np.unique(cleaned_strings)
     pprint.pprint("Unique: ")
     print(len(unique))
-    # pprint.pprint("Unique: ")
-    # pprint.pprint(unique)
 
     tokenized = tokenize_messages(unique, 'space', spacer_annotate=False, spacer_new=False)
 
@@ -59,7 +57,7 @@ def main(argv):
 
         word2vec.save(outputfile)
 
-        print('Training has finished. Model saved in file. Thanks for coming :)')
+        print('Training has finished. Model saved in file.')
     except Exception as e:
         print('Training model error:', e)
 
