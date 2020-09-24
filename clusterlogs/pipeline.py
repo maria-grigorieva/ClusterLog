@@ -46,7 +46,6 @@ class Chain(object):
     MATCHING_ACCURACY = 0.8
     CLUSTERING_TYPE = 'dbscan'
     # 'similarity', 'hdbscan', 'hierarchical'
-    ALGORITHM = 'dbscan'
     KEYWORDS_EXTRACTION = 'rake_nltk'
 
     def __init__(self, df, target,
@@ -54,15 +53,15 @@ class Chain(object):
                  cluster_settings=None,
                  model_name='word2vec.model',
                  mode='create',
-                 output_file='report.html',
+                 output_type='csv',
+                 output_fname='report',
                  add_placeholder=True,
                  dimensionality_reduction=False,
                  threshold=CLUSTERING_THRESHOLD,
                  matching_accuracy=MATCHING_ACCURACY,
                  clustering_type=CLUSTERING_TYPE,
                  keywords_extraction=KEYWORDS_EXTRACTION,
-                 categorization=False,
-                 generate_html_report=False):
+                 categorization=False):
         self.df = df
         self.target = target
         self.tokenizer_type = tokenizer_type
@@ -75,9 +74,9 @@ class Chain(object):
         self.matching_accuracy = matching_accuracy
         self.clustering_type = clustering_type
         self.add_placeholder = add_placeholder
-        self.output_file = output_file
+        self.output_type = output_type
+        self.output_fname = output_fname
         self.categorization = categorization
-        self.generate_html_report = generate_html_report
         self.dimensionality_reduction = dimensionality_reduction
         self.keywords_extraction = keywords_extraction
 
@@ -116,12 +115,15 @@ class Chain(object):
         print(f"Timings:\n{self.timings}")
 
         # Categorization
-        if self.generate_html_report:
+        fname = f'{self.output_fname}.{self.output_type}'
+        if self.output_type == 'html':
             if self.categorization:
                 self.categories = execute_categorization(self.result)
-                report.categorized_report(self.categories, self.output_file)
+                report.categorized_report(self.categories, fname)
             else:
-                report.generate_html_report(self.result, self.output_file)
+                report.generate_html_report(self.result, fname)
+        elif self.output_type == 'csv':
+            self.result.to_csv(fname)
 
     @safe_run
     def remove_unique_tokens(self, tokens):

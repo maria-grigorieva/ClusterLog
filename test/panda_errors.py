@@ -10,9 +10,8 @@ def main():
     target = 'exeerrordiag'
 
     # UPDATE
-    cluster = pipeline.Chain(df, target, mode='process', model_name='../models/exeerrors_01-01-20_05-20-20.model',matching_accuracy=0.8,
-                             output_file='../reports/exeerror_week_1.html', categorization=False,
-                             generate_html_report=False)
+    cluster = pipeline.Chain(df, target, mode='process', model_name='../models/exeerrors_01-01-20_05-20-20.model',
+                             matching_accuracy=0.8)
     # CREATE
     # cluster = pipeline.Chain(df, target, mode='create', model_name='../models/exeerrors_tmp.model',
     #                          matching_accuracy=0.8,
