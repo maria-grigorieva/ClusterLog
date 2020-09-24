@@ -113,7 +113,10 @@ class MLClustering:
         if len(self.vectors.sent2vec) >= 5000:
             self.vectors.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 \
                 else self.dimensionality_reduction()
+        self.kneighbors()
+        self.epsilon_search()
         self.cluster_labels = AgglomerativeClustering(n_clusters=None,
-                                                      distance_threshold=0.1) \
+                                                      distance_threshold=self.epsilon) \
             .fit_predict(self.vectors.sent2vec)
         self.groups['cluster'] = self.cluster_labels
+        print('Hierarchical finished with {} clusters'.format(len(set(self.cluster_labels))))

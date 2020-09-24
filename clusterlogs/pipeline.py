@@ -231,12 +231,12 @@ class Chain(object):
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
 
-        phrases = self.search_keyphrases(indices)
+        phrases = self.search_keyphrases(pattern)
 
         return {'pattern': pattern,
                 'indices': indices,
                 'cluster_size': size,
-                'common_phrases': phrases[:5]}
+                'common_phrases': phrases[:10]}
 
     @safe_run
     def search_common_patterns(self, gb):
@@ -251,8 +251,8 @@ class Chain(object):
         return detokenize_messages(tokenized_pattern, self.tokenizer_type)
 
     @safe_run
-    def search_keyphrases(self, indices):
-        text = '. '.join([' '.join(row) for row in self.df.loc[indices]['sequence'].values])
+    def search_keyphrases(self, pattern):
+        text = '. '.join(clean_messages(pattern))
         return extract_common_phrases(text, self.keywords_extraction)
 
     def in_cluster(self, groups, cluster_label):
