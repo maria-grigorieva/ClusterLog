@@ -8,7 +8,7 @@ from .tfidf import *
 from .similarity_clusterization import *
 from .phraser import *
 from .sequence_matching import *
-from .Drain import *
-from .LogCluster import *
+from clusterlogs.external_clustering.Drain import *
+from clusterlogs.external_clustering.LogCluster import *
 from .reporting import *
 from .categorization import *
