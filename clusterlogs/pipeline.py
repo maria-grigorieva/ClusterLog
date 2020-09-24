@@ -161,9 +161,11 @@ class Chain(object):
         :param gr:
         :return:
         """
-        matcher = Match(gr['tokenized_pattern'].values, add_placeholder=self.add_placeholder)
+        matcher = Match(gr['tokenized_pattern'].values,
+                        match_threshhold=self.matching_accuracy,
+                        add_placeholder=self.add_placeholder)
         # pprint.pprint(gr['tokenized_pattern'].values)
-        tokenized_pattern = matcher.sequence_matcher()
+        tokenized_pattern = matcher.sequence_matcher(gr['tokenized_pattern'].values)
         return pd.DataFrame([{'indices': gr.index.values.tolist(),
                               'pattern': detokenize_row(tokenized_pattern, self.tokenizer_type),
                               'sequence': gr['sequence'].values[0],
@@ -240,7 +242,9 @@ class Chain(object):
 
     @safe_run
     def search_common_patterns(self, gb):
-        m = Match(gb['tokenized_pattern'].values, add_placeholder=self.add_placeholder)
+        m = Match(gb['tokenized_pattern'].values,
+                  match_threshhold=self.matching_accuracy,
+                  add_placeholder=self.add_placeholder)
         tokenized_pattern = []
         sequences = gb['tokenized_pattern'].values
 
