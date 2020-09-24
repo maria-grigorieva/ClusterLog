@@ -9,19 +9,17 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.decomposition import PCA
 
 from .phraser import extract_common_phrases
-from .Drain import LogParser
 from .tokenization import get_vocabulary, detokenize_messages
-from .data_preparation import clean_messages
 from .sequence_matching import Match
 import spacy
-nlp = spacy.load("en_core_web_sm")
 
+nlp = spacy.load("en_core_web_sm")
 LIMIT = 30
 
 
 class MLClustering:
 
-    def __init__(self, df, groups, vectors, cpu_number, add_placeholder, method, tokenizer_type, pca):
+    def __init__(self, df, groups, vectors, cpu_number, add_placeholder, method, tokenizer_type, pca, keywords_extraction):
         self.groups = groups
         self.df = df
         self.method = method
@@ -34,7 +32,7 @@ class MLClustering:
         self.tokenizer_type = tokenizer_type
         self.diversity_factor = 0
         self.pca = pca
-
+        self.keywords_extraction = keywords_extraction
 
     def process(self):
         if self.method == 'dbscan':
@@ -44,7 +42,6 @@ class MLClustering:
         if self.method == 'hierarchical':
             return self.hierarchical()
 
-
     def dimensionality_reduction(self):
         n = self.vectors.detect_embedding_size(get_vocabulary(self.groups['sequence']))
         print('Number of dimensions is {}'.format(n))
@@ -52,11 +49,9 @@ class MLClustering:
         pca.fit(self.vectors.sent2vec)
         return pca.transform(self.vectors.sent2vec)
 
-
     def kneighbors(self):
         """
         Calculates average distances for k-nearest neighbors
-        :return:
         """
         k = round(math.sqrt(len(self.vectors.sent2vec)))
         print('K-neighbours = {}'.format(k))
@@ -64,23 +59,19 @@ class MLClustering:
         distances, indices = nbrs.kneighbors(self.vectors.sent2vec)
         self.distances = [np.mean(d) for d in np.sort(distances, axis=0)]
 
-
     def epsilon_search(self):
         """
         Search epsilon for the DBSCAN clusterization
-        :return:
         """
         kneedle = KneeLocator(self.distances, list(range(len(self.distances))), online=True)
         self.epsilon = np.mean(list(kneedle.all_elbows))
         if self.epsilon == 0.0:
             self.epsilon = np.mean(self.distances)
 
-
     def dbscan(self):
         """
-        Execution of the DBSCAN clusterization algorithm.
+        Execution of the DBSCAN clustering algorithm.
         Returns cluster labels
-        :return:
         """
         if self.pca:
             self.vectors.sent2vec = self.dimensionality_reduction()
@@ -96,7 +87,6 @@ class MLClustering:
             [item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)],
             orient='columns').sort_values(by=['cluster_size'], ascending=False)
 
-
     def hdbscan(self):
         self.vectors.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 else self.dimensionality_reduction()
 
@@ -108,11 +98,9 @@ class MLClustering:
             [item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)],
             orient='columns').sort_values(by=['cluster_size'], ascending=False)
 
-
     def hierarchical(self):
         """
-        Agglomerative clusterization
-        :return:
+        Agglomerative clustering
         """
         if len(self.vectors.sent2vec) >= 5000:
             self.vectors.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 \
@@ -125,41 +113,25 @@ class MLClustering:
             [item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)],
             orient='columns').sort_values(by=['cluster_size'], ascending=False)
 
-
     def gb_regroup(self, gb):
         m = Match(gb['tokenized_pattern'].values, add_placeholder=self.add_placeholder)
         tokenized_pattern = []
         sequences = gb['tokenized_pattern'].values
+
         if len(sequences) > 1:
             m.matching_clusters(sequences, tokenized_pattern)
         elif len(sequences) == 1:
             tokenized_pattern.append(sequences[0])
         pattern = detokenize_messages(tokenized_pattern, self.tokenizer_type)
-        text = '. '.join(clean_messages(pattern))
-        # phrases_pyTextRank = Phraser(text, 'pyTextRank')
-        # print('Extracting key phrases...')
-        # phrases_RAKE = extract_common_phrases(text, 'rake_nltk')
+
         # Get all indices for the group
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
 
-        phrases_RAKE = extract_common_phrases(text, 'rake_nltk')
-
-        # doc = nlp(text)
-        # print("Noun phrases:", [chunk.text for chunk in doc.noun_chunks])
-        # print("Verbs:", [token.lemma_ for token in doc if token.pos_ == "VERB"])
-        # for entity in doc.ents:
-        #     print(entity.text, entity.label_)
-
-        # return {'pattern': pattern,
-        #         'indices': indices,
-        #         'cluster_size': size,
-        #         'common_phrases_RAKE': phrases_RAKE,
-        #         'verbs': np.unique([token.lemma_ for token in doc if token.pos_ == "VERB"]).tolist(),
-        #         'noun_phrases': np.unique([chunk.text for chunk in doc.noun_chunks]).tolist(),
-        #         'entities': np.unique([entity.text for entity in doc.ents]).tolist()}
+        text = '. '.join([' '.join(row) for row in self.df.loc[indices]['sequence'].values])
+        phrases = extract_common_phrases(text, self.keywords_extraction)
 
         return {'pattern': pattern,
                 'indices': indices,
                 'cluster_size': size,
-                'common_phrases_RAKE': phrases_RAKE}
+                'common_phrases': phrases}
