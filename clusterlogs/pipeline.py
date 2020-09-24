@@ -42,12 +42,6 @@ CLUSTERING_DEFAULTS = {"w2v_size": 300,
 
 class Chain(object):
 
-    CLUSTERING_THRESHOLD = 5000
-    MATCHING_ACCURACY = 0.8
-    CLUSTERING_TYPE = 'dbscan'
-    # 'similarity', 'hdbscan', 'hierarchical'
-    KEYWORDS_EXTRACTION = 'rake_nltk'
-
     def __init__(self, df, target,
                  tokenizer_type='space',
                  cluster_settings=None,
@@ -57,10 +51,10 @@ class Chain(object):
                  output_fname='report',
                  add_placeholder=True,
                  dimensionality_reduction=False,
-                 threshold=CLUSTERING_THRESHOLD,
-                 matching_accuracy=MATCHING_ACCURACY,
-                 clustering_type=CLUSTERING_TYPE,
-                 keywords_extraction=KEYWORDS_EXTRACTION,
+                 threshold=5000,
+                 matching_accuracy=0.8,
+                 clustering_type='dbscan',
+                 keywords_extraction='rake_nltk',
                  categorization=False):
         self.df = df
         self.target = target
@@ -96,13 +90,8 @@ class Chain(object):
         """
         Chain of methods, providing data preparation, vectorization and clusterization
         """
-        self.df['tokenized_pattern'] = tokenize_messages(self.df[self.target].values, self.tokenizer_type)
-        cleaned_strings = clean_messages(self.df[self.target].values)
-        cleaned_tokens = tokenize_messages(cleaned_strings, self.tokenizer_type, spacer_annotate=False, spacer_new=False)
-
-        self.df['hash'] = self.generateHash(cleaned_strings)
-        self.df['sequence'] = cleaned_tokens
-
+        self.tokenization()
+        self.cleaning()
         self.group_equals(self.df, 'hash')
 
         if self.clustering_type == 'similarity' and self.groups.shape[0] <= self.threshold:
@@ -126,6 +115,18 @@ class Chain(object):
             self.result.to_csv(fname)
 
     @safe_run
+    def tokenization(self):
+        self.df['tokenized_pattern'] = tokenize_messages(self.df[self.target].values, self.tokenizer_type)
+
+    @safe_run
+    def cleaning(self):
+        cleaned_strings = clean_messages(self.df[self.target].values)
+        cleaned_tokens = tokenize_messages(cleaned_strings, self.tokenizer_type, spacer_annotate=False, spacer_new=False)
+        self.df['hash'] = self.generateHash(cleaned_strings)
+        self.df['sequence'] = cleaned_tokens
+
+
+    @safe_run
     def remove_unique_tokens(self, tokens):
         frequency = get_term_frequencies(tokens)
         # remove tokens that appear only once
@@ -143,6 +144,7 @@ class Chain(object):
         self.groups.reset_index(drop=True, inplace=True)
         print('Found {} equal groups'.format(self.groups.shape[0]))
 
+    @safe_run
     def regroup(self, gr):
         """
         tokenized_pattern - common sequence of tokens, generated based on all tokens
@@ -223,7 +225,8 @@ class Chain(object):
         clusters = SClustering(self.groups,
                                self.matching_accuracy,
                                self.add_placeholder,
-                               self.tokenizer_type)
+                               self.tokenizer_type,
+                               self.keywords_extraction)
         self.result = clusters.process()
         print('Finished with {} clusters'.format(self.result.shape[0]))
 

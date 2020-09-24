@@ -10,4 +10,4 @@ matplotlib==3.1.2
 hdbscan==0.8.24
 python-rake==1.4.5
 pytextrank==2.0.1
-Jinja2==2.11.1
+Jinja2==2.11.2

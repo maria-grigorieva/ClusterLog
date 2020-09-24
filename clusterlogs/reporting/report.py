@@ -9,9 +9,6 @@ def generate_html_report(df, output_file):
     new_list = [{k: v for k, v in d.items() if
                  k in ['cluster_size', 'pattern', 'common_phrases']} for d in
                 original_list]
-    # new_list = [{k: v for k, v in d.items() if
-    #              k in ['cluster_size', 'pattern', 'common_phrases_RAKE', 'verbs', 'noun_phrases','entities']} for d in
-    #             original_list]
     template_vars = {"values": new_list}
     html_out = template.render(template_vars)
     f = open(output_file, "w")

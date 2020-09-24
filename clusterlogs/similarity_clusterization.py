@@ -9,11 +9,12 @@ from .utility import levenshtein_similarity_1_to_n
 
 class SClustering:
 
-    def __init__(self, groups, accuracy, add_placeholder, tokenizer_type):
+    def __init__(self, groups, accuracy, add_placeholder, tokenizer_type, keywords_extraction):
         self.groups = groups
         self.accuracy = accuracy
         self.add_placeholder = add_placeholder
         self.tokenizer_type = tokenizer_type
+        self.keywords_extraction = keywords_extraction
 
     def process(self):
         """
@@ -53,7 +54,7 @@ class SClustering:
         # Convert list of sequences to text
         text = '. '.join([' '.join(row) for row in filtered['sequence'].values])
         # Extract common phrases
-        common_phrases = extract_common_phrases(text, 'rake_nltk')
+        common_phrases = extract_common_phrases(text, self.keywords_extraction)
 
         result.append({'pattern': [textual_pattern],
                        'tokenized_pattern': tokenized_pattern,
