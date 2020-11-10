@@ -4,12 +4,16 @@ import spacy
 import pytextrank
 from rake_nltk import Rake, Metric
 from functools import partial
+from sklearn.decomposition import LatentDirichletAllocation
+from sklearn.feature_extraction.text import CountVectorizer
+
 
 def extract_common_phrases(text, algorithm):
     dispatch = {
         "RAKE": _extract_common_phrases_rake,
         "pyTextRank": _extract_common_phrases_pytextrank,
         "rake_nltk": _extract_common_phrases_rake_nltk,
+        'lda': _extract_common_phrases_lda,
 
         "tfidf": partial(_extract_common_phrases_pke, algorithm="tfidf"),
         "KPMiner": partial(_extract_common_phrases_pke, algorithm="KPMiner"),
@@ -23,7 +27,10 @@ def extract_common_phrases(text, algorithm):
         "Kea": partial(_extract_common_phrases_pke, algorithm="Kea"),
         "WINGNUS": partial(_extract_common_phrases_pke, algorithm="WINGNUS"),
     }
-    return dispatch[algorithm](text)
+    try:
+        return dispatch[algorithm.lower()](text)
+    except KeyError as key:
+        raise KeyError(f"Invalid keyword extraction method name: {key}! Available methods are: {tuple(dispatch.keys())}")
 
 
 def _extract_common_phrases_rake(text):
@@ -39,7 +46,7 @@ def _extract_common_phrases_rake(text):
 def _extract_common_phrases_pytextrank(text):
     # load a spaCy model, depending on language, scale, etc.
     nlp = spacy.load("en_core_web_sm")
-    #nlp = en_core_web_sm.load()
+    # nlp = en_core_web_sm.load()
 
     # add PyTextRank to the spaCy pipeline
     tr = pytextrank.TextRank()
@@ -112,3 +119,29 @@ def _extract_common_phrases_pke(text, algorithm):
 
     keyphrases = extractor.get_n_best(n=10)
     return [item[0] for item in keyphrases]
+
+
+def _extract_common_phrases_lda(articles, n_keywords):
+    vectorizer = CountVectorizer(stop_words='english',
+                                 lowercase=True,
+                                 token_pattern='[-a-zA-Z][-a-zA-Z]{2,}')
+    vectorized_data = vectorizer.fit_transform(articles)
+    lda = LatentDirichletAllocation(n_components=20, max_iter=10,
+                                    learning_method='online',
+                                    verbose=False, random_state=42)
+    lda.fit(vectorized_data)
+
+    n_topics_to_use = 10
+    current_words = set()
+    keywords = []
+
+    for topic in lda.components_:
+        words = [(vectorizer.get_feature_names()[i], topic[i])
+                 for i in topic.argsort()[:-n_topics_to_use - 1:-1]]
+        for word in words:
+            if word[0] not in current_words:
+                keywords.append(word)
+                current_words.add(word[0])
+
+    keywords.sort(key=lambda x: x[1], reverse=True)
+    return [keyword[0] for keyword in keywords][:20]
