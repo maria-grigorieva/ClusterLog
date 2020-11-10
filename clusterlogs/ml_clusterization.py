@@ -1,10 +1,10 @@
 import math
 import numpy as np
-import pandas as pd
+# import pandas as pd
 
 from kneed import KneeLocator
 from hdbscan import HDBSCAN
-from sklearn.cluster import DBSCAN, AgglomerativeClustering
+from sklearn.cluster import DBSCAN, AgglomerativeClustering, MiniBatchKMeans
 from sklearn.neighbors import NearestNeighbors
 from sklearn.decomposition import PCA
 from sklearn.cluster import OPTICS
@@ -41,6 +41,8 @@ class MLClustering:
             self.hierarchical()
         if self.method == 'optics':
             self.optics()
+        if self.method == 'kmeans':
+            self.kmeans()
 
     def dimensionality_reduction(self):
         n = self.vectors.detect_embedding_size(get_vocabulary(self.groups['sequence']))
@@ -84,10 +86,9 @@ class MLClustering:
         self.groups['cluster'] = self.cluster_labels
         print('DBSCAN finished with {} clusters'.format(len(set(self.cluster_labels))))
 
-
     def optics(self):
         """
-        Execution of the DBSCAN clustering algorithm.
+        Execution of the OPTICS clustering algorithm.
         Returns cluster labels
         """
         if self.pca:
@@ -97,6 +98,15 @@ class MLClustering:
             .fit_predict(self.vectors.sent2vec)
         self.groups['cluster'] = self.cluster_labels
         print('OPTICS finished with {} clusters'.format(len(set(self.cluster_labels))))
+
+    def kmeans(self):
+        n_clusters = 30
+        if self.pca:
+            self.vectors.sent2vec = self.dimensionality_reduction()
+        model = MiniBatchKMeans(n_clusters=n_clusters)
+        self.cluster_labels = model.fit_predict(self.vectors.sent2vec)
+        self.groups['cluster'] = self.cluster_labels
+        print('k-means finished with {} clusters'.format(n_clusters))
 
     def hdbscan(self):
         if self.pca:
@@ -116,6 +126,7 @@ class MLClustering:
         self.kneighbors()
         self.epsilon_search()
         self.cluster_labels = AgglomerativeClustering(n_clusters=None,
+                                                      affinity='cosine',
                                                       distance_threshold=self.epsilon) \
             .fit_predict(self.vectors.sent2vec)
         self.groups['cluster'] = self.cluster_labels

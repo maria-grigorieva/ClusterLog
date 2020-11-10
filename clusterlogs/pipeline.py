@@ -1,11 +1,10 @@
-import pprint
 import hashlib
 import multiprocessing
 import numpy as np
 import pandas as pd
 
 from time import time
-from string import punctuation
+# from string import punctuation
 
 from .reporting import report
 from .validation import Output
@@ -127,7 +126,6 @@ class Chain(object):
         self.df['hash'] = self.generateHash(cleaned_strings)
         self.df['sequence'] = cleaned_tokens
 
-
     @safe_run
     def remove_unique_tokens(self, tokens):
         frequency = get_term_frequencies(tokens)
@@ -219,12 +217,10 @@ class Chain(object):
                                      self.dimensionality_reduction)
         self.clusters.process()
 
-
     def clusters_description(self):
         self.result = pd.DataFrame.from_dict(
             [item for item in self.groups.groupby('cluster').apply(func=self.clusters_regroup)],
             orient='columns').sort_values(by=['cluster_size'], ascending=False)
-
 
     def clusters_regroup(self, gb):
         pattern = self.search_common_patterns(gb)
