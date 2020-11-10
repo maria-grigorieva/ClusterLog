@@ -19,31 +19,36 @@ class Match:
         self.add_placeholder = add_placeholder
 
     def sequence_matcher(self, sequences):
-        unique = np.unique(sequences)
+        unique = np.unique(sequences).tolist()
         if len(unique) <= 1:
             return unique[0]
 
-        x = random.choice(unique)
-        for sequence in unique:
-            matches = difflib.SequenceMatcher(None, x, sequence)
-            if matches.ratio() < self.match_threshhold:
+        unique = random.shuffle(unique)
+        for x in unique:
+            others = unique[:]
+            others.remove(x)
+            for sequence in others:
+                matches = difflib.SequenceMatcher(None, x, sequence)
+                if matches.ratio() < self.match_threshhold:
+                    continue
+
+                # We extract matching fragments of sequences
+                # and change pattern to only contain those subsequences.
+                # In the end this gives us a common part of all the sequences.
+                match_ranges = matches.get_matching_blocks()[:-1]
+                matches = [x[m.a:m.a + m.size] for m in match_ranges]
+                if self.add_placeholder:  # Add a placeholder between matching subsequences
+                    [match + ['(.*?)'] for match in matches]
+                    matches[-1].pop()
+                pattern = list(chain(*matches))  # concatenate inner lists
+
+            if not pattern:
                 continue
-
-            # We extract matching fragments of sequences
-            # and change pattern to only contain those subsequences.
-            # In the end this gives us a common part of all the sequences.
-            match_ranges = matches.get_matching_blocks()[:-1]
-            matches = [x[m.a:m.a + m.size] for m in match_ranges]
-            if self.add_placeholder:  # Add a placeholder between matching subsequences
-                [match + ['(.*?)'] for match in matches]
-                matches[-1].pop()
-            pattern = list(chain(*matches))  # concatenate inner lists
-
-        # TODO: if pattern is empty - try to make it based on another sample message
-        junk = list(punctuation) + ['_', '(.*?)', '']
-        # if at least one of the items in sequence is not junk - return True
-        correct = any([token not in junk for token in pattern])
-        return pattern if correct else x
+            junk = list(punctuation) + ['_', '(.*?)', '']
+            # if at least one of the items in sequence is not junk - return True
+            correct = any([token not in junk for token in pattern])
+            return pattern if correct else x
+        return x
 
     # This basically does the same as sequence_matcher, with a couple of differences:
     # * sequence_matcher picks only unique sequences
