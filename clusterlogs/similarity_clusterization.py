@@ -42,13 +42,13 @@ class SClustering:
         # Filter the inistal DataFrame by accuracy values
         filtered = df[(df['ratio'] >= self.accuracy)]
         # Search common tokenized pattern and detokenize it
-        pattern = Match(filtered['tokenized_pattern'].values, add_placeholder=self.add_placeholder)
-        tokenized_pattern = pattern.sequence_matcher()
+        pattern = Match(add_placeholder=self.add_placeholder)
+        tokenized_pattern = pattern.sequence_matcher(filtered['tokenized_pattern'].values)
         textual_pattern = detokenize_row(tokenized_pattern, self.tokenizer_type)
         textual_pattern = re.sub(r'(\(\.\*\?\))(?:[\W\s]*\1)+', r'(.*?)', textual_pattern)
         # Search common sequence
-        sequence = Match(filtered['sequence'].values)
-        common_sequence = sequence.sequence_matcher()
+        sequence = Match()
+        common_sequence = sequence.sequence_matcher(filtered['sequence'].values)
         # Detect indices for the group
         indices = [item for sublist in filtered['indices'].values for item in sublist]
         # Convert list of sequences to text

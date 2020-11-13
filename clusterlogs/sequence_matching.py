@@ -13,8 +13,8 @@ class Match:
     This class allows to extract the common pattern from a list of sequences.
     Create a new Match object for every pattern extraction task.
     '''
-    def __init__(self, sequences, match_threshhold=0.8, add_placeholder=False):
-        self.sequences = sequences
+    def __init__(self, match_threshhold=0.8, add_placeholder=False):
+        #self.sequences = sequences
         self.match_threshhold = match_threshhold
         self.add_placeholder = add_placeholder
 
