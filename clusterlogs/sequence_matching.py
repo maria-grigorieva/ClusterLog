@@ -23,7 +23,7 @@ class Match:
         if len(unique) <= 1:
             return unique[0]
 
-        unique = random.shuffle(unique)
+        random.shuffle(unique)
         for x in unique:
             others = unique[:]
             others.remove(x)
@@ -55,20 +55,20 @@ class Match:
     # * SM picks random to compare to, this picks first one
     # * SM only compares sequences that have more similarity than self.match_threshhold
 
-    # def matcher(self, sequences):
-    #     x = sequences[0]
-    #     for s in sequences:
-    #         matches = difflib.SequenceMatcher(None, x, s)
-    #         match_ranges = matches.get_matching_blocks()[:-1]
-    #         matches = [x[m.a:m.a + m.size] for m in match_ranges]
-    #         if self.add_placeholder:
-    #             matches = [match + ['(.*?)'] for match in matches]
-    #             matches[-1].pop()
-    #         pattern = list(chain(*matches))  # concatenate inner lists
-    #         junk = list(punctuation) + ['_', '(.*?)', '']
-    #         # if at least one of the items in sequence is not junk - return True
-    #         correct = any([token not in junk for token in pattern])
-    #     return pattern if correct else x
+    def matcher(self, sequences):
+        x = sequences[0]
+        for s in sequences:
+            matches = difflib.SequenceMatcher(None, x, s)
+            match_ranges = matches.get_matching_blocks()[:-1]
+            matches = [x[m.a:m.a + m.size] for m in match_ranges]
+            if self.add_placeholder:
+                matches = [match + ['(.*?)'] for match in matches]
+                matches[-1].pop()
+            pattern = list(chain(*matches))  # concatenate inner lists
+            junk = list(punctuation) + ['_', '(.*?)', '']
+            # if at least one of the items in sequence is not junk - return True
+            correct = any([token not in junk for token in pattern])
+        return pattern if correct else x
 
     def matching_clusters(self, sequences, patterns):
         similarities = levenshtein_similarity_1_to_n(sequences)
