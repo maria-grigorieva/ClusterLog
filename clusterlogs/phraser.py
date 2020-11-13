@@ -6,9 +6,10 @@ from rake_nltk import Rake, Metric
 from functools import partial
 from sklearn.decomposition import LatentDirichletAllocation
 from sklearn.feature_extraction.text import CountVectorizer
+from .data_preparation import clean_messages
 
 
-def extract_common_phrases(text, algorithm):
+def extract_common_phrases(pattern, algorithm):
     dispatch = {
         "RAKE": _extract_common_phrases_rake,
         "pyTextRank": _extract_common_phrases_pytextrank,
@@ -28,12 +29,13 @@ def extract_common_phrases(text, algorithm):
         "WINGNUS": partial(_extract_common_phrases_pke, algorithm="WINGNUS"),
     }
     try:
-        return dispatch[algorithm.lower()](text)
+        return dispatch[algorithm](pattern)
     except KeyError as key:
         raise KeyError(f"Invalid keyword extraction method name: {key}! Available methods are: {tuple(dispatch.keys())}")
 
 
-def _extract_common_phrases_rake(text):
+def _extract_common_phrases_rake(pattern):
+    text = '. '.join(clean_messages(pattern))
     Rake = RAKE.Rake(RAKE.GoogleSearchStopList())
     phrases = sorted(Rake.run(text, minFrequency=1, minCharacters=3, maxWords=5),
                      key=lambda x: x[1], reverse=True)
@@ -43,7 +45,8 @@ def _extract_common_phrases_rake(text):
         return [item[0] for item in phrases]
 
 
-def _extract_common_phrases_pytextrank(text):
+def _extract_common_phrases_pytextrank(pattern):
+    text = '. '.join(clean_messages(pattern))
     # load a spaCy model, depending on language, scale, etc.
     nlp = spacy.load("en_core_web_sm")
     # nlp = en_core_web_sm.load()
@@ -61,8 +64,10 @@ def _extract_common_phrases_pytextrank(text):
     return phrases
 
 
-def _extract_common_phrases_rake_nltk(text):
-    r = Rake(min_length=2, max_length=5, ranking_metric=Metric.WORD_DEGREE)  # Uses stopwords for english from NLTK, and all puntuation characters.
+def _extract_common_phrases_rake_nltk(pattern):
+    text = '. '.join(clean_messages(pattern))
+    r = Rake(min_length=2, max_length=5, ranking_metric=Metric.WORD_DEGREE)
+    # Uses stopwords for english from NLTK, and all puntuation characters.
     # r = Rake(ranking_metric=Metric.DEGREE_TO_FREQUENCY_RATIO)
     # r = Rake(ranking_metric=Metric.WORD_DEGREE)
     # r = Rake(ranking_metric=Metric.WORD_FREQUENCY)
@@ -70,7 +75,7 @@ def _extract_common_phrases_rake_nltk(text):
     return r.get_ranked_phrases()  # To get keyword phrases ranked highest to lowest.
 
 
-def _extract_common_phrases_pke(text, algorithm):
+def _extract_common_phrases_pke(pattern, algorithm):
     dispatch = {
         "tfidf": pke.unsupervised.TfIdf,
         "KPMiner": pke.unsupervised.KPMiner,
@@ -85,7 +90,7 @@ def _extract_common_phrases_pke(text, algorithm):
         "WINGNUS": pke.supervised.WINGNUS
     }
     extractor = dispatch[algorithm]()
-    extractor.load_document(input=text, language='en')
+    extractor.load_document(input='. '.join(clean_messages(pattern)), language='en')
 
     selection_arguments = {
         "tfidf": {"n": 3, "stoplist": None},
@@ -121,11 +126,11 @@ def _extract_common_phrases_pke(text, algorithm):
     return [item[0] for item in keyphrases]
 
 
-def _extract_common_phrases_lda(articles, n_keywords):
+def _extract_common_phrases_lda(pattern):
     vectorizer = CountVectorizer(stop_words='english',
                                  lowercase=True,
                                  token_pattern='[-a-zA-Z][-a-zA-Z]{2,}')
-    vectorized_data = vectorizer.fit_transform(articles)
+    vectorized_data = vectorizer.fit_transform(pattern)
     lda = LatentDirichletAllocation(n_components=20, max_iter=10,
                                     learning_method='online',
                                     verbose=False, random_state=42)
@@ -144,4 +149,4 @@ def _extract_common_phrases_lda(articles, n_keywords):
                 current_words.add(word[0])
 
     keywords.sort(key=lambda x: x[1], reverse=True)
-    return [keyword[0] for keyword in keywords][:20]
+    return [keyword[0] for keyword in keywords][:10]

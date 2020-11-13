@@ -295,8 +295,7 @@ class Chain(object):
 
     @safe_run
     def search_keyphrases(self, pattern):
-        text = '. '.join(clean_messages(pattern))
-        return extract_common_phrases(text, self.keywords_extraction)
+        return extract_common_phrases(pattern, self.keywords_extraction)
 
     def in_cluster(self, groups, cluster_label):
         indices = groups.loc[cluster_label, 'indices']
