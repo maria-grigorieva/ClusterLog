@@ -102,7 +102,7 @@ class Chain(object):
             self.ml_clustering()
             self.clusters_description()
 
-        print(f"Timings:\n{self.timings}")
+        self.process_timings()
 
         # Categorization
         fname = f'{self.output_fname}.{self.output_type}'
@@ -279,3 +279,9 @@ class Chain(object):
             return df, None
         else:
             return df[df[column] >= threshold], df[df[column] < threshold]
+
+    def process_timings(self):
+        if self.timings['group_equals'] != 0 and self.timings['regroup'] != 0:
+            self.timings['group_equals'] -= self.timings['regroup']  # group_equals contains regroup
+
+        print(f"Timings:\n{self.timings}")
