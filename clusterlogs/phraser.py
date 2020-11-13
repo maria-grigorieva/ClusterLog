@@ -7,6 +7,10 @@ from functools import partial
 from sklearn.decomposition import LatentDirichletAllocation
 from sklearn.feature_extraction.text import CountVectorizer
 from .data_preparation import clean_messages
+import nltk
+from nltk.collocations import *
+from gensim.summarization import keywords, summarize
+
 
 
 def extract_common_phrases(pattern, algorithm):
@@ -15,6 +19,8 @@ def extract_common_phrases(pattern, algorithm):
         "pyTextRank": _extract_common_phrases_pytextrank,
         "rake_nltk": _extract_common_phrases_rake_nltk,
         'lda': _extract_common_phrases_lda,
+        "ngrams": _extract_common_phrases_ngrams,
+        "gensim": _extract_common_phrases_gensim,
 
         "tfidf": partial(_extract_common_phrases_pke, algorithm="tfidf"),
         "KPMiner": partial(_extract_common_phrases_pke, algorithm="KPMiner"),
@@ -33,6 +39,19 @@ def extract_common_phrases(pattern, algorithm):
     except KeyError as key:
         raise KeyError(f"Invalid keyword extraction method name: {key}! Available methods are: {tuple(dispatch.keys())}")
 
+
+def _extract_common_phrases_gensim(pattern):
+    return keywords('. '.join(clean_messages(pattern)), words=10).split("\n")
+
+def _extract_common_phrases_ngrams(pattern):
+    bigram_measures = nltk.collocations.BigramAssocMeasures()
+    trigram_measures = nltk.collocations.TrigramAssocMeasures()
+    text = ' '.join(clean_messages(pattern))
+    bi_finder = BigramCollocationFinder.from_words(text.split())
+    bi_finder.apply_freq_filter(1)
+    tri_finder = TrigramCollocationFinder.from_words(text.split())
+    tri_finder.apply_freq_filter(1)
+    return bi_finder.nbest(bigram_measures.pmi, 5)+tri_finder.nbest(trigram_measures.pmi, 5)
 
 def _extract_common_phrases_rake(pattern):
     text = '. '.join(clean_messages(pattern))
