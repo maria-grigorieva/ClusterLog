@@ -1,4 +1,3 @@
-import pprint
 import hashlib
 import multiprocessing
 import numpy as np
@@ -7,7 +6,7 @@ import pandas as pd
 import math
 
 from time import time
-from string import punctuation
+# from string import punctuation
 
 from .reporting import report
 from .validation import Output
@@ -138,9 +137,22 @@ class Chain(object):
         self.gather_df()
         if comm_rank == 0:
             self.group_equals(self.df, 'hash')
+        if self.clustering_type == 'similarity' and self.groups.shape[0] <= self.threshold:
+            self.similarity_clustering()
+        else:
+            self.tokens_vectorization()
+            self.sentence_vectorization()
+            self.ml_clustering()
+            self.clusters_description()
 
-            if self.clustering_type == 'similarity' and self.groups.shape[0] <= self.threshold:
-                self.similarity_clustering()
+        self.process_timings()
+
+        # Categorization
+        fname = f'{self.output_fname}.{self.output_type}'
+        if self.output_type == 'html':
+            if self.categorization:
+                self.categories = execute_categorization(self.result)
+                report.categorized_report(self.categories, fname)
             else:
                 self.tokens_vectorization()
                 self.sentence_vectorization()
@@ -170,7 +182,6 @@ class Chain(object):
         cleaned_tokens = tokenize_messages(cleaned_strings, self.tokenizer_type, spacer_annotate=False, spacer_new=False)
         self.df['hash'] = self.generateHash(cleaned_strings)
         self.df['sequence'] = cleaned_tokens
-
 
     @safe_run
     def remove_unique_tokens(self, tokens):
@@ -262,12 +273,10 @@ class Chain(object):
                                      self.dimensionality_reduction)
         self.clusters.process()
 
-
     def clusters_description(self):
         self.result = pd.DataFrame.from_dict(
             [item for item in self.groups.groupby('cluster').apply(func=self.clusters_regroup)],
             orient='columns').sort_values(by=['cluster_size'], ascending=False)
-
 
     def clusters_regroup(self, gb):
         pattern = self.search_common_patterns(gb)
@@ -325,3 +334,9 @@ class Chain(object):
             return df, None
         else:
             return df[df[column] >= threshold], df[df[column] < threshold]
+
+    def process_timings(self):
+        if self.timings['group_equals'] != 0 and self.timings['regroup'] != 0:
+            self.timings['group_equals'] -= self.timings['regroup']  # group_equals contains regroup
+
+        print(f"Timings:\n{self.timings}")
