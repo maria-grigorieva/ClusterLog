@@ -154,23 +154,9 @@ class Chain(object):
                 self.categories = execute_categorization(self.result)
                 report.categorized_report(self.categories, fname)
             else:
-                self.tokens_vectorization()
-                self.sentence_vectorization()
-                self.ml_clustering()
-                self.clusters_description()
-
-            print(f"Timings:\n{self.timings}")
-
-            # Categorization
-            fname = f'{self.output_fname}.{self.output_type}'
-            if self.output_type == 'html':
-                if self.categorization:
-                    self.categories = execute_categorization(self.result)
-                    report.categorized_report(self.categories, fname)
-                else:
-                    report.generate_html_report(self.result, fname)
-            elif self.output_type == 'csv':
-                self.result.to_csv(fname)
+                report.generate_html_report(self.result, fname)
+        elif self.output_type == 'csv':
+            self.result.to_csv(fname)
 
     @safe_run
     def tokenization(self):
@@ -220,11 +206,13 @@ class Chain(object):
                         add_placeholder=self.add_placeholder)
         # pprint.pprint(gr['tokenized_pattern'].values)
         tokenized_pattern = matcher.sequence_matcher(gr['tokenized_pattern'].values)
-        return pd.DataFrame([{'indices': gr.index.values.tolist(),
+
+        df = pd.DataFrame([{'indices': gr.index.values.tolist(),
                               'pattern': detokenize_row(tokenized_pattern, self.tokenizer_type),
                               'sequence': gr['sequence'].values[0],
                               'tokenized_pattern': tokenized_pattern,
                               'cluster_size': len(gr.index.values.tolist())}])
+        return df
 
     @safe_run
     def tokens_vectorization(self):
