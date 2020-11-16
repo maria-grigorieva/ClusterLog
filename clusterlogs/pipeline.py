@@ -1,9 +1,9 @@
+import os
+import math
 import hashlib
 import multiprocessing
 import numpy as np
 import pandas as pd
-
-import math
 
 from time import time
 # from string import punctuation
@@ -21,13 +21,11 @@ from .phraser import extract_common_phrases
 comm_size = 1
 comm_rank = 0
 
-import os
 if os.environ.get("USE_MPI"):
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
     comm_size = comm.Get_size()
     comm_rank = comm.Get_rank()
-
 
 
 def safe_run(method):
@@ -97,10 +95,10 @@ class Chain(object):
                 setattr(self, key, params.get(key))
             else:
                 setattr(self, key, value)
+
     @safe_run
     def gather_df(self):
         if comm_size > 1:
-            
             if comm_rank == 0:
                 blocks = math.ceil(len(self.df) / 20000)
             else:
@@ -117,7 +115,7 @@ class Chain(object):
                         end = len(self.df)
                     part = self.df[start:end]
                 else:
-                    part = None #pd.DataFrame()
+                    part = None  # pd.DataFrame()
                 data = comm.gather(part, root=0)
                 if comm_rank == 0:
                     result.append(data)
@@ -208,10 +206,10 @@ class Chain(object):
         tokenized_pattern = matcher.sequence_matcher(gr['tokenized_pattern'].values)
 
         df = pd.DataFrame([{'indices': gr.index.values.tolist(),
-                              'pattern': detokenize_row(tokenized_pattern, self.tokenizer_type),
-                              'sequence': gr['sequence'].values[0],
-                              'tokenized_pattern': tokenized_pattern,
-                              'cluster_size': len(gr.index.values.tolist())}])
+                            'pattern': detokenize_row(tokenized_pattern, self.tokenizer_type),
+                            'sequence': gr['sequence'].values[0],
+                            'tokenized_pattern': tokenized_pattern,
+                            'cluster_size': len(gr.index.values.tolist())}])
         return df
 
     @safe_run
@@ -326,4 +324,6 @@ class Chain(object):
         if self.timings['group_equals'] != 0 and self.timings['regroup'] != 0:
             self.timings['group_equals'] -= self.timings['regroup']  # group_equals contains regroup
 
-        print(f"Timings:\n{self.timings}")
+        print("\nTime taken:")
+        for timing in self.timings.items():
+            print(f" — {timing[0]}: {timing[1]:1.3}")
