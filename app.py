@@ -4,22 +4,24 @@ import dash_core_components as dcc
 import dash_html_components as html
 
 from collections.abc import Iterable
+from dash.dependencies import Input, Output, State
 
 from clusterlogs.pipeline import Chain
 
 
-def process():
-    df = pd.read_csv('./samples/exeerror_1week.csv')
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+
+def process(filename, model_name):
+    df = pd.read_csv(filename)
     target = 'exeerrordiag'
-    cluster = Chain(df, target, model_name='./models/exeerrors_01-01-20_05-20-20.model', mode='process',
+    cluster = Chain(df, target, model_name=model_name, mode='process',
                     add_placeholder=False, matching_accuracy=0.8, output_type='html',
                     clustering_type='kmeans', keywords_extraction='lda')
     cluster.process()
     return cluster.result
-
-
-def upload_file():
-    pass
 
 
 def generate_table(dataframe, columns=None, max_rows=10):
@@ -45,25 +47,34 @@ def generate_table(dataframe, columns=None, max_rows=10):
     ])
 
 
-def main():
-    external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+app.layout = html.Div(children=[
+    html.H1(children='ClusterLogs'),
 
-    app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+    html.Div(["Enter name of csv file: ",
+              dcc.Input(id='input-file', value='', type='text')]),
 
-    df = process()
+    html.Div(["Enter name of model file: ",
+              dcc.Input(id='model-file', value='', type='text')]),
 
-    app.layout = html.Div(children=[
-        html.H1(children='ClusterLogs'),
+    html.Button(id='submit-button-state', n_clicks=0, children='Submit'),
 
-        html.Div(children='''
-            Clusterlogs results webapp, test variant
-        '''),
+    html.Div(id='results-table',
+             children=None)
+])
 
-        generate_table(df, columns=['cluster_size', 'pattern', 'common_phrases'])
-    ])
 
-    app.run_server(debug=True)
+# ./samples/exeerror_1week.csv
+# ./models/exeerrors_01-01-20_05-20-20.model
+@app.callback(
+    Output(component_id='results-table', component_property='children'),
+    [Input('submit-button-state', 'n_clicks')],
+    [State(component_id='input-file', component_property='value'),
+     State(component_id='model-file', component_property='value')])
+def update_table(_, filename, model_name):
+    if not filename or not model_name:
+        return None
+    return generate_table(process(filename, model_name), columns=['cluster_size', 'pattern', 'common_phrases'])
 
 
 if __name__ == '__main__':
-    main()
+    app.run_server(debug=True)
