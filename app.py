@@ -16,10 +16,17 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 def process(filename, target_column,
             model_name, tokenizer_type,
-            clustering_algorithm, keywords_extraction):
+            clustering_algorithm, keywords_extraction,
+            options, threshold, matching_accuracy):
     df = pd.read_csv(filename)
-    cluster = Chain(df, target_column, model_name=model_name, mode='process',
-                    add_placeholder=False, matching_accuracy=0.8, output_type='html',
+    cluster = Chain(df, target_column, model_name=model_name,
+                    mode='process',
+                    add_placeholder=options['add_placeholder'],
+                    dimensionality_reduction=options['dimensionality_reduction'],
+                    categorization=options['categorization'],
+                    threshold=threshold,
+                    matching_accuracy=matching_accuracy,
+                    output_type='html',
                     tokenizer_type=tokenizer_type,
                     clustering_type=clustering_algorithm,
                     keywords_extraction=keywords_extraction)
@@ -138,6 +145,29 @@ app.layout = html.Div(children=[
              ],
              value='rake_nltk')]),
 
+    html.Br(),
+
+    html.Div([
+        html.P(
+            children=[
+                html.Span(children="Similarity threshold",
+                          style={"display": "table-cell"}),
+                dcc.Input(id='threshold', value=5000, type='number', debounce=True, min=1,
+                          style={"display": "table-cell"})],
+            style={"display": "table-row"}),
+
+        html.P(
+            children=[
+                html.Span(children="Sequence matching accuracy",
+                          style={"display": "table-cell"}),
+                dcc.Input(id='matching-accuracy', value=0.8, type='number', debounce=True, min=0.0, max=1.0, step=0.01,
+                          style={"display": "table-cell"})],
+            style={"display": "table-row"})],
+
+        style={"display": "table", "border-spacing": "15px 0px", "margin": "-15px"}),
+
+    html.Br(),
+
     html.Div(
         dcc.Checklist(
             id='boolean-options',
@@ -169,8 +199,8 @@ app.layout = html.Div(children=[
 # output_fname='report',
 # + add_placeholder=True,
 # + dimensionality_reduction=False,
-# threshold=5000,
-# matching_accuracy=0.8,
+# + threshold=5000,
+# + matching_accuracy=0.8,
 # + clustering_type='dbscan',
 # + keywords_extraction='rake_nltk',
 # + categorization=False
@@ -190,11 +220,14 @@ app.layout = html.Div(children=[
      State(component_id='tokenizer-type', component_property='value'),
      State(component_id='clustering-algorithm', component_property='value'),
      State(component_id='keyword-extraction-algorithm', component_property='value'),
+     State(component_id='threshold', component_property='value'),
+     State(component_id='matching-accuracy', component_property='value'),
      State(component_id='boolean-options', component_property='value')])
 def update_table(n_clicks, filename,
                  target_column, model_name,
                  tokenizer_type, clustering_algorithm,
-                 keywords_extraction, boolean_options):
+                 keywords_extraction, threshold,
+                 matching_accuracy, boolean_options):
 
     if n_clicks == 0 or not filename or not target_column:
         return None
@@ -212,7 +245,10 @@ def update_table(n_clicks, filename,
                                   model_name,
                                   tokenizer_type,
                                   clustering_algorithm,
-                                  keywords_extraction),
+                                  keywords_extraction,
+                                  options,
+                                  threshold,
+                                  matching_accuracy),
                           columns=['cluster_size', 'pattern', 'common_phrases'])
 
 
