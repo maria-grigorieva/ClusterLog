@@ -3,7 +3,9 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 
+from io import StringIO
 from os.path import exists
+from base64 import b64decode
 from collections.abc import Iterable
 from dash.dependencies import Input, Output, State
 
@@ -15,15 +17,14 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 
-def process(filename, target_column,
+def process(dataframe, target_column,
             model_name, update_model, tokenizer_type,
             clustering_algorithm, keywords_extraction,
             options, threshold, matching_accuracy):
-    df = pd.read_csv(filename)
     mode = 'process'
     if update_model:
         mode = 'update' if exists(model_name) else 'create'
-    cluster = Chain(df, target_column,
+    cluster = Chain(dataframe, target_column,
                     model_name=model_name, mode=mode,
                     add_placeholder=options['add_placeholder'],
                     dimensionality_reduction=options['dimensionality_reduction'],
@@ -70,15 +71,35 @@ app.layout = html.Div(children=[
 
     # TODO: Remove test values after app is done
 
+    html.Div(
+        dcc.Upload(
+            id='input-file',
+            children=html.Div([
+                'Drag and drop or ',
+                html.A('select a csv file')
+            ]),
+            style={
+                'width': '50%',
+                'height': '60px',
+                'lineHeight': '60px',
+                'borderWidth': '1px',
+                'borderStyle': 'dashed',
+                'borderRadius': '5px',
+                'textAlign': 'center',
+                'margin': '10px'
+            },
+        )
+    ),
+
     html.Br(),
     html.Div([
-        html.P(
-            children=[
-                html.Span(children="Enter name of csv file: ",
-                          style={"display": "table-cell"}),
-                dcc.Input(id='input-file', value='./samples/exeerror_1week.csv', type='text',
-                          style={"display": "table-cell", "width": "200%"})],
-            style={"display": "table-row"}),
+        # html.P(
+        #     children=[
+        #         html.Span(children="Enter name of csv file: ",
+        #                   style={"display": "table-cell"}),
+        #         dcc.Input(id='input-file', value='./samples/exeerror_1week.csv', type='text',
+        #                   style={"display": "table-cell", "width": "200%"})],
+        #     style={"display": "table-row"}),
 
         html.P(
             children=[
@@ -234,6 +255,28 @@ app.layout = html.Div(children=[
 # ./models/exeerrors_01-01-20_05-20-20.model
 
 
+def parse_input_file(content):
+    content_type, content_string = content.split(',')
+    decoded = b64decode(content_string)
+    df = pd.read_csv(StringIO(decoded.decode('utf-8')))
+    return df
+
+
+@app.callback(
+    Output(component_id='input-file', component_property='children'),
+    [Input(component_id='input-file', component_property='contents')],
+    [State(component_id='input-file', component_property='filename')]
+)
+def display_uploaded_filename(contents, filename):
+    if contents:
+        return html.Div(filename)
+    else:
+        return html.Div([
+            'Drag and drop or ',
+            html.A('select a csv file')
+        ]),
+
+
 @app.callback(
     Output(component_id='no-model-warning', component_property='displayed'),
     [Input('submit-button-state', 'n_clicks')],
@@ -248,8 +291,7 @@ def display_model_file_warning(_, model_name, update_model):
 @app.callback(
     Output(component_id='results-table', component_property='children'),
     [Input('submit-button-state', 'n_clicks')],
-    [State(component_id='no-model-warning', component_property='displayed'),
-     State(component_id='input-file', component_property='value'),
+    [State(component_id='input-file', component_property='contents'),
      State(component_id='target-column', component_property='value'),
      State(component_id='model-file', component_property='value'),
      State(component_id='update-model', component_property='value'),
@@ -259,15 +301,19 @@ def display_model_file_warning(_, model_name, update_model):
      State(component_id='threshold', component_property='value'),
      State(component_id='matching-accuracy', component_property='value'),
      State(component_id='boolean-options', component_property='value')])
-def update_table(n_clicks, warning_displayed,
-                 filename, target_column, 
+def update_table(n_clicks,
+                 input_file, target_column,
                  model_name, update_model,
                  tokenizer_type, clustering_algorithm,
                  keywords_extraction, threshold,
                  matching_accuracy, boolean_options):
 
-    if n_clicks == 0 or (not update_model and not exists(model_name)) or not filename or not target_column:
+    if n_clicks == 0 or not input_file or not target_column:
         return None
+    if not update_model and not exists(model_name):
+        return None
+
+    dataframe = parse_input_file(input_file)
 
     options = {
         'add_placeholder': False,
@@ -277,7 +323,7 @@ def update_table(n_clicks, warning_displayed,
     for option in boolean_options:
         options[option] = True
 
-    return generate_table(process(filename,
+    return generate_table(process(dataframe,
                                   target_column,
                                   model_name,
                                   bool(update_model),
