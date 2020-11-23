@@ -8,9 +8,8 @@ from sklearn.decomposition import LatentDirichletAllocation
 from sklearn.feature_extraction.text import CountVectorizer
 from .data_preparation import clean_messages
 import nltk
-from nltk.collocations import *
-from gensim.summarization import keywords, summarize
-
+from nltk.collocations import BigramCollocationFinder, TrigramCollocationFinder
+from gensim.summarization import keywords  # , summarize
 
 
 def extract_common_phrases(pattern, algorithm):
@@ -43,6 +42,7 @@ def extract_common_phrases(pattern, algorithm):
 def _extract_common_phrases_gensim(pattern):
     return keywords('. '.join(clean_messages(pattern)), words=10).split("\n")
 
+
 def _extract_common_phrases_ngrams(pattern):
     bigram_measures = nltk.collocations.BigramAssocMeasures()
     trigram_measures = nltk.collocations.TrigramAssocMeasures()
@@ -51,7 +51,8 @@ def _extract_common_phrases_ngrams(pattern):
     bi_finder.apply_freq_filter(1)
     tri_finder = TrigramCollocationFinder.from_words(text.split())
     tri_finder.apply_freq_filter(1)
-    return bi_finder.nbest(bigram_measures.pmi, 5)+tri_finder.nbest(trigram_measures.pmi, 5)
+    return bi_finder.nbest(bigram_measures.pmi, 5) + tri_finder.nbest(trigram_measures.pmi, 5)
+
 
 def _extract_common_phrases_rake(pattern):
     text = '. '.join(clean_messages(pattern))
