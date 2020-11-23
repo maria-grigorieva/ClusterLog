@@ -3,6 +3,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 
+from os.path import exists
 from collections.abc import Iterable
 from dash.dependencies import Input, Output, State
 
@@ -15,12 +16,15 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 
 def process(filename, target_column,
-            model_name, tokenizer_type,
+            model_name, update_model, tokenizer_type,
             clustering_algorithm, keywords_extraction,
             options, threshold, matching_accuracy):
     df = pd.read_csv(filename)
-    cluster = Chain(df, target_column, model_name=model_name,
-                    mode='process',
+    mode = 'process'
+    if update_model:
+        mode = 'update' if exists(model_name) else 'create'
+    cluster = Chain(df, target_column,
+                    model_name=model_name, mode=mode,
                     add_placeholder=options['add_placeholder'],
                     dimensionality_reduction=options['dimensionality_reduction'],
                     categorization=options['categorization'],
@@ -95,6 +99,25 @@ app.layout = html.Div(children=[
         style={"display": "table", "border-spacing": "15px 0px", "margin": "-15px"}),
 
     html.Br(),
+
+    html.Div(
+        dcc.Checklist(
+            id='update-model',
+            options=[
+                {'label': ' Use input data in word2vec model', 'value': 'update_model'},
+            ],
+            value=[]
+        ),
+    ),
+
+    html.Br(),
+
+    dcc.ConfirmDialog(
+        id='no-model-warning',
+        message='Word2vec model file does not exist.\nEnter a valid path or use input data to create a new model',
+        displayed=False
+    ),
+
     html.H5(children='Log clustering parameters'),
 
     html.Div(
@@ -212,24 +235,38 @@ app.layout = html.Div(children=[
 
 
 @app.callback(
+    Output(component_id='no-model-warning', component_property='displayed'),
+    [Input('submit-button-state', 'n_clicks')],
+    [State(component_id='model-file', component_property='value'),
+     State(component_id='update-model', component_property='value')])
+def display_model_file_warning(_, model_name, update_model):
+    if not update_model and not exists(model_name):
+        return True
+    return False
+
+
+@app.callback(
     Output(component_id='results-table', component_property='children'),
     [Input('submit-button-state', 'n_clicks')],
-    [State(component_id='input-file', component_property='value'),
+    [State(component_id='no-model-warning', component_property='displayed'),
+     State(component_id='input-file', component_property='value'),
      State(component_id='target-column', component_property='value'),
      State(component_id='model-file', component_property='value'),
+     State(component_id='update-model', component_property='value'),
      State(component_id='tokenizer-type', component_property='value'),
      State(component_id='clustering-algorithm', component_property='value'),
      State(component_id='keyword-extraction-algorithm', component_property='value'),
      State(component_id='threshold', component_property='value'),
      State(component_id='matching-accuracy', component_property='value'),
      State(component_id='boolean-options', component_property='value')])
-def update_table(n_clicks, filename,
-                 target_column, model_name,
+def update_table(n_clicks, warning_displayed,
+                 filename, target_column, 
+                 model_name, update_model,
                  tokenizer_type, clustering_algorithm,
                  keywords_extraction, threshold,
                  matching_accuracy, boolean_options):
 
-    if n_clicks == 0 or not filename or not target_column:
+    if n_clicks == 0 or (not update_model and not exists(model_name)) or not filename or not target_column:
         return None
 
     options = {
@@ -243,6 +280,7 @@ def update_table(n_clicks, filename,
     return generate_table(process(filename,
                                   target_column,
                                   model_name,
+                                  bool(update_model),
                                   tokenizer_type,
                                   clustering_algorithm,
                                   keywords_extraction,
