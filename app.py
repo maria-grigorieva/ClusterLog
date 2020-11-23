@@ -7,6 +7,7 @@ from io import StringIO
 from os.path import exists
 from base64 import b64decode
 from collections.abc import Iterable
+from typing import List, Optional, Dict
 from dash.dependencies import Input, Output, State
 
 from clusterlogs.pipeline import Chain
@@ -17,10 +18,10 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 
-def process(dataframe, target_column,
-            model_name, update_model, tokenizer_type,
-            clustering_algorithm, keywords_extraction,
-            options, threshold, matching_accuracy):
+def process(dataframe: pd.DataFrame, target_column: str,
+            model_name: str, update_model: bool, tokenizer_type: str,
+            clustering_algorithm: str, keywords_extraction: str,
+            options: Dict[str, bool], threshold: int, matching_accuracy: float) -> pd.DataFrame:
     mode = 'process'
     if update_model:
         mode = 'update' if exists(model_name) else 'create'
@@ -39,7 +40,7 @@ def process(dataframe, target_column,
     return cluster.result
 
 
-def generate_table(dataframe, columns=None, max_rows=None):
+def generate_table(dataframe: pd.DataFrame, columns: Optional[List[str]] = None, max_rows: Optional[int] = None) -> html.Table:
     if columns is None:
         columns = dataframe.columns
     if max_rows is None or max_rows > len(dataframe):
@@ -238,7 +239,7 @@ app.layout = html.Div(children=[
 # + tokenizer_type='space',
 # cluster_settings=None,
 # + model_name='word2vec.model',
-# mode='create',
+# + mode='create',
 # output_type='csv',
 # output_fname='report',
 # + add_placeholder=True,
@@ -255,8 +256,8 @@ app.layout = html.Div(children=[
 # ./models/exeerrors_01-01-20_05-20-20.model
 
 
-def parse_input_file(content):
-    content_type, content_string = content.split(',')
+def parse_input_file(content: str) -> pd.DataFrame:
+    _, content_string = content.split(',')
     decoded = b64decode(content_string)
     df = pd.read_csv(StringIO(decoded.decode('utf-8')))
     return df
@@ -267,7 +268,7 @@ def parse_input_file(content):
     [Input(component_id='input-file', component_property='contents')],
     [State(component_id='input-file', component_property='filename')]
 )
-def display_uploaded_filename(contents, filename):
+def display_uploaded_filename(contents: str, filename: str) -> html.Div:
     if contents:
         return html.Div(filename)
     else:
@@ -282,7 +283,7 @@ def display_uploaded_filename(contents, filename):
     [Input('submit-button-state', 'n_clicks')],
     [State(component_id='model-file', component_property='value'),
      State(component_id='update-model', component_property='value')])
-def display_model_file_warning(_, model_name, update_model):
+def display_model_file_warning(_, model_name: str, update_model: bool) -> bool:
     if not update_model and not exists(model_name):
         return True
     return False
@@ -301,12 +302,12 @@ def display_model_file_warning(_, model_name, update_model):
      State(component_id='threshold', component_property='value'),
      State(component_id='matching-accuracy', component_property='value'),
      State(component_id='boolean-options', component_property='value')])
-def update_table(n_clicks,
-                 input_file, target_column,
-                 model_name, update_model,
-                 tokenizer_type, clustering_algorithm,
-                 keywords_extraction, threshold,
-                 matching_accuracy, boolean_options):
+def update_table(n_clicks: int,
+                 input_file: Optional[str], target_column: str,
+                 model_name: str, update_model: List[str],
+                 tokenizer_type: str, clustering_algorithm: str,
+                 keywords_extraction: str, threshold: int,
+                 matching_accuracy: float, boolean_options: List[str]) -> Optional[html.Table]:
 
     if n_clicks == 0 or not input_file or not target_column:
         return None
