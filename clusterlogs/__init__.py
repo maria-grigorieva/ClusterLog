@@ -4,10 +4,11 @@ from .vectorization import *
 from .data_preparation import *
 from .validation import *
 from .ml_clusterization import *
+from .tfidf import *
 from .similarity_clusterization import *
 from .phraser import *
 from .sequence_matching import *
-from clusterlogs.external_clustering.Drain import *
-from clusterlogs.external_clustering.LogCluster import *
+from .Drain import *
+from .LogCluster import *
 from .reporting import *
 from .categorization import *

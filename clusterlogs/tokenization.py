@@ -48,17 +48,30 @@ def to_lower(tokenized_messages):
     return [[token.lower() for token in row] for row in tokenized_messages]
 
 
-def clean_tokenized(tokenized_messages, remove_stopwords=False):
-    """
-    This function removes tokens with any symbols other than letters.
-    Optionally it can also remove any stop words.
-    """
-    if remove_stopwords:
-        return [[token for token in row if token.lower() not in STOP and token.lower().isalpha()]
-                for row in tokenized_messages]
-    return [[token for token in row if token.lower().isalpha()]
-            for row in tokenized_messages]
+# def clean_tokenized(tokenized_messages, remove_stopwords=False):
+#     """
+#     This function removes tokens with any symbols other than letters.
+#     Optionally it can also remove any stop words.
+#     """
+    
+#     if remove_stopwords:
+#         return [[token for token in row if token.lower() not in STOP and token.lower().isalpha()]
+#                 for row in tokenized_messages]
+#     return [[token for token in row if token.lower().isalpha()]
+#             for row in tokenized_messages]
 
+def clean_tokenized(tokenized_messages):
+    """
+    This function removes tokens appearing once and stopwords
+    """
+    frequency=get_term_frequencies(tokenized_messages)
+            
+    stoplist = ['the','with','a','an','but','of','on','to','all','has','have','been','for','in','it','its','itself',
+                'this','that','those','these','is','are','were','was','be','being','having','had','does','did','doing',
+                'and','if','about','again','then','so','too','cern','cms','atlas','by','srm','ifce', 'err']
+    
+    return [[token for token in row if token not in stoplist and frequency[token] != 1]
+            for row in tokenized_messages]
 
 # def remove_adjacent(L):
 #     return [elem for i, elem in enumerate(L) if i == 0 or L[i - 1] != elem]
