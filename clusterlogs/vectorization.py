@@ -18,11 +18,12 @@ class Vector(Chain):
         self.cpu_number = cpu_number
         self.model_name = model_name
 
+
     def create_word2vec_model(self, min_count=1, iterations=30):
         """
         Train new word2vec model
         :param iterations:
-        :param min_count: minimum frequency count of words (recommended value is 10)
+        :param min_count: minimum frequency count of words (recommended value is 1)
         """
         self.word2vec = Word2Vec(self.tokenized,
                                  size=self.w2v_size,
@@ -32,6 +33,7 @@ class Vector(Chain):
                                  iter=iterations)
 
         self.word2vec.save(self.model_name)
+
 
     def update_word2vec_model(self):
         """
@@ -46,11 +48,13 @@ class Vector(Chain):
         self.word2vec.train(self.tokenized, total_examples=self.word2vec.corpus_count, epochs=30, report_delay=1)
         self.word2vec.save(self.model_name)
 
+
     def load_word2vec_model(self):
         """
         Load word2vec model from file
         """
         self.word2vec = Word2Vec.load(self.model_name)
+
 
     def get_w2v_vocabulary(self):
         """
@@ -60,6 +64,7 @@ class Vector(Chain):
         for item in self.word2vec.wv.vocab:
             w2c[item] = self.word2vec.wv.vocab[item].count
         return w2c
+
 
     def vectorize_messages(self, tf_idf=False):
         """
@@ -85,14 +90,15 @@ class Vector(Chain):
             ])
         else:
             for sent in self.tokenized:
-                # sent2vec.append(np.average(self.word2vec[sent],0))
+                #sent2vec.append(np.average(self.word2vec[sent],0))
                 sent_vec = np.average([self.word2vec[w] if w in self.word2vec else np.zeros((self.w2v_size,), dtype=np.float32)
-                                       for w in sent], 0)
+                                   for w in sent], 0)
                 sent2vec.append(np.zeros((self.w2v_size,), dtype=np.float32) if np.isnan(np.sum(sent_vec)) else sent_vec)
             self.sent2vec = np.array(sent2vec)
 
+
     @staticmethod
-    def detect_embedding_size(vocab):
+    def detect_embedding_size(vocab):#non credo che l'embedding size dipenda dal vocab. da quel che ho capito è il numero di nodi nell'hidden layer
         """
         Automatic detection of word2vec embedding vector size,
         based on the length of vocabulary.
