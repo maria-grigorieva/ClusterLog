@@ -17,7 +17,9 @@ from .ml_clusterization import MLClustering
 from .similarity_clusterization import SClustering
 from .categorization import execute_categorization
 from .phraser import extract_common_phrases
+from .utility import gather_df
 
+comm = None
 comm_size = 1
 comm_rank = 0
 
@@ -97,35 +99,6 @@ class Chain(object):
                 setattr(self, key, params.get(key))
             else:
                 setattr(self, key, value)
-    @safe_run
-    def gather_df(self):
-        if comm_size > 1:
-            
-            if comm_rank == 0:
-                blocks = math.ceil(len(self.df) / 20000)
-            else:
-                blocks = None
-            blocks = comm.bcast(blocks, root=0)
-            result = []
-            n = 0
-            for i in range(blocks):
-                n += 1
-                start = i * 20000
-                if start < len(self.df):
-                    end = (i + 1) * 20000
-                    if end > len(self.df):
-                        end = len(self.df)
-                    part = self.df[start:end]
-                else:
-                    part = None #pd.DataFrame()
-                data = comm.gather(part, root=0)
-                if comm_rank == 0:
-                    result.append(data)
-            if comm_rank == 0:
-                tmp = []
-                for d in result:
-                    tmp.append(pd.concat(d))
-                self.df = pd.concat(tmp)
 
     @safe_run
     def process(self):
@@ -134,7 +107,7 @@ class Chain(object):
         """
         self.tokenization()
         self.cleaning()
-        self.gather_df()
+        self.df = gather_df(comm, self.df)
         if comm_rank == 0:
             self.group_equals(self.df, 'hash')
             if self.clustering_type == 'similarity' and self.groups.shape[0] <= self.threshold:
