@@ -5,11 +5,11 @@ Firstly, connect to lxplus:
 
 Go to a place where you want to have the repo and clone it there:
 
-`git clone https://github.com/micolocco/error_message_clustering.git`
+https://github.com/micolocco/ClusterLog.git
 
 After cloning the repo:
 
-`cd error_message_clustering`
+`cd ClusterLog`
 
 Set up a new virtual environment there:
 
