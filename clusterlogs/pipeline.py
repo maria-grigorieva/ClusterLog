@@ -118,7 +118,7 @@ class Chain(object):
                 self.ml_clustering()
                 self.clusters_description()
 
-                self.process_timings()
+            self.process_timings()
 
             # Categorization
             fname = f'{self.output_fname}.{self.output_type}'
