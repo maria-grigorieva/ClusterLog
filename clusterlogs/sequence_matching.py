@@ -27,6 +27,7 @@ class Match:
         for x in unique:
             others = unique[:]
             others.remove(x)
+            pattern = None
             for sequence in others:
                 matches = difflib.SequenceMatcher(None, x, sequence)
                 if matches.ratio() < self.match_threshhold:
