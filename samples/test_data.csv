@@ -1,0 +1,250 @@
+,pandaid,starttime,exeerrorcode,exeerrordiag
+0,4498866929,2019-10-01T09:04:39,65,"Non-zero return code from EVNTtoHITS (8); Logfile error in log.EVNTtoHITS: ""ValueError:  ATLAS-P2-ITK-17-04-02 is not the expected type and/or the value is not allowed for: JobProperties.SimFlags.SimLayout"""
+1,4498851809,2019-10-01T09:13:17,11,Missing AthenaMP outputs file athenaMP-outputs-EVNTtoHITS-sim (probably athena crashed)
+2,4499004301,2019-10-01T10:18:49,15,No events to process: 16000 (skipEvents) >= 2343 (inputEvents of HITS
+3,4499011565,2019-10-01T10:25:17,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+4,4499004297,2019-10-01T10:15:46,15,No events to process: 14000 (skipEvents) >= 2343 (inputEvents of HITS
+5,4499011462,2019-10-01T10:22:04,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""RuntimeError: Smart slimming container BTagging_AntiKt4LCTopo does not exist or does not have a smart slimming list"""
+6,4499008082,2019-10-01T10:23:28,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+7,4499011446,2019-10-01T10:21:21,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+8,4499011466,2019-10-01T10:23:13,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+9,4499008070,2019-10-01T10:26:24,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+10,4499008073,2019-10-01T10:26:24,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+11,4499008025,2019-10-01T10:28:59,65,"Non-zero return code from AODtoDAOD (64); Logfile error in log.AODtoDAOD: ""JETM7Kernel_Skim                                    FATAL  Standard std::exception is caught"""
+12,4498813193,2019-10-01T09:56:48,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     FATAL makePool failed for AthMpEvtLoopMgr.SharedEvtQueueProvider"""
+13,4498808776,2019-10-01T09:01:40,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+14,4499004416,2019-10-01T10:18:20,65,"Non-zero return code from POOLMergeAthenaMPDESDMCALJET0 (8); Logfile error in log.POOLMergeAthenaMPDESDMCALJET0: ""TypeError: %d format: a number is required, not NoneType"""
+15,4499004413,2019-10-01T10:18:19,68,"Fatal error in athena logfile: ""Logfile error in log.RAWtoALL: ""ToolSvc.HLTJetMon                                   ERROR Unknown exception caught, while filling histograms"""""
+16,4498813183,2019-10-01T09:52:09,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+17,4498856214,2019-10-01T09:24:14,68,"Fatal error in athena logfile: ""G4 exception at line 13383 (see jobReport for further details)"""
+18,4498813206,2019-10-01T10:16:12,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+19,4498813220,2019-10-01T10:20:26,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+20,4498997209,2019-10-01T10:10:42,65,"Non-zero return code from ESDtoDPD (65); Logfile error in log.ESDtoDPD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+21,4498768924,2019-10-01T09:43:43,65,Non-zero return code from EVNTtoHITS (65); G4 exception at line 12768 (see jobReport for further details)
+22,4498828350,2019-10-01T09:04:32,9,Input file argument(s) ['RDO.pool.root'] globbed to NO input files - probably the file(s) are missing
+23,4499000863,2019-10-01T10:13:57,9,Input file argument(s) ['RDO.pool.root'] globbed to NO input files - probably the file(s) are missing
+24,4498817673,2019-10-01T09:28:29,9,Input file argument(s) ['RDO.pool.root'] globbed to NO input files - probably the file(s) are missing
+25,4499004287,2019-10-01T10:14:58,15,No events to process: 8000 (skipEvents) >= 2343 (inputEvents of HITS
+26,4499011554,2019-10-01T10:21:28,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+27,4499008045,2019-10-01T10:19:33,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""RuntimeError: Smart slimming container BTagging_AntiKt4LCTopo does not exist or does not have a smart slimming list"""
+28,4499004291,2019-10-01T10:15:11,15,No events to process: 10000 (skipEvents) >= 2343 (inputEvents of HITS
+29,4499008077,2019-10-01T10:23:27,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+30,4499012206,2019-10-01T10:20:21,65,"Non-zero return code from RAWtoESD (8); Logfile error in log.RAWtoESD: """""
+31,4499008097,2019-10-01T10:23:36,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+32,4499017793,2019-10-01T10:26:22,11,Missing AthenaMP outputs file athenaMP-outputs-EVNTtoHITS-sim (probably athena crashed)
+33,4498813182,2019-10-01T09:52:01,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+34,4498813201,2019-10-01T10:13:30,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+35,4498813095,2019-10-01T09:33:34,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+36,4499000589,2019-10-01T10:21:24,66,File data18_13TeV.00363033.physics_Main.merge.AOD.f993_m2032._lb0113._0002.1 did not pass corruption test
+37,4498813241,2019-10-01T10:27:01,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+38,4498812915,2019-10-01T09:11:36,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+39,4498813082,2019-10-01T09:31:20,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+40,4498997208,2019-10-01T10:10:42,65,Non-zero return code from RAWtoALL (65); Long ERROR message at line 16432 (see jobReport for further details)
+41,4499004382,2019-10-01T10:14:40,68,"Fatal error in athena logfile: ""Logfile error in log.ESDtoAOD: ""ToolSvc.HLTJetMon                                   ERROR Unknown exception caught, while filling histograms"""""
+42,4498812940,2019-10-01T09:16:01,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+43,4499008470,2019-10-01T10:19:19,68,"Fatal error in athena logfile: ""Logfile error in log.EVNTtoHITS: ""ISF_MC12LLPTrut...  ERROR Unable to register truth incident with unknown SimGeoID=0"""""
+44,4498795729,2019-10-01T09:01:57,65,AODtoDAOD got a SIGKILL signal (exit code 137)
+45,4498867837,2019-10-01T09:12:31,68,"Fatal error in athena logfile: ""G4 exception at line 43572 (see jobReport for further details)"""
+46,4499011557,2019-10-01T10:21:28,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+47,4499011563,2019-10-01T10:21:29,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+48,4499011517,2019-10-01T10:21:11,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""RuntimeError: Smart slimming container BTagging_AntiKt4LCTopo does not exist or does not have a smart slimming list"""
+49,4499004281,2019-10-01T10:14:54,15,No events to process: 4000 (skipEvents) >= 2343 (inputEvents of HITS
+50,4499008092,2019-10-01T10:23:31,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+51,4499008093,2019-10-01T10:23:32,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+52,4499011463,2019-10-01T10:22:05,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""RuntimeError: Smart slimming container BTagging_AntiKt4LCTopo does not exist or does not have a smart slimming list"""
+53,4499008069,2019-10-01T10:26:24,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+54,4498997185,2019-10-01T10:09:17,65,"Non-zero return code from RAWtoESD (65); Logfile error in log.RAWtoESD: ""AthenaHiveEventLoopMgr                              FATAL Failed event detected on s: 0  e: 0 w/ fail mode: AlgStall"""
+55,4499004383,2019-10-01T10:17:41,68,"Fatal error in athena logfile: ""Logfile error in log.RAWtoALL: ""ToolSvc.HLTJetMon                                   ERROR Unknown exception caught, while filling histograms"""""
+56,4498812932,2019-10-01T09:13:53,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+57,4498813029,2019-10-01T09:27:13,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+58,4498813151,2019-10-01T09:43:46,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+59,4498813089,2019-10-01T09:32:14,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+60,4498856185,2019-10-01T09:02:39,68,"Fatal error in athena logfile: ""G4 exception at line 13293 (see jobReport for further details)"""
+61,4499016296,2019-10-01T10:24:21,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+62,4499004385,2019-10-01T10:17:41,68,"Fatal error in athena logfile: ""Logfile error in log.RAWtoALL: ""ToolSvc.HLTJetMon                                   ERROR Unknown exception caught, while filling histograms"""""
+63,4499007954,2019-10-01T10:24:00,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+64,4498997207,2019-10-01T10:10:42,65,"Non-zero return code from RAWtoALL (65); Logfile error in log.RAWtoALL: ""muonTrkTrackThinTool_CT                             ERROR FILE:LINE (StatusCode muonTrkTrackThinTool::execute()): code FAILURE: evtStore()->retrieve( alltracks, m_trackCollKey )"""
+65,4498979877,2019-10-01T09:56:46,65,EVNTtoHITS got a SIGKILL signal (exit code 137)
+66,4499011548,2019-10-01T10:21:28,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""RuntimeError: Smart slimming container BTagging_AntiKt4LCTopo does not exist or does not have a smart slimming list"""
+67,4499011527,2019-10-01T10:21:16,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+68,4499008067,2019-10-01T10:26:24,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+69,4499011445,2019-10-01T10:21:21,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+70,4499008062,2019-10-01T10:25:23,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""RuntimeError: Smart slimming container BTagging_AntiKt4LCTopo does not exist or does not have a smart slimming list"""
+71,4499008065,2019-10-01T10:25:52,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+72,4499004294,2019-10-01T10:15:26,15,No events to process: 12000 (skipEvents) >= 2343 (inputEvents of HITS
+73,4499007911,2019-10-01T10:22:05,65,Non-zero return code from AODtoDAOD (65); Long FATAL message at line 6228 (see jobReport for further details)
+74,4499000735,2019-10-01T10:20:13,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""Unable to identify specific exception"""
+75,4498812893,2019-10-01T09:05:49,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+76,4499007963,2019-10-01T10:29:36,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+77,4498812906,2019-10-01T09:09:10,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+78,4499004412,2019-10-01T10:18:19,68,"Fatal error in athena logfile: ""Logfile error in log.RAWtoALL: ""ToolSvc.HLTJetMon                                   ERROR Unknown exception caught, while filling histograms"""""
+79,4499004407,2019-10-01T10:18:17,65,"Non-zero return code from RDOtoRDOTrigger (33); Logfile error in log.RDOtoRDOTrigger: ""TrigSteer_HLT                                       FATAL Signature: (TE = EF_xe10_step1) : Could not find matching sequence for output TE."""
+80,4498812959,2019-10-01T09:19:40,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+81,4499014812,2019-10-01T10:24:15,9,Input file argument testRTT.RDO.pool.root globbed to NO input files - probably the file(s) are missing
+82,4498771928,2019-10-01T10:07:48,68,"Fatal error in athena logfile: ""Logfile error in log.EVNTtoHITS: ""ISF_MC12LLPTrut...  ERROR Unable to register truth incident with unknown SimGeoID=0"""""
+83,4498782251,2019-10-01T09:42:44,65,EVNTtoHITS got a SIGKILL signal (exit code 137)
+84,4498817665,2019-10-01T09:09:51,9,Input file argument(s) ['RDO.pool.root'] globbed to NO input files - probably the file(s) are missing
+85,4498774137,2019-10-01T09:34:27,65,Non-zero return code from EVNTtoHITS (255)
+86,4498774146,2019-10-01T09:33:34,65,Non-zero return code from EVNTtoHITS (255)
+87,4498984294,2019-10-01T09:56:17,65,"Non-zero return code from EVNTtoHITS (33); Logfile error in log.EVNTtoHITS: ""IOVDbSvc            FATAL Conditions database connection COOLOFL_INDET/OFLP200 cannot be opened - STOP"""
+88,4499004304,2019-10-01T10:19:05,15,No events to process: 18000 (skipEvents) >= 2343 (inputEvents of HITS
+89,4499008095,2019-10-01T10:23:33,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+90,4499011449,2019-10-01T10:21:32,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+91,4499008050,2019-10-01T10:21:53,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+92,4499008079,2019-10-01T10:23:28,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+93,4499011465,2019-10-01T10:22:23,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+94,4499007921,2019-10-01T10:23:47,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""AttributeError: 'module' object has no attribute 'GetDecoratePromptTauAlgs'"""
+95,4498812919,2019-10-01T09:12:18,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+96,4498812999,2019-10-01T09:23:18,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+97,4498812953,2019-10-01T09:19:12,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     FATAL makePool failed for AthMpEvtLoopMgr.SharedEvtQueueProvider"""
+98,4498856145,2019-10-01T09:02:02,68,"Fatal error in athena logfile: ""G4 exception at line 17137 (see jobReport for further details)"""
+99,4498813217,2019-10-01T10:19:25,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+100,4498812995,2019-10-01T09:23:15,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+101,4498813252,2019-10-01T10:28:27,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+102,4498808778,2019-10-01T09:01:46,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+103,4498813232,2019-10-01T10:25:01,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+104,4498117632,2019-10-01T09:00:05,15,No events to process: 2100 (skipEvents) >= 2000 (inputEvents of EVNT
+105,4498117637,2019-10-01T09:02:55,15,No events to process: 2600 (skipEvents) >= 2000 (inputEvents of EVNT
+106,4498117639,2019-10-01T09:02:46,15,No events to process: 2800 (skipEvents) >= 2000 (inputEvents of EVNT
+107,4497879322,2019-10-01T09:10:01,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+108,4498033362,2019-10-01T09:03:24,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+109,4498033795,2019-10-01T09:04:31,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+110,4498033879,2019-10-01T09:04:51,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+111,4498033868,2019-10-01T09:04:50,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+112,4498033997,2019-10-01T09:17:20,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+113,4498052901,2019-10-01T09:44:10,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+114,4498033728,2019-10-01T09:04:03,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+115,4498033809,2019-10-01T09:04:35,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+116,4497587840,2019-10-01T09:52:27,-1,LRMS error: (271) Job was cancelled
+117,4497587794,2019-10-01T09:06:30,-1,LRMS error: (271) Job was cancelled
+118,4498117633,2019-10-01T09:00:06,15,No events to process: 2200 (skipEvents) >= 2000 (inputEvents of EVNT
+119,4498117636,2019-10-01T09:00:41,15,No events to process: 2500 (skipEvents) >= 2000 (inputEvents of EVNT
+120,4498117643,2019-10-01T09:00:38,15,No events to process: 3200 (skipEvents) >= 2000 (inputEvents of EVNT
+121,4498033740,2019-10-01T09:04:07,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+122,4498033830,2019-10-01T09:04:40,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+123,4498033183,2019-10-01T09:03:14,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+124,4497973740,2019-10-01T09:48:36,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+125,4497905056,2019-10-01T09:02:49,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+126,4497587800,2019-10-01T10:07:26,-1,LRMS error: (271) Job was cancelled
+127,4497587718,2019-10-01T09:39:27,-1,LRMS error: (271) Job was cancelled
+128,4497587788,2019-10-01T09:16:07,-1,LRMS error: (271) Job was cancelled
+129,4497587734,2019-10-01T10:07:49,-1,LRMS error: (271) Job was cancelled
+130,4497587776,2019-10-01T09:29:08,-1,LRMS error: (271) Job was cancelled
+131,4497587738,2019-10-01T09:26:10,-1,LRMS error: (271) Job was cancelled
+132,4497587798,2019-10-01T09:50:10,-1,LRMS error: (271) Job was cancelled
+133,4497587839,2019-10-01T10:10:51,-1,LRMS error: (271) Job was cancelled
+134,4498117635,2019-10-01T09:01:55,15,No events to process: 2400 (skipEvents) >= 2000 (inputEvents of EVNT
+135,4498117638,2019-10-01T09:01:42,15,No events to process: 2700 (skipEvents) >= 2000 (inputEvents of EVNT
+136,4498033709,2019-10-01T09:03:57,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+137,4498033824,2019-10-01T09:04:39,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+138,4498033965,2019-10-01T09:17:16,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+139,4498033200,2019-10-01T09:03:17,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+140,4497940257,2019-10-01T09:06:05,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+141,4498033977,2019-10-01T09:17:17,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+142,4498033985,2019-10-01T09:17:18,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+143,4498034089,2019-10-01T09:59:02,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+144,4497587781,2019-10-01T09:40:25,-1,LRMS error: (271) Job was cancelled
+145,4497587768,2019-10-01T10:23:28,-1,LRMS error: (271) Job was cancelled
+146,4497587799,2019-10-01T10:00:28,-1,LRMS error: (271) Job was cancelled
+147,4498117631,2019-10-01T09:00:05,15,No events to process: 2000 (skipEvents) >= 2000 (inputEvents of EVNT
+148,4498117644,2019-10-01T09:01:13,15,No events to process: 3300 (skipEvents) >= 2000 (inputEvents of EVNT
+149,4498033523,2019-10-01T09:03:37,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+150,4497904901,2019-10-01T09:01:29,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+151,4498033854,2019-10-01T09:04:48,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+152,4498033805,2019-10-01T09:04:34,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+153,4498033126,2019-10-01T09:03:02,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+154,4498034012,2019-10-01T09:17:28,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+155,4497587741,2019-10-01T09:27:26,-1,LRMS error: (271) Job was cancelled
+156,4497587824,2019-10-01T09:06:49,-1,LRMS error: (271) Job was cancelled
+157,4497587803,2019-10-01T09:52:10,-1,LRMS error: (271) Job was cancelled
+158,4497587747,2019-10-01T10:02:11,-1,LRMS error: (271) Job was cancelled
+159,4497587745,2019-10-01T09:23:31,-1,LRMS error: (271) Job was cancelled
+160,4497587726,2019-10-01T09:44:31,-1,LRMS error: (271) Job was cancelled
+161,4498117640,2019-10-01T09:00:37,15,No events to process: 2900 (skipEvents) >= 2000 (inputEvents of EVNT
+162,4498117645,2019-10-01T09:01:13,15,No events to process: 3400 (skipEvents) >= 2000 (inputEvents of EVNT
+163,4498034085,2019-10-01T09:47:53,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+164,4498033499,2019-10-01T09:03:36,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+165,4498033755,2019-10-01T09:04:13,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+166,4498033251,2019-10-01T09:03:20,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+167,4498033818,2019-10-01T09:04:38,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+168,4497655712,2019-10-01T09:17:12,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+169,4497655778,2019-10-01T09:52:45,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+170,4497587723,2019-10-01T09:14:27,-1,LRMS error: (271) Job was cancelled
+171,4497587828,2019-10-01T09:17:30,-1,LRMS error: (271) Job was cancelled
+172,4497587792,2019-10-01T09:55:10,-1,LRMS error: (271) Job was cancelled
+173,4498676664,2019-10-01T09:14:27,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+174,4498640664,2019-10-01T10:09:04,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     FATAL makePool failed for AthMpEvtLoopMgr.SharedEvtQueueProvider"""
+175,4498617609,2019-10-01T09:18:25,68,"Fatal error in athena logfile: ""Long ERROR message at line 3317 (see jobReport for further details)"""
+176,4498711098,2019-10-01T09:36:02,68,"Fatal error in athena logfile: ""Long ERROR message at line 2621 (see jobReport for further details)"""
+177,4498634405,2019-10-01T09:18:05,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+178,4498744765,2019-10-01T09:32:27,65,"Non-zero return code from HITtoRDO (65); Logfile error in log.HITtoRDO: ""AthMpEvtLoopMgr     ERROR Failure in waiting or sub-process finished abnormally"""
+179,4498744776,2019-10-01T09:49:34,65,"Non-zero return code from HITtoRDO (65); Logfile error in log.HITtoRDO: ""AthMpEvtLoopMgr     ERROR Failure in waiting or sub-process finished abnormally"""
+180,4498731016,2019-10-01T09:10:08,65,"Non-zero return code from HITtoRDO (65); Logfile error in log.HITtoRDO: ""AthMpEvtLoopMgr     ERROR Failure in waiting or sub-process finished abnormally"""
+181,4498740999,2019-10-01T09:13:08,11,Missing AthenaMP outputs file athenaMP-outputs-RDOtoRDOTrigger-r2t (probably athena crashed)
+182,4498426980,2019-10-01T09:18:23,68,"Fatal error in athena logfile: ""G4 exception at line 30644 (see jobReport for further details)"""
+183,4498545009,2019-10-01T09:10:56,-1,LRMS error: (271) Job timeout
+184,4498374240,2019-10-01T09:00:33,65,"Non-zero return code from HITtoRDO (65); Logfile error in log.HITtoRDO: ""AthMpEvtLoopMgr     ERROR Failure in waiting or sub-process finished abnormally"""
+185,4498144011,2019-10-01T09:05:27,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+186,4498233345,2019-10-01T09:09:49,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+187,4498636437,2019-10-01T10:02:51,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+188,4498711135,2019-10-01T09:52:29,68,"Fatal error in athena logfile: ""Long ERROR message at line 3393 (see jobReport for further details)"""
+189,4498636436,2019-10-01T10:02:50,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+190,4498711033,2019-10-01T10:14:59,68,"Fatal error in athena logfile: ""Long ERROR message at line 3354 (see jobReport for further details)"""
+191,4498710959,2019-10-01T10:14:27,68,"Fatal error in athena logfile: ""Long ERROR message at line 3168 (see jobReport for further details)"""
+192,4498744793,2019-10-01T10:19:52,65,"Non-zero return code from HITtoRDO (65); Logfile error in log.HITtoRDO: ""AthMpEvtLoopMgr     ERROR Failure in waiting or sub-process finished abnormally"""
+193,4498636433,2019-10-01T10:02:16,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+194,4498161048,2019-10-01T09:02:48,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+195,4498161052,2019-10-01T09:23:01,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+196,4498731012,2019-10-01T09:10:00,65,"Non-zero return code from HITtoRDO (65); Logfile error in log.HITtoRDO: ""AthMpEvtLoopMgr     ERROR Failure in waiting or sub-process finished abnormally"""
+197,4498744745,2019-10-01T09:00:01,65,"Non-zero return code from HITtoRDO (65); Logfile error in log.HITtoRDO: ""AthMpEvtLoopMgr     ERROR Failure in waiting or sub-process finished abnormally"""
+198,4498744784,2019-10-01T09:54:36,65,"Non-zero return code from RDOtoRDOTrigger (65); Logfile error in log.RDOtoRDOTrigger: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+199,4498223139,2019-10-01T09:34:48,65,"Non-zero return code from AODtoDAOD (8); Logfile error in log.AODtoDAOD: ""KeyError: 'nentries'"""
+200,4498730991,2019-10-01T09:13:20,65,"Non-zero return code from HITtoRDO (65); Logfile error in log.HITtoRDO: ""AthMpEvtLoopMgr     ERROR Failure in waiting or sub-process finished abnormally"""
+201,4498443984,2019-10-01T09:51:22,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+202,4498443761,2019-10-01T09:02:58,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+203,4498547627,2019-10-01T09:35:26,68,"Fatal error in athena logfile: ""G4 exception at line 20330 (see jobReport for further details)"""
+204,4498196825,2019-10-01T09:10:12,68,"Fatal error in athena logfile: ""G4 exception at line 28872 (see jobReport for further details)"""
+205,4498545010,2019-10-01T09:10:57,-1,LRMS error: (271) Job timeout
+206,4498711028,2019-10-01T09:33:22,68,"Fatal error in athena logfile: ""Long ERROR message at line 3257 (see jobReport for further details)"""
+207,4498711093,2019-10-01T09:35:59,68,"Fatal error in athena logfile: ""Long ERROR message at line 2374 (see jobReport for further details)"""
+208,4498711035,2019-10-01T10:11:55,68,"Fatal error in athena logfile: ""Long ERROR message at line 3305 (see jobReport for further details)"""
+209,4498431150,2019-10-01T10:19:55,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+210,4498744755,2019-10-01T09:12:00,65,"Non-zero return code from HITtoRDO (65); Logfile error in log.HITtoRDO: ""AthMpEvtLoopMgr     ERROR Failure in waiting or sub-process finished abnormally"""
+211,4498710960,2019-10-01T10:10:29,68,"Fatal error in athena logfile: ""Logfile error in log.EVNTtoHITS: ""IOVDbSvc            ERROR Could not retrieve COOL data for folder /LAR/ElecCalibMC/Noise tag LARElecCalibMCNoise-IOVDEP-00 validityKeys [[],[]]"""""
+212,4498731014,2019-10-01T09:10:14,65,"Non-zero return code from HITtoRDO (65); Logfile error in log.HITtoRDO: ""AthMpEvtLoopMgr     ERROR Failure in waiting or sub-process finished abnormally"""
+213,4498744757,2019-10-01T09:21:54,65,"Non-zero return code from HITtoRDO (65); Logfile error in log.HITtoRDO: ""AthMpEvtLoopMgr     ERROR Failure in waiting or sub-process finished abnormally"""
+214,4498740983,2019-10-01T09:09:04,11,Missing AthenaMP outputs file athenaMP-outputs-RDOtoRDOTrigger-r2t (probably athena crashed)
+215,4498733249,2019-10-01T09:15:33,65,"Non-zero return code from RAWtoESD (65); Logfile error in log.RAWtoESD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+216,4498744746,2019-10-01T09:00:40,65,"Non-zero return code from RAWtoESD (65); Logfile error in log.RAWtoESD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+217,4498691356,2019-10-01T09:43:42,65,EVNTtoHITS got a SIGKILL signal (exit code 137)
+218,4498711129,2019-10-01T09:02:06,68,"Fatal error in athena logfile: ""Long ERROR message at line 2845 (see jobReport for further details)"""
+219,4498617607,2019-10-01T09:16:29,68,"Fatal error in athena logfile: ""Long ERROR message at line 3414 (see jobReport for further details)"""
+220,4498711022,2019-10-01T09:22:55,68,"Fatal error in athena logfile: ""Long ERROR message at line 3325 (see jobReport for further details)"""
+221,4498711073,2019-10-01T09:25:53,68,"Fatal error in athena logfile: ""Long ERROR message at line 3245 (see jobReport for further details)"""
+222,4498567181,2019-10-01T09:11:52,68,"Fatal error in athena logfile: ""G4 exception at line 21005 (see jobReport for further details)"""
+223,4498711108,2019-10-01T09:53:37,68,"Fatal error in athena logfile: ""Long ERROR message at line 2561 (see jobReport for further details)"""
+224,4498223385,2019-10-01T09:11:35,0,Error reading user generated output file list
+225,4498730992,2019-10-01T09:09:02,65,"Non-zero return code from HITtoRDO (65); Logfile error in log.HITtoRDO: ""AthMpEvtLoopMgr     ERROR Failure in waiting or sub-process finished abnormally"""
+226,4498740998,2019-10-01T09:10:02,11,Missing AthenaMP outputs file athenaMP-outputs-RDOtoRDOTrigger-r2t (probably athena crashed)
+227,4498730997,2019-10-01T09:10:36,65,"Non-zero return code from HITtoRDO (65); Logfile error in log.HITtoRDO: ""AthMpEvtLoopMgr     ERROR Failure in waiting or sub-process finished abnormally"""
+228,4498730974,2019-10-01T09:04:54,65,"Non-zero return code from HITtoRDO (65); Logfile error in log.HITtoRDO: ""AthMpEvtLoopMgr     ERROR Failure in waiting or sub-process finished abnormally"""
+229,4498733444,2019-10-01T09:49:56,65,"Non-zero return code from RAWtoESD (65); Logfile error in log.RAWtoESD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+230,4498443860,2019-10-01T09:30:36,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+231,4498443988,2019-10-01T09:54:39,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+232,4498443869,2019-10-01T09:31:41,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+233,4498744780,2019-10-01T09:52:08,65,"Non-zero return code from RDOtoRDOTrigger (65); Logfile error in log.RDOtoRDOTrigger: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+234,4498495983,2019-10-01T09:30:54,65,"Non-zero return code from EVNTtoHITS (33); Logfile error in log.EVNTtoHITS: ""IOVDbSvc            FATAL Conditions database connection COOLOFL_INDET/OFLP200 cannot be opened - STOP"""
+235,4498520374,2019-10-01T09:02:37,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+236,4498648974,2019-10-01T10:12:52,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     FATAL makePool failed for AthMpEvtLoopMgr.SharedEvtQueueProvider"""
+237,4498711038,2019-10-01T10:07:45,68,"Fatal error in athena logfile: ""Long ERROR message at line 3377 (see jobReport for further details)"""
+238,4498711125,2019-10-01T09:56:34,68,"Fatal error in athena logfile: ""Logfile error in log.EVNTtoHITS: ""IOVDbSvc            ERROR Could not retrieve COOL data for folder /LAR/ElecCalibMC/MphysOverMcal tag  validityKeys [[],[]]"""""
+239,4498711128,2019-10-01T10:00:30,68,"Fatal error in athena logfile: ""Long ERROR message at line 2634 (see jobReport for further details)"""
+240,4498636431,2019-10-01T10:00:51,65,"Non-zero return code from AODtoDAOD (65); Logfile error in log.AODtoDAOD: ""AthMpEvtLoopMgr                                     ERROR Failure in waiting or sub-process finished abnormally"""
+241,4498283027,2019-10-01T09:43:09,65,"Non-zero return code from EVNTtoHITS (65); Logfile error in log.EVNTtoHITS: ""AthMpEvtLoopMgr     ERROR Failure in waiting or sub-process finished abnormally"""
+242,4498443769,2019-10-01T09:02:59,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+243,4498740996,2019-10-01T09:10:13,11,Missing AthenaMP outputs file athenaMP-outputs-RDOtoRDOTrigger-r2t (probably athena crashed)
+244,4498731008,2019-10-01T09:09:13,65,"Non-zero return code from HITtoRDO (65); Logfile error in log.HITtoRDO: ""AthMpEvtLoopMgr     ERROR Failure in waiting or sub-process finished abnormally"""
+245,4498443852,2019-10-01T09:26:03,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)
+246,4498731010,2019-10-01T09:09:38,65,"Non-zero return code from HITtoRDO (65); Logfile error in log.HITtoRDO: ""AthMpEvtLoopMgr     ERROR Failure in waiting or sub-process finished abnormally"""
+247,4498730995,2019-10-01T09:08:50,65,"Non-zero return code from HITtoRDO (65); Logfile error in log.HITtoRDO: ""AthMpEvtLoopMgr     ERROR Failure in waiting or sub-process finished abnormally"""
+248,4498443955,2019-10-01T09:45:56,11,Missing AthenaMP outputs file athenaMP-outputs-HITtoRDO-h2r (probably athena crashed)

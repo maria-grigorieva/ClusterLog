@@ -1,0 +1,73 @@
+<html>
+
+
+<head>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <style>
+        table {
+          font-size: 12px;
+        }
+        .container {
+            width: 65%;
+            margin-top: 55px;
+        }
+    </style>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <title>ClusterLogs Report</title>
+  </head>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="row">
+        <div class="col-md-12">
+
+        <h3>ClusterLogs Report (Categorized)</h3>
+        {% for gr in groups %}
+        <table class="table table-sm table-condensed table-striped">
+            <thead class="thead-dark">
+            <tr>
+                <th>Cluster Size</th>
+                <th>Patterns</th>
+                <th>Key Phrases</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for dict_item in gr %}
+                <tr>
+                    <td>{{ dict_item['cluster_size'] }}</td>
+                    <td>
+                        <ul>
+                            {% for item in dict_item['pattern'] %}
+                            <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            {% for item in dict_item['common_phrases'] %}
+                            <li>{{ item }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+            {% endfor %}
+            </div>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,127 +1,191 @@
+import hashlib
 import multiprocessing
-from math import sqrt
-from time import time
-
 import numpy as np
-from kneed import KneeLocator
-from sklearn.cluster import DBSCAN, AgglomerativeClustering
-from sklearn.neighbors import NearestNeighbors
-from .helper import *
-from .tokenization import Tokens
+import pandas as pd
+
+import math
+
+from time import time
+# from string import punctuation
+
+from .reporting import report
+from .validation import Output
+from .tokenization import tokenize_messages, detokenize_messages, get_term_frequencies, detokenize_row
+from .data_preparation import clean_messages
+from .sequence_matching import Match
+from .ml_clusterization import MLClustering
+from .similarity_clusterization import SClustering
+from .categorization import execute_categorization
+from .phraser import extract_common_phrases
+from .utility import gather_df
+
+comm = None
+comm_size = 1
+comm_rank = 0
+
+import os
+if os.environ.get("USE_MPI"):
+    from mpi4py import MPI
+    comm = MPI.COMM_WORLD
+    comm_size = comm.Get_size()
+    comm_rank = comm.Get_rank()
+
 
 
 def safe_run(method):
-    def func_wrapper(self, *args, **kwargs):
 
+    def func_wrapper(self, *args, **kwargs):
         try:
             ts = time()
             result = method(self, *args, **kwargs)
             te = time()
-            self.timings[method.__name__] = round((te - ts), 4)
+            if method.__name__ in self.timings:
+                self.timings[method.__name__] += round((te - ts), 4)
+            else:
+                self.timings[method.__name__] = round((te - ts), 4)
             return result
-
-        except Exception:
-            return None
+        except Exception as e:
+            print(f"{method.__name__} threw an exception: {e}")
 
     return func_wrapper
 
 
-CLUSTERING_DEFAULTS = {"tokenizer": "nltk",
-                       "w2v_size": "auto",
+CLUSTERING_DEFAULTS = {"w2v_size": 300,
                        "w2v_window": 7,
                        "min_samples": 1}
 
 
-class ml_clustering:
+class Chain(object):
 
-
-    def __init__(self, df, target, cluster_settings=None, model_name='word2vec.model', mode='create'):
+    def __init__(self, df, target,
+                 tokenizer_type='space',
+                 cluster_settings=None,
+                 model_name='word2vec.model',
+                 mode='create',
+                 output_type='csv',
+                 output_fname='report',
+                 add_placeholder=True,
+                 dimensionality_reduction=False,
+                 threshold=5000,
+                 matching_accuracy=0.8,
+                 clustering_type='dbscan',
+                 keywords_extraction='rake_nltk',
+                 categorization=False):
         self.df = df
         self.target = target
+        self.tokenizer_type = tokenizer_type
         self.set_cluster_settings(cluster_settings or CLUSTERING_DEFAULTS)
         self.cpu_number = self.get_cpu_number()
-        self.messages = self.extract_messages()
         self.timings = {}
-        self.messages_cleaned = None
-        self.tokenized = None
-        self.sent2vec = None
-        self.distances = None
-        self.epsilon = None
-        self.cluster_labels = None
         self.model_name = model_name
         self.mode = mode
-
+        self.threshold = threshold
+        self.matching_accuracy = matching_accuracy
+        self.clustering_type = clustering_type
+        self.add_placeholder = add_placeholder
+        self.output_type = output_type
+        self.output_fname = output_fname
+        self.categorization = categorization
+        self.dimensionality_reduction = dimensionality_reduction
+        self.keywords_extraction = keywords_extraction
 
     @staticmethod
     def get_cpu_number():
         return multiprocessing.cpu_count()
 
-
     def set_cluster_settings(self, params):
-        for key,value in CLUSTERING_DEFAULTS.items():
+        for key, value in CLUSTERING_DEFAULTS.items():
             if params.get(key) is not None:
                 setattr(self, key, params.get(key))
             else:
                 setattr(self, key, value)
 
-
-    def extract_messages(self):
-        """
-        Returns a list of all error messages from target column
-        :return:
-        """
-        return list(self.df[self.target])
-
-
     @safe_run
     def process(self):
         """
         Chain of methods, providing data preparation, vectorization and clusterization
-        :return:
         """
-        return self.data_preparation() \
-            .tokenization() \
-            .tokens_vectorization() \
-            .sentence_vectorization() \
-            .kneighbors() \
-            .epsilon_search() \
-            .dbscan()
+        self.tokenization()
+        self.cleaning()
+        self.df = gather_df(comm, self.df)
+        if comm_rank == 0:
+            self.group_equals(self.df, 'hash')
+            if self.clustering_type == 'similarity' and self.groups.shape[0] <= self.threshold:
+                self.similarity_clustering()
+            else:
+                self.tokens_vectorization()
+                self.sentence_vectorization()
+                self.ml_clustering()
+                self.clusters_description()
 
-    def reprocess(self, epsilon):
-        self.epsilon = epsilon
-        return self.dbscan()
+            self.process_timings()
 
-    @safe_run
-    def data_preparation(self):
-        """
-        Cleaning log messages from unnucessary substrings and tokenization
-        :return:
-        """
-        self.messages_cleaned = cleaner(self.messages)
-        self.df['_cleaned'] = self.messages_cleaned
-        return self
-
+            # Categorization
+            fname = f'{self.output_fname}.{self.output_type}'
+            if self.output_type == 'html':
+                if self.categorization:
+                    self.categories = execute_categorization(self.result)
+                    report.categorized_report(self.categories, fname)
+                else:
+                    report.generate_html_report(self.result, fname)
+            elif self.output_type == 'csv':
+                self.result.to_csv(fname)
 
     @safe_run
     def tokenization(self):
+        self.df['tokenized_pattern'] = tokenize_messages(self.df[self.target].values, self.tokenizer_type)
+
+    @safe_run
+    def cleaning(self):
+        cleaned_strings = clean_messages(self.df[self.target].values)
+        cleaned_tokens = tokenize_messages(cleaned_strings, self.tokenizer_type, spacer_annotate=False, spacer_new=False)
+        self.df['hash'] = self.generateHash(cleaned_strings)
+        self.df['sequence'] = cleaned_tokens
+
+    @safe_run
+    def remove_unique_tokens(self, tokens):
+        frequency = get_term_frequencies(tokens)
+        # remove tokens that appear only once
+        cleaned_tokens = [
+            [token for token in row if frequency[token] > 1]
+            for row in tokens]
+        return cleaned_tokens
+
+    def generateHash(self, sequences):
+        return [hashlib.md5(repr(row).encode('utf-8')).hexdigest() for row in sequences]
+
+    @safe_run
+    def group_equals(self, df, column):
+        self.groups = df.groupby(column).apply(func=self.regroup)
+        self.groups.reset_index(drop=True, inplace=True)
+        print('Found {} equal groups of cleaned messages'.format(self.groups.shape[0]))
+
+    @safe_run
+    def regroup(self, gr):
         """
-        Tokenization of a list of error messages.
+        tokenized_pattern - common sequence of tokens, generated based on all tokens
+        sequence - common sequence of tokens, based on cleaned tokens
+        pattern - textual log pattern, based on all tokens
+        indices - indices of the initial dataframe, corresponding to current cluster/group of log messages
+        cluster_size - number of messages in cluster/group
+
+        The difference between sequence and tokenized_pattern is that tokenized_pattern is used for the
+        reconstruction of textual pattern (detokenization), while sequence is a set of cleaned tokens
+        and can be used for grouping/clusterization.
+        :param gr:
         :return:
         """
-        tokens = Tokens(self.messages_cleaned, type=self.tokenizer)
-        self.tokenized = tokens.process()
-        if self.w2v_size == 'auto':
-            self.w2v_size = self.detect_embedding_size(tokens)
-        return self
+        matcher = Match(match_threshhold=self.matching_accuracy,
+                        add_placeholder=self.add_placeholder)
+        # pprint.pprint(gr['tokenized_pattern'].values)
+        tokenized_pattern = matcher.sequence_matcher(gr['tokenized_pattern'].values)
 
-
-    def detect_embedding_size(self, tokens):
-        vocab = tokens.get_vocabulary()
-        embedding_size = round(len(vocab) ** (2/3))
-        if embedding_size >= 400:
-            embedding_size = 400
-        return embedding_size
-
+        df = pd.DataFrame([{'indices': gr.index.values.tolist(),
+                              'pattern': detokenize_row(tokenized_pattern, self.tokenizer_type),
+                              'sequence': gr['sequence'].values[0],
+                              'tokenized_pattern': tokenized_pattern,
+                              'cluster_size': len(gr.index.values.tolist())}])
+        return df
 
     @safe_run
     def tokens_vectorization(self):
@@ -132,19 +196,19 @@ class ml_clustering:
         :return:
         """
         from .vectorization import Vector
-        self.word_vector = Vector(self.tokenized,
-                                  self.w2v_size,
-                                  self.w2v_window,
-                                  self.cpu_number,
-                                  self.model_name)
-        if self.mode == 'create':
-            self.word_vector.create_word2vec_model(min_count=1, iterations=10)
-        if self.mode == 'update':
-            self.word_vector.update_word2vec_model()
-        if self.mode == 'process':
-            self.word_vector.load_word2vec_model()
-        return self
+        self.vectors = Vector(self.groups['sequence'].values,
+                              self.w2v_size,
+                              self.w2v_window,
+                              self.cpu_number,
+                              self.model_name)
 
+        if self.mode == 'create':
+            self.vectors.create_word2vec_model()
+        if self.mode == 'update':
+            self.vectors.update_word2vec_model()
+        if self.mode == 'process':
+            self.vectors.load_word2vec_model()
+        print('Vectorization of tokens finished')
 
     @safe_run
     def sentence_vectorization(self):
@@ -153,55 +217,86 @@ class ml_clustering:
         of all the words in each sentence
         :return:
         """
-        self.sent2vec = self.word_vector.sent2vec()
+        self.vectors.vectorize_messages(tf_idf=False)
+        print('Vectorization of messages is finished')
         return self
-
 
     @safe_run
-    def kneighbors(self):
-        """
-        Calculates average distances for k-nearest neighbors
-        :return:
-        """
-        k = round(sqrt(len(self.sent2vec)))
-        neigh = NearestNeighbors(n_neighbors=k)
-        nbrs = neigh.fit(self.sent2vec)
-        distances, indices = nbrs.kneighbors(self.sent2vec)
-        self.distances = [np.mean(d) for d in np.sort(distances, axis=0)]
-        return self
+    def ml_clustering(self):
 
+        self.clusters = MLClustering(self.df,
+                                     self.groups,
+                                     self.vectors,
+                                     self.cpu_number,
+                                     self.add_placeholder,
+                                     self.clustering_type,
+                                     self.tokenizer_type,
+                                     self.dimensionality_reduction)
+        self.clusters.process()
+
+    def clusters_description(self):
+        self.result = pd.DataFrame.from_dict(
+            [item for item in self.groups.groupby('cluster').apply(func=self.clusters_regroup)],
+            orient='columns').sort_values(by=['cluster_size'], ascending=False)
+
+    def clusters_regroup(self, gb):
+        pattern = self.search_common_patterns(gb)
+
+        # Get all indices for the group
+        indices = [i for sublist in gb['indices'].values for i in sublist]
+        size = len(indices)
+
+        phrases = self.search_keyphrases(pattern)
+
+        return {'pattern': pattern,
+                'indices': indices,
+                'cluster_size': size,
+                'common_phrases': phrases[:10]}
 
     @safe_run
-    def epsilon_search(self):
-        """
-        Search epsilon for the DBSCAN clusterization
-        :return:
-        """
-        kneedle = KneeLocator(self.distances, list(range(len(self.distances))))
-        self.epsilon = max(kneedle.all_elbows) if (len(kneedle.all_elbows) > 0) else 1
-        return self
+    def search_common_patterns(self, gb):
+        m = Match(match_threshhold=self.matching_accuracy,
+                  add_placeholder=self.add_placeholder)
+        tokenized_pattern = []
+        sequences = gb['tokenized_pattern'].values
 
+        if len(sequences) > 1:
+            m.matching_clusters(sequences, tokenized_pattern)
+        elif len(sequences) == 1:
+            tokenized_pattern.append(sequences[0])
+        return detokenize_messages(tokenized_pattern, self.tokenizer_type)
 
     @safe_run
-    def dbscan(self):
-        """
-        Execution of the DBSCAN clusterization algorithm.
-        Returns cluster labels
-        :return:
-        """
-        self.cluster_labels = DBSCAN(eps=self.epsilon,
-                                     min_samples=self.min_samples,
-                                     n_jobs=self.cpu_number) \
-            .fit_predict(self.sent2vec)
-        return self
+    def search_keyphrases(self, pattern):
+        return extract_common_phrases(pattern, self.keywords_extraction)
 
+    def in_cluster(self, groups, cluster_label):
+        indices = groups.loc[cluster_label, 'indices']
+        return self.df.loc[indices][self.target].values
 
-    def hierarchical(self):
-        """
-        Agglomerative clusterization
-        :return:
-        """
-        self.cluster_labels = AgglomerativeClustering(n_clusters=None,
-                                                      distance_threshold=self.epsilon)\
-            .fit_predict(self.sent2vec)
-        return self
+    @safe_run
+    def similarity_clustering(self):
+        clusters = SClustering(self.groups,
+                               self.matching_accuracy,
+                               self.add_placeholder,
+                               self.tokenizer_type,
+                               self.keywords_extraction)
+        self.result = clusters.process()
+        print('Finished with {} clusters'.format(self.result.shape[0]))
+
+    @safe_run
+    def validation(self, groups):
+        return Output().statistics(self.df, self.target, groups)
+
+    @staticmethod
+    def split_clusters(df, column, threshold=100):
+        if np.max(df[column].values) < threshold:
+            return df, None
+        else:
+            return df[df[column] >= threshold], df[df[column] < threshold]
+
+    def process_timings(self):
+        if self.timings['group_equals'] != 0 and self.timings['regroup'] != 0:
+            self.timings['group_equals'] -= self.timings['regroup']  # group_equals contains regroup
+
+        print(f"Timings:\n{self.timings}")

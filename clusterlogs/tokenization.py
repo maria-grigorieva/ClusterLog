@@ -1,51 +1,91 @@
-from nltk.tokenize import TreebankWordTokenizer
-from pyonmttok import Tokenizer
-from nltk.corpus import stopwords
 from string import punctuation
+from itertools import chain
+from pyonmttok import Tokenizer
+from collections import Counter
+from nltk.corpus import stopwords
 
-class Tokens:
-
-    def __init__(self, messages, type='nltk'):
-        self.messages = messages
-        self.type = type
-
-    def process(self):
-        """
-        The best tokenizer for error messages is TreebankWordTokenizer (nltk).
-        It's good at tokenizing file paths.
-        Alternative tokenizer. It performs much faster, but worse in tokenizing of paths.
-        It splits all paths by "/".
-        TODO: This method should be optimized to the same tokenization quality as TreebankWordTokenizer
-        :return:
-        """
-        tokenized = []
-        if self.type == 'nltk':
-            for line in self.messages:
-                tokenized.append(TreebankWordTokenizer().tokenize(line))
-        elif self.tokenizer == 'pyonmttok':
-            tokenizer = Tokenizer("space", joiner_annotate=False, segment_numbers=False)
-            for line in self.messages:
-                tokens, features = tokenizer.tokenize(line)
-                tokenized.append(tokens)
-        self.tokenized = self.clean_tokens(tokenized)
-        return self.tokenized
+from itertools import groupby
 
 
-    def clean_tokens(self, tokenized):
-        """
-        Clean tokens from english stop words, numbers and punctuation
-        :return:
-        """
-        stop = stopwords.words('english') + list(punctuation) + ["``", "''"]
-        cleaned_tokens = []
-        for row in tokenized:
-            cleaned_tokens.append([i for i in row if i.lower() not in stop and not i.lower().isnumeric()])
-        return cleaned_tokens
+# TOKENIZER = Tokenizer("space", spacer_annotate=True, preserve_placeholders=True, spacer_new=True)
+STOP = stopwords.words('english') + list(punctuation) + ["``", "''", u"\u2581"]
 
 
-    def get_vocabulary(self):
-        flat_list = [item for row in self.tokenized for item in row]
-        self.vocabulary = set(flat_list)
-        return self.vocabulary
+def tokenize_messages(messages, tokenizer_type, spacer_annotate=True, spacer_new=True):
+    tokenizer = Tokenizer(tokenizer_type, spacer_annotate=spacer_annotate, preserve_placeholders=True, spacer_new=spacer_new)
+    return [tokenizer.tokenize(line)[0] for line in messages]
 
 
+def detokenize_row(row, tokenizer_type):
+    tokenizer = Tokenizer(tokenizer_type, spacer_annotate=True, preserve_placeholders=True, spacer_new=True)
+    remove_indices = [i - 1 for i, token in enumerate(row) if token == '｟*｠' and row[i - 1] == '▁']
+    row = [token for i, token in enumerate(row) if i not in remove_indices]
+    # return tokenizer.detokenize(Tokens.remove_adjacent(row))
+    return tokenizer.detokenize(row)
+
+
+def get_vocabulary(tokenized_messages):
+    '''
+    A function that, given a list of token sequences,
+    returns a list of tokens unique to all the sequences
+    '''
+    return list(set(chain(*tokenized_messages)))
+
+
+def get_term_frequencies(tokenized_messages):
+    '''
+    A function that, given a list of token sequences,
+    returns a dictionary with number of occurences for each token
+    '''
+    frequency = Counter(chain(*tokenized_messages))
+    return dict(frequency)
+
+
+def to_lower(tokenized_messages):
+    '''
+    A function that makes every token lowercase
+    '''
+    return [[token.lower() for token in row] for row in tokenized_messages]
+
+
+def clean_tokenized(tokenized_messages, remove_stopwords=False):
+    """
+    This function removes tokens with any symbols other than letters.
+    Optionally it can also remove any stop words.
+    """
+    if remove_stopwords:
+        return [[token for token in row if token.lower() not in STOP and token.lower().isalpha()]
+                for row in tokenized_messages]
+    return [[token for token in row if token.lower().isalpha()]
+            for row in tokenized_messages]
+
+
+# def remove_adjacent(L):
+#     return [elem for i, elem in enumerate(L) if i == 0 or L[i - 1] != elem]
+
+
+def detokenize_messages(tokenized_messages, tokenizer_type):
+    TOKENIZER = Tokenizer(tokenizer_type, spacer_annotate=True, preserve_placeholders=True, spacer_new=True)
+    return [TOKENIZER.detokenize([x for x, _ in groupby(row)]) for row in tokenized_messages]
+
+
+# def remove_neighboring_duplicates(tokenized):
+#     n = []
+#     for row in tokenized:
+#         remove_indices = [i - 1 for i, j in enumerate(row) if j == '｟*｠' and row[i - 1] == '▁']
+#         row = [i for j, i in enumerate(row) if j not in remove_indices]
+#         n.append([x for x, _ in groupby(row)])
+#     return n
+
+
+# def tokenize_string(row, tokenizer_type, clean=False):
+#     TOKENIZER = Tokenizer(tokenizer_type, spacer_annotate=True, preserve_placeholders=True, spacer_new=True)
+#     tokens, features = TOKENIZER.tokenize(row)
+#     if clean:
+#         return [i for i in tokens if i.lower() not in STOP]
+#     else:
+#         return tokens
+
+
+# def clean_row(row):
+#     return [token for token in row if token.lower() not in STOP and token.lower().isalpha()]
