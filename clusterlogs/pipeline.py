@@ -15,6 +15,20 @@ from .sequence_matching import Match
 from .ml_clusterization import MLClustering
 from .similarity_clusterization import SClustering
 from .categorization import execute_categorization
+from .phraser import extract_common_phrases
+from .utility import gather_df
+
+comm = None
+comm_size = 1
+comm_rank = 0
+
+import os
+if os.environ.get("USE_MPI"):
+    from mpi4py import MPI
+    comm = MPI.COMM_WORLD
+    comm_size = comm.Get_size()
+    comm_rank = comm.Get_rank()
+
 
 def safe_run(method):
 
@@ -91,7 +105,34 @@ class Chain(object):
         """
         Chain of methods, providing data preparation, vectorization and clusterization
         """
-        start_time = time()
+        self.tokenization()
+        self.cleaning()
+        self.df = gather_df(comm, self.df)
+        if comm_rank == 0:
+            self.group_equals(self.df, 'hash')
+            if self.clustering_type == 'similarity' and self.groups.shape[0] <= self.threshold:
+                self.similarity_clustering()
+            else:
+                self.tokens_vectorization()
+                self.sentence_vectorization()
+                self.ml_clustering()
+                self.clusters_description()
+
+            self.process_timings()
+
+            # Categorization
+            fname = f'{self.output_fname}.{self.output_type}'
+            if self.output_type == 'html':
+                if self.categorization:
+                    self.categories = execute_categorization(self.result)
+                    report.categorized_report(self.categories, fname)
+                else:
+                    report.generate_html_report(self.result, fname)
+            elif self.output_type == 'csv':
+                self.result.to_csv(fname)
+
+    @safe_run
+    def tokenization(self):
         self.df['tokenized_pattern'] = tokenize_messages(self.df[self.target].values, self.tokenizer_type)
         pre_cleaned_mex=pre_cleaning(self.df[self.target].values)
         self.df['cleaned_strings'] = clean_messages(pre_cleaned_mex)

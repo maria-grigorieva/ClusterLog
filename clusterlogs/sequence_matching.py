@@ -25,11 +25,27 @@ class Match:
         unique = np.unique(self.sequences)
         if len(unique) <= 1:
             return unique[0]
+        random.shuffle(unique)
+        for x in unique:
+            others = unique[:]
+            others.remove(x)
+            pattern = None
+            for sequence in others:
+                matches = difflib.SequenceMatcher(None, x, sequence)
+                if matches.ratio() < self.match_threshhold:
+                    continue
 
-        pattern = random.choice(unique)
-        for sequence in unique:
-            matches = difflib.SequenceMatcher(None, pattern, sequence)
-            if matches.ratio() < self.match_threshhold:
+                # We extract matching fragments of sequences
+                # and change pattern to only contain those subsequences.
+                # In the end this gives us a common part of all the sequences.
+                match_ranges = matches.get_matching_blocks()[:-1]
+                matches = [x[m.a:m.a + m.size] for m in match_ranges]
+                if self.add_placeholder:  # Add a placeholder between matching subsequences
+                    [match + ['(.*?)'] for match in matches]
+                    matches[-1].pop()
+                pattern = list(chain(*matches))  # concatenate inner lists
+
+            if not pattern:
                 continue
 
             # We extract matching portions of sequences
