@@ -1,14 +1,18 @@
+import numpy as np
 import pandas as pd
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+# import plotly.graph_objects as go
 
 from io import StringIO
 from os.path import exists
 from base64 import b64decode
+# from sklearn.manifold import TSNE
 from collections.abc import Iterable
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Tuple
 from dash.dependencies import Input, Output, State
+# from sklearn.utils import resample
 
 from clusterlogs.pipeline import Chain
 
@@ -21,7 +25,7 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 def process(dataframe: pd.DataFrame, target_column: str,
             model_name: str, update_model: bool, tokenizer_type: str,
             clustering_algorithm: str, keywords_extraction: str,
-            options: Dict[str, bool], threshold: int, matching_accuracy: float) -> pd.DataFrame:
+            options: Dict[str, bool], threshold: int, matching_accuracy: float) -> Chain:
     mode = 'process'
     if update_model:
         mode = 'update' if exists(model_name) else 'create'
@@ -37,7 +41,7 @@ def process(dataframe: pd.DataFrame, target_column: str,
                     clustering_type=clustering_algorithm,
                     keywords_extraction=keywords_extraction)
     cluster.process()
-    return cluster.result
+    return cluster
 
 
 def generate_table(dataframe: pd.DataFrame, columns: Optional[List[str]] = None, max_rows: Optional[int] = None) -> html.Table:
@@ -229,8 +233,13 @@ app.layout = html.Div(children=[
     html.Button(id='submit-button-state', n_clicks=0, children='Submit'),
 
     html.Hr(),
-    html.Div(id='results-table',
-             children=None)
+    html.Div(id='results-graph', children=None),
+
+    html.Br(),
+    html.Div(id='results-table', children=None),
+
+    html.Div(id='results-storage', children=None, style={'display': 'none'}),
+    html.Div(id='embeddings-storage', children=None, style={'display': 'none'}),
 ])
 
 # Chain parameters: implemented are marked with +
@@ -290,7 +299,8 @@ def display_model_file_warning(_, model_name: str, update_model: bool) -> bool:
 
 
 @app.callback(
-    Output(component_id='results-table', component_property='children'),
+    Output(component_id='results-storage', component_property='children'),
+    Output(component_id='embeddings-storage', component_property='children'),
     [Input('submit-button-state', 'n_clicks')],
     [State(component_id='input-file', component_property='contents'),
      State(component_id='target-column', component_property='value'),
@@ -302,17 +312,17 @@ def display_model_file_warning(_, model_name: str, update_model: bool) -> bool:
      State(component_id='threshold', component_property='value'),
      State(component_id='matching-accuracy', component_property='value'),
      State(component_id='boolean-options', component_property='value')])
-def update_table(n_clicks: int,
-                 input_file: Optional[str], target_column: str,
-                 model_name: str, update_model: List[str],
-                 tokenizer_type: str, clustering_algorithm: str,
-                 keywords_extraction: str, threshold: int,
-                 matching_accuracy: float, boolean_options: List[str]) -> Optional[html.Table]:
+def update_results(n_clicks: int,
+                   input_file: Optional[str], target_column: str,
+                   model_name: str, update_model: List[str],
+                   tokenizer_type: str, clustering_algorithm: str,
+                   keywords_extraction: str, threshold: int,
+                   matching_accuracy: float, boolean_options: List[str]) -> Tuple[Optional[str], Optional[str]]:
 
     if n_clicks == 0 or not input_file or not target_column:
-        return None
+        return None, None
     if not update_model and not exists(model_name):
-        return None
+        return None, None
 
     dataframe = parse_input_file(input_file)
 
@@ -324,17 +334,31 @@ def update_table(n_clicks: int,
     for option in boolean_options:
         options[option] = True
 
-    return generate_table(process(dataframe,
-                                  target_column,
-                                  model_name,
-                                  bool(update_model),
-                                  tokenizer_type,
-                                  clustering_algorithm,
-                                  keywords_extraction,
-                                  options,
-                                  threshold,
-                                  matching_accuracy),
-                          columns=['cluster_size', 'pattern', 'common_phrases'])
+    result = process(dataframe,
+                     target_column,
+                     model_name,
+                     bool(update_model),
+                     tokenizer_type,
+                     clustering_algorithm,
+                     keywords_extraction,
+                     options,
+                     threshold,
+                     matching_accuracy)
+
+    embeddings: np.ndarray = result.vectors.sent2vec
+    jsoned_embeddings = pd.DataFrame(embeddings).to_json(orient='split')
+
+    return result.result.to_json(), jsoned_embeddings
+
+
+@app.callback(
+    Output(component_id='results-table', component_property='children'),
+    [Input('results-storage', 'children')])
+def update_table(stored_results: str) -> Optional[html.Table]:
+    if not stored_results:
+        return None
+    result = pd.read_json(stored_results)
+    return generate_table(result, columns=['cluster_size', 'pattern', 'common_phrases'])
 
 
 if __name__ == '__main__':
