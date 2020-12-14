@@ -3,12 +3,12 @@ import pandas as pd
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-# import plotly.graph_objects as go
+import plotly.graph_objects as go
 
 from io import StringIO
 from os.path import exists
 from base64 import b64decode
-# from sklearn.manifold import TSNE
+from sklearn.manifold import TSNE
 from collections.abc import Iterable
 from typing import List, Optional, Dict, Tuple
 from dash.dependencies import Input, Output, State
@@ -235,10 +235,10 @@ app.layout = html.Div(children=[
     html.Hr(),
     html.Div(id='results-graph', children=None),
 
-    html.Br(),
     html.Div(id='results-table', children=None),
 
     html.Div(id='results-storage', children=None, style={'display': 'none'}),
+    html.Div(id='groups-storage', children=None, style={'display': 'none'}),
     html.Div(id='embeddings-storage', children=None, style={'display': 'none'}),
 ])
 
@@ -300,6 +300,7 @@ def display_model_file_warning(_, model_name: str, update_model: bool) -> bool:
 
 @app.callback(
     Output(component_id='results-storage', component_property='children'),
+    Output(component_id='groups-storage', component_property='children'),
     Output(component_id='embeddings-storage', component_property='children'),
     [Input('submit-button-state', 'n_clicks')],
     [State(component_id='input-file', component_property='contents'),
@@ -317,12 +318,12 @@ def update_results(n_clicks: int,
                    model_name: str, update_model: List[str],
                    tokenizer_type: str, clustering_algorithm: str,
                    keywords_extraction: str, threshold: int,
-                   matching_accuracy: float, boolean_options: List[str]) -> Tuple[Optional[str], Optional[str]]:
+                   matching_accuracy: float, boolean_options: List[str]) -> Tuple[Optional[str], Optional[str], Optional[str]]:
 
     if n_clicks == 0 or not input_file or not target_column:
-        return None, None
+        return None, None, None
     if not update_model and not exists(model_name):
-        return None, None
+        return None, None, None
 
     dataframe = parse_input_file(input_file)
 
@@ -345,10 +346,12 @@ def update_results(n_clicks: int,
                      threshold,
                      matching_accuracy)
 
+    groups: pd.DataFrame = result.groups
+
     embeddings: np.ndarray = result.vectors.sent2vec
     jsoned_embeddings = pd.DataFrame(embeddings).to_json(orient='split')
 
-    return result.result.to_json(), jsoned_embeddings
+    return result.result.to_json(), groups.to_json(), jsoned_embeddings
 
 
 @app.callback(
@@ -359,6 +362,47 @@ def update_table(stored_results: str) -> Optional[html.Table]:
         return None
     result = pd.read_json(stored_results)
     return generate_table(result, columns=['cluster_size', 'pattern', 'common_phrases'])
+
+
+@app.callback(
+    Output(component_id='results-graph', component_property='children'),
+    [Input('groups-storage', 'children'),
+     Input('embeddings-storage', 'children')])
+def update_graph(stored_groups: str, stored_embeddings: str) -> Optional[dcc.Graph]:
+    if not stored_embeddings or not stored_groups:
+        return None
+
+    groups: pd.DataFrame = pd.read_json(stored_groups)
+    embeddings = pd.read_json(stored_embeddings, orient='split').to_numpy()
+
+    tsne = TSNE(perplexity=25, random_state=42, verbose=False)
+    embeddings = tsne.fit_transform(embeddings)
+
+    cluster_x, cluster_y, cluster_labels, cluster_titles = [], [], [], []
+    for i, row in groups.iterrows():
+        cluster_x.append(embeddings[i, 0])
+        cluster_y.append(embeddings[i, 1])
+        cluster_labels.append(row['cluster'])
+        cluster_titles.append(f"Cluster №{row['cluster']}:<br>" + row['pattern'].replace("; ", ";<br>"))
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=cluster_x, y=cluster_y,
+        name="Clusters",
+        marker_line_width=1,
+        marker_size=8,
+        opacity=.8,
+        marker_color=cluster_labels,
+        text=cluster_titles
+    ))
+
+    fig.update_traces(mode="markers", hoverinfo="text")
+    fig.update_layout(title="Log message clusters",
+                      hovermode="closest",
+                      xaxis={"visible": False},
+                      yaxis={"visible": False})
+
+    return dcc.Graph(figure=fig, style={'width': '80vw', 'height': '100vh'})
 
 
 if __name__ == '__main__':
