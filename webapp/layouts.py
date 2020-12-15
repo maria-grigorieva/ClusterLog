@@ -3,8 +3,6 @@ import dash_html_components as html
 
 
 parameters_layout = html.Div(children=[
-    html.H1(children='ClusterLogs'),
-
     html.H5(children='Files with data to cluster'),
 
     # TODO: Remove test values after app is done
@@ -164,13 +162,12 @@ parameters_layout = html.Div(children=[
 
     html.Br(),
     html.Button(id='submit-button-state', n_clicks=0, children='Submit'),
+])
 
-    html.Hr(),
-    html.Div(id='results-graph', children=None),
-
+results_table_layout = html.Div(children=[
     html.Div(id='results-table', children=None),
+])
 
-    html.Div(id='results-storage', children=None, style={'display': 'none'}),
-    html.Div(id='groups-storage', children=None, style={'display': 'none'}),
-    html.Div(id='embeddings-storage', children=None, style={'display': 'none'}),
+results_graph_layout = html.Div(children=[
+    html.Div(id='results-graph', children=None),
 ])

@@ -44,7 +44,7 @@ def display_model_file_warning(_, model_name: str, update_model: bool) -> bool:
     Output(component_id='results-storage', component_property='children'),
     Output(component_id='groups-storage', component_property='children'),
     Output(component_id='embeddings-storage', component_property='children'),
-    [Input('submit-button-state', 'n_clicks')],
+    [Input(component_id='submit-button-state', component_property='n_clicks')],
     [State(component_id='input-file', component_property='contents'),
      State(component_id='target-column', component_property='value'),
      State(component_id='model-file', component_property='value'),
