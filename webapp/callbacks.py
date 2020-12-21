@@ -85,8 +85,11 @@ def update_results(n_clicks: int,
 
     groups: pd.DataFrame = result.groups
 
-    embeddings: np.ndarray = result.vectors.sent2vec
-    jsoned_embeddings = pd.DataFrame(embeddings).to_json(orient='split')
+    if clustering_algorithm != "similarity":
+        embeddings: np.ndarray = result.vectors.sent2vec
+        jsoned_embeddings = pd.DataFrame(embeddings).to_json(orient='split')
+    else:
+        jsoned_embeddings = None
 
     return result.result.to_json(), groups.to_json(), jsoned_embeddings
 

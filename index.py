@@ -1,8 +1,7 @@
 import dash_core_components as dcc
 import dash_html_components as html
 
-# from dash.dependencies import Input, Output
-
+# the "noqa" comment tells the linter to ignore that import is unused
 import webapp.callbacks  # noqa: F401
 from webapp.app import app
 from webapp.layouts import parameters_layout, results_table_layout, results_graph_layout
