@@ -44,13 +44,25 @@ class Match:
                 match_ranges = matches.get_matching_blocks()[:-1]
                 matches = [x[m.a:m.a + m.size] for m in match_ranges]
                 if self.add_placeholder:  # Add a placeholder between matching subsequences
-                    matches = [match + ['(.*?)'] for match in matches]
-                    matches[-1].pop()
+                    placeholder_matches = []
+                    # All the ifs in the following iteration are meant to
+                    # keep several placeholders in a row from appearing
+                    for match in matches:
+                        if match == ['▁']:
+                            continue
+                        if match[:2] == ['▁', '(.*?)']:
+                            match = match[2:]
+                        placeholder_matches.append(match + ['(.*?)'])
+                    matches = placeholder_matches
+                    # x.a + x.size == len(x) means that the ends of the patterns match
+                    # so we don't need a placeholder at the end of the last match
+                    if match_ranges[-1].a + match_ranges[-1].size == len(x):
+                        matches[-1].pop()
                 pattern = list(chain(*matches))  # concatenate inner lists
 
             if not pattern:
                 continue
-            junk = list(punctuation) + ['_', '(.*?)', '']
+            junk = list(punctuation) + ['▁', '(.*?)', '']
             # if at least one of the items in sequence is not junk - return True
             correct = any([token not in junk for token in pattern])
             return pattern if correct else x
