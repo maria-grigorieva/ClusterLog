@@ -105,31 +105,17 @@ class Chain(object):
         """
         Chain of methods, providing data preparation, vectorization and clusterization
         """
+        if comm_rank == 0:
+            print("clever index")
         # e2e indexing for df
-        if comm_size > 1:
-            if comm_rank > 0:
-                prev_size = comm.recv(source=comm_rank - 1)
-            else:
-                prev_size = 0
-            cur_end = prev_size + self.df.shape[0]
-            self.df.set_index(pd.RangeIndex(prev_size, cur_end), inplace=True)
-            if comm_rank < comm_size - 1:
-                comm.send(cur_end, dest=comm_rank + 1)
+        self.df.set_index(pd.RangeIndex(comm_rank, comm_rank + comm_size * self.df.shape[0], comm_size), inplace=True)
 
         self.tokenization()
         self.cleaning()
         self.group_equals(self.df, 'hash')
 
         # e2e indexing for groups
-        if comm_size > 1:
-            if comm_rank > 0:
-                prev_size = comm.recv(source=comm_rank - 1)
-            else:
-                prev_size = 0
-            cur_end = prev_size + self.groups.shape[0]
-            self.groups.set_index(pd.RangeIndex(prev_size, cur_end), inplace=True)
-            if comm_rank < comm_size - 1:
-                comm.send(cur_end, dest=comm_rank + 1)
+        self.groups.set_index(pd.RangeIndex(comm_rank, comm_rank + comm_size * self.groups.shape[0], comm_size), inplace=True)
 
         self.df = gather_df(comm, self.df)
         self.groups = gather_df(comm, self.groups)
