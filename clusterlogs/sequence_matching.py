@@ -71,29 +71,23 @@ class Match:
             return pattern if correct else x
         return x
 
-    def matching_clusters(self, sequences, patterns):
+    def matching_clusters(self, sequences):
         if len(sequences) == 1:
-            patterns.append(sequences[0])
-            return
+            return [sequences[0]]
         # Degree of similarity of every sequence to the first
         similarities = levenshtein_similarity_1_to_n(sequences)
-        similar, to_remove = [sequences[0]], [0]
+        similar, others = [sequences[0]], []
         for i, value in enumerate(similarities):
             if value >= self.match_threshhold:
                 similar.append(sequences[i + 1])
-                to_remove.append(i + 1)
-        patterns.append(self.sequence_matcher(similar))
-        # np.delete can screw up when we have a list of one list
-        new_sequences = []
-        for i in range(len(sequences)):
-            if i not in to_remove:
-                new_sequences.append(sequences[i])
-        sequences = new_sequences
-        # sequences = np.delete(sequences, to_remove)
-        if len(sequences) > 1:
-            self.matching_clusters(sequences, patterns)
-        elif len(sequences) == 1:
-            patterns.append(sequences[0])
+            else:
+                others.append(sequences[i + 1])
+        patterns = [self.sequence_matcher(similar)]
+        if len(others) > 1:
+            patterns.extend(self.matching_clusters(others))
+        elif len(others) == 1 and others[0] not in patterns:
+            patterns.append(others[0])
+        return patterns
 
     def matrix_matching(self, sequences):
         if len(sequences) == 1:

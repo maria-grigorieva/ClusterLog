@@ -282,13 +282,14 @@ class Chain(object):
     def search_common_patterns(self, gb):
         m = Match(match_threshhold=self.matching_accuracy,
                   add_placeholder=self.add_placeholder)
-        tokenized_pattern = []
         sequences = gb['tokenized_pattern'].values
 
         if len(sequences) > 1:
-            m.matching_clusters(sequences, tokenized_pattern)
+            tokenized_pattern = m.matching_clusters(sequences)
         elif len(sequences) == 1:
-            tokenized_pattern.append(sequences[0])
+            tokenized_pattern = [sequences[0]]
+        else:
+            tokenized_pattern = [[]]
         return detokenize_messages(tokenized_pattern, self.tokenizer_type)
 
     @safe_run
