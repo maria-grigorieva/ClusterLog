@@ -20,9 +20,11 @@ def generate_table(dataframe: pd.DataFrame, columns: Optional[List[str]] = None,
             ])
         return item
 
+    column_names = [col.replace('_', ' ').title() for col in columns]
+
     return html.Table(className='table table-striped table-sm', children=[
         html.Thead(
-            html.Tr([html.Th(col) for col in columns])
+            html.Tr([html.Th(col) for col in column_names])
         ),
         html.Tbody([
             html.Tr([

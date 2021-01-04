@@ -170,5 +170,5 @@ results_table_layout = html.Div(children=[
 ])
 
 results_graph_layout = html.Div(children=[
-    html.Div(id='results-graph', children=None),
+    html.Div(id='results-graph', className='my-4 w-100', children=None),
 ])
