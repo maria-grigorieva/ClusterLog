@@ -9,7 +9,7 @@ from typing import List, Optional
 
 def generate_table(dataframe: pd.DataFrame, columns: Optional[List[str]] = None, max_rows: Optional[int] = None) -> html.Table:
     if columns is None:
-        columns = dataframe.columns
+        columns = [col for col in dataframe.columns]
     if max_rows is None or max_rows > len(dataframe):
         max_rows = len(dataframe)
 
@@ -38,4 +38,4 @@ def parse_input_file(content: str) -> pd.DataFrame:
     _, content_string = content.split(',')
     decoded = b64decode(content_string)
     df = pd.read_csv(StringIO(decoded.decode('utf-8')))
-    return df
+    return df  # type: ignore

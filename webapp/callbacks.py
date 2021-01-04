@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import dash_core_components as dcc
 import dash_html_components as html
-import plotly.graph_objects as go
+from plotly.graph_objects import Figure, Scatter
 
 from os.path import exists
 from sklearn.manifold import TSNE
@@ -26,7 +26,7 @@ def display_uploaded_filename(contents: str, filename: str) -> html.Div:
         return html.Div([
             'Drag and drop or ',
             html.A('select a csv file')
-        ]),
+        ])
 
 
 @app.callback(
@@ -100,7 +100,7 @@ def update_results(n_clicks: int,
 def update_table(stored_results: str) -> Optional[html.Table]:
     if not stored_results:
         return None
-    result = pd.read_json(stored_results)
+    result: pd.DataFrame = pd.read_json(stored_results)  # type: ignore
     return generate_table(result, columns=['cluster_size', 'pattern', 'common_phrases'])
 
 
@@ -112,7 +112,7 @@ def update_graph(stored_groups: str, stored_embeddings: str) -> Optional[dcc.Gra
     if not stored_embeddings or not stored_groups:
         return None
 
-    groups: pd.DataFrame = pd.read_json(stored_groups)
+    groups: pd.DataFrame = pd.read_json(stored_groups)  # type: ignore
     embeddings = pd.read_json(stored_embeddings, orient='split').to_numpy()
 
     tsne = TSNE(perplexity=25, random_state=42, verbose=False)
@@ -125,8 +125,8 @@ def update_graph(stored_groups: str, stored_embeddings: str) -> Optional[dcc.Gra
         cluster_labels.append(row['cluster'])
         cluster_titles.append(f"Cluster №{row['cluster']}:<br>" + row['pattern'].replace("; ", ";<br>"))
 
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
+    fig = Figure()
+    fig.add_trace(Scatter(
         x=cluster_x, y=cluster_y,
         name="Clusters",
         marker_line_width=1,
