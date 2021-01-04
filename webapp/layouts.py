@@ -3,6 +3,7 @@ import dash_html_components as html
 
 
 parameters_layout = html.Div(children=[
+    html.Br(),
     html.H5(children='Files with data to cluster'),
 
     # TODO: Remove test values after app is done

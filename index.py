@@ -17,23 +17,10 @@ navbar = html.Nav(
                 html.Li(
                     className='nav-item',
                     children=[
-                        html.A(
-                            className='nav-link active',
-                            children=[
-                                dcc.Link("Parameters", href='/')
-                            ]
-                        )
-                    ]
-                ),
-
-                html.Li(
-                    className='nav-item',
-                    children=[
-                        html.A(
+                        dcc.Link(
                             className='nav-link',
-                            children=[
-                                dcc.Link("Results", href='/results-table')
-                            ]
+                            children="Parameters",
+                            href='/'
                         )
                     ]
                 ),
@@ -41,11 +28,21 @@ navbar = html.Nav(
                 html.Li(
                     className='nav-item',
                     children=[
-                        html.A(
-                            className='nav-link active',
-                            children=[
-                                dcc.Link("Cluster Graph", href='/results-graph')
-                            ]
+                        dcc.Link(
+                            className='nav-link',
+                            children="Results",
+                            href='/results-table'
+                        )
+                    ]
+                ),
+
+                html.Li(
+                    className='nav-item',
+                    children=[
+                        dcc.Link(
+                            className='nav-link',
+                            children="Cluster Graph",
+                            href='/results-graph'
                         )
                     ]
                 )
