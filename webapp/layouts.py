@@ -166,7 +166,7 @@ parameters_layout = html.Div(children=[
 ])
 
 results_table_layout = html.Div(children=[
-    html.Div(id='results-table', children=None),
+    html.Div(id='results-table', className='table-responsive', children=None),
 ])
 
 results_graph_layout = html.Div(children=[

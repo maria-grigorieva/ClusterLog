@@ -20,7 +20,7 @@ def generate_table(dataframe: pd.DataFrame, columns: Optional[List[str]] = None,
             ])
         return item
 
-    return html.Table([
+    return html.Table(className='table table-striped table-sm', children=[
         html.Thead(
             html.Tr([html.Th(col) for col in columns])
         ),
