@@ -9,9 +9,9 @@ from sklearn.manifold import TSNE
 from typing import List, Optional, Tuple
 from dash.dependencies import Input, Output, State
 
+from webapp.app import app
 from webapp.process import execute_pipeline
 from webapp.utility import parse_input_file, generate_table
-from webapp.app import app
 
 
 @app.callback(
@@ -143,3 +143,18 @@ def update_graph(stored_groups: str, stored_embeddings: str) -> Optional[dcc.Gra
                       yaxis={"visible": False})
 
     return dcc.Graph(figure=fig, style={'width': '80vw', 'height': '100vh'})
+
+
+@app.callback(
+    [Output('parameters-layout', 'style'),
+     Output('results-table-layout', 'style'),
+     Output('results-graph-layout', 'style')],
+    [Input('url', 'pathname')]
+)
+def display_page(pathname):
+    routing_table = {
+        '/': (None, {'display': 'none'}, {'display': 'none'}),
+        '/results-table': ({'display': 'none'}, None, {'display': 'none'}),
+        '/results-graph': ({'display': 'none'}, {'display': 'none'}, None)
+    }
+    return routing_table[pathname]

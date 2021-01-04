@@ -85,6 +85,8 @@ class Match:
         patterns = [self.sequence_matcher(similar)]
         if len(others) > 1:
             patterns.extend(self.matching_clusters(others))
+        # We need this elif instead of an if in the beginning
+        # to check for messages being the same after sequence matching
         elif len(others) == 1 and others[0] not in patterns:
             patterns.append(others[0])
         return patterns
