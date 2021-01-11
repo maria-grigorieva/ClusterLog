@@ -8,18 +8,22 @@ This package doesn't work currently with python 2.7 because of `kneed` library, 
 
 ```
 editdistance==0.5.3
-gensim==3.8.1
-kneed==0.5.0
+gensim==3.8.3
+kneed==0.7.0
 nltk==3.4.5
-numpy==1.16.4
+numpy==1.18.1
 pandas==1.0.1
 pyonmttok==1.10.1
-scikit-learn==0.21.2
-matplotlib==3.0.3
-hdbscan==0.8.24
+scikit-learn==0.22.1
+matplotlib==3.1.2
+hdbscan==0.8.26
 python-rake==1.4.5
-pytextrank==2.0.1
-Jinja2==2.11.1
+pytextrank==2.0.3
+Jinja2==2.11.2
+spacy==2.3.2
+rake-nltk==1.0.4
+python-rake==1.4.5
+pke @ git+https://github.com/boudinfl/pke.git@6abbcd5d29d14f5151b79a20715ae06dbdd5e4b5
 ```
 
 Execute in command line to download dictionary required for pyTextRank library
@@ -46,17 +50,20 @@ Required input:
 Optional input:
 
 - clusterization_settings
-    - `w2v_size` (default: 100)
+    - `w2v_size` (default: 300)
     - `w2v_window` (default: 7)
     - `min_samples` (default: 1)
 - `model_name` (path to a file with word2vec model)
-- `mode` ('create'(default) | 'update' | 'load')
-- `output_file` (path to report file)
+- `mode` (create(default)|update|process)
+- `output_type` (csv|html)
+- `output_fname` (path to output report file)
 - `add_placeholder` (default: FALSE)
+- `dimensionality_reduction` (default: FALSE)
 - `threshold` (clustering threshold, default = 5000)
-- `matching_accuracy` (accuracy threshold, default = 0.8)
-- `clustering_type` (ML | SIMILARITY, default=SIMILARITY)
-- `algorithm` (dbscan|hdbscan|hierarchical, default=dbscan)
+- `matching_accuracy` (sequences similarity threshold, default = 0.8)
+- `clustering_type` (dbscan(default)|hdbscan|k-means|optics|hierarchical|similarity)
+- `keywords_extraction` (rake_nltk(default)|RAKE|pyTextRank|lda|ngrams|gensim)
+- `categorization` (default: FALSE)
 
 **Modes:**
 1) `create`
@@ -84,12 +91,9 @@ Optional input:
 
 **Output:**
 
-The output is available in different views:
-   1) `ALL` - DataFrame grouped by cluster numbers
-   2) `INDEX` - dictionary of lists of indexes for all clusters
-   3) `TARGET` - dictionary of lists of error messages for all clusters
-   4) `cluster labels` - array of cluster labels (as output of `DBSCAN -> fit_predict()`)
-
+`Cluster Size` - the number of messages in a cluster
+`Patterns` - common textual patterns of messages in a cluster
+`Key Phrases` - keywords and key phrases of messages in a cluster
 
 **Clusters statistics:**
 
@@ -110,12 +114,30 @@ pip install clusterlogs
 
 **Usage:**
 ```
-from clusterlogs import pipeline
+from clusterlogs.pipeline import Chain
+
+df = pd.read_csv(<CSV file with data>)
+target = '<target column with error messages>>'
+
+# Similarity clustering
+cluster_sim = Chain(df, target, matching_accuracy=0.8, 
+                    clustering_type='similarity', output_type='html',
+                    output_fname='<path to output report>', 
+                    keywords_extraction='rake_nltk')
+cluster_sim.process()
+
+# dbscan (mode=process)
+cluster_dbscan_p = Chain(df, target, mode='process', model_name='<path to pre-trained word2vec model>',
+                         matching_accuracy=0.5, clustering_type='dbscan', output_type='html',
+                         output_fname='<path to output report>')
+cluster_dbscan_p.process()
+
+# dbscan (mode=create)
+cluster_dbscan_c = Chain(df, target, mode='create', model_name='<path to new word2vec model>',
+                         matching_accuracy=0.8, clustering_type='dbscan', output_type='html',
+                         output_fname='<path to output report>')
+cluster_dbscan_c.process()
 ```
-
-Detailed usage of this library is described at
-[clusterlogs_notebook.ipynb](https://github.com/maria-grigorieva/ClusterLog/blob/master/clusterlogs_notebook.ipynb).
-
 
 **Author:**
 maria.grigorieva@cern.ch (Maria Grigorieva)
