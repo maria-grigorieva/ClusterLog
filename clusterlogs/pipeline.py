@@ -17,7 +17,9 @@ from .ml_clusterization import MLClustering
 from .similarity_clusterization import SClustering
 from .categorization import execute_categorization
 from .phraser import extract_common_phrases
+from .utility import gather_df
 
+comm = None
 comm_size = 1
 comm_rank = 0
 
@@ -97,64 +99,35 @@ class Chain(object):
                 setattr(self, key, value)
 
     @safe_run
-    def gather_df(self):
-        if comm_size > 1:
-            if comm_rank == 0:
-                blocks = math.ceil(len(self.df) / 20000)
-            else:
-                blocks = None
-            blocks = comm.bcast(blocks, root=0)
-            result = []
-            n = 0
-            for i in range(blocks):
-                n += 1
-                start = i * 20000
-                if start < len(self.df):
-                    end = (i + 1) * 20000
-                    if end > len(self.df):
-                        end = len(self.df)
-                    part = self.df[start:end]
-                else:
-                    part = None  # pd.DataFrame()
-                data = comm.gather(part, root=0)
-                if comm_rank == 0:
-                    result.append(data)
-            if comm_rank == 0:
-                tmp = []
-                for d in result:
-                    tmp.append(pd.concat(d))
-                self.df = pd.concat(tmp)
-
-    @safe_run
     def process(self):
         """
         Chain of methods, providing data preparation, vectorization and clusterization
         """
         self.tokenization()
         self.cleaning()
-        self.gather_df()
+        self.df = gather_df(comm, self.df)
         if comm_rank == 0:
             self.group_equals(self.df, 'hash')
-        if self.clustering_type == 'similarity' and self.groups.shape[0] <= self.threshold:
-            self.similarity_clustering()
-        else:
-            self.tokens_vectorization()
-            self.sentence_vectorization()
-            self.ml_clustering()
-            self.clusters_description()
-
-        self.process_timings()
-
-        # Categorization
-        fname = f'{self.output_fname}.{self.output_type}'
-        if self.output_type == 'html':
-            if self.categorization:
-                self.categories = execute_categorization(self.result)
-                report.categorized_report(self.categories, fname)
+            if self.clustering_type == 'similarity' and self.groups.shape[0] <= self.threshold:
+                self.similarity_clustering()
             else:
-                report.generate_html_report(self.result, fname)
-        elif self.output_type == 'csv':
-            self.result.to_csv(fname)
+                self.tokens_vectorization()
+                self.sentence_vectorization()
+                self.ml_clustering()
+                self.clusters_description()
+
+            self.process_timings()
+
+            # Categorization
+            fname = f'{self.output_fname}.{self.output_type}'
+            if self.output_type == 'html':
+                if self.categorization:
+                    self.categories = execute_categorization(self.result)
+                    report.categorized_report(self.categories, fname)
+                else:
+                    report.generate_html_report(self.result, fname)
+            elif self.output_type == 'csv':
+                self.result.to_csv(fname)
 
     @safe_run
     def tokenization(self):

@@ -8,6 +8,21 @@ import numpy as np
 
 from clusterlogs.tokenization import tokenize_messages
 
+from utility import gather_df
+from utility import parallel_file_read
+
+comm = None
+comm_size = 1
+comm_rank = 0
+
+import os
+if os.environ.get("USE_MPI"):
+    import pandas as pd
+    from mpi4py import MPI
+    comm = MPI.COMM_WORLD
+    comm_size = comm.Get_size()
+    comm_rank = comm.Get_rank()
+
 
 def main(argv):
 
@@ -30,10 +45,11 @@ def main(argv):
             outputfile = arg
 
     # Read messages from log file
-    messages = [line[:-1] for line in open(inputfile)]
+    messages = [line[:-1] for line in parallel_file_read(comm, inputfile)]
 
-    pprint.pprint("First 10 messages: ")
-    pprint.pprint(messages[0:10])
+    if comm_rank == 0:
+        pprint.pprint("First 10 messages: ")
+        pprint.pprint(messages[0:10])
 
     print('Log file contains {} lines'.format(len(messages)))
 
@@ -47,19 +63,22 @@ def main(argv):
 
     print('Messages has been tokenized')
 
-    try:
-        word2vec = Word2Vec(tokenized,
-                            size=300,
-                            window=7,
-                            min_count=1,
-                            workers=4,
-                            iter=30)
+    tokenized = gather_df(comm, pd.DataFrame(tokenized)).values.tolist()
+    
+    if comm_rank == 0:
+        try:
+            word2vec = Word2Vec(tokenized,
+                                size=300,
+                                window=7,
+                                min_count=1,
+                                workers=4,
+                                iter=30)
 
-        word2vec.save(outputfile)
+            word2vec.save(outputfile)
 
-        print('Training has finished. Model saved in file.')
-    except Exception as e:
-        print('Training model error:', e)
+            print('Training has finished. Model saved in file.')
+        except Exception as e:
+            print('Training model error:', e)
 
 
 if __name__ == "__main__":
