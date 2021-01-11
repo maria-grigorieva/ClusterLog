@@ -3,7 +3,7 @@ import dash_html_components as html
 
 from io import StringIO
 from base64 import b64decode
-from collections.abc import Iterable
+from collections.abc import Sequence
 from typing import List, Optional
 
 
@@ -14,7 +14,7 @@ def generate_table(dataframe: pd.DataFrame, columns: Optional[List[str]] = None,
         max_rows = len(dataframe)
 
     def format_item(item):
-        if isinstance(item, Iterable):
+        if isinstance(item, Sequence):
             return html.Ul([
                 html.Li(x) for x in item
             ])

@@ -2,34 +2,45 @@ import dash_core_components as dcc
 import dash_html_components as html
 
 
-parameters_layout = html.Div(children=[
+parameters_layout = html.Main(className='container', children=[
     html.Br(),
     html.H5(children='Files with data to cluster'),
 
     # TODO: Remove test values after app is done
 
-    html.Div(
-        dcc.Upload(
-            id='input-file',
-            children=html.Div([
-                'Drag and drop or ',
-                html.A('select a csv file')
-            ]),
-            style={
-                'width': '50%',
-                'height': '60px',
-                'lineHeight': '60px',
-                'borderWidth': '1px',
-                'borderStyle': 'dashed',
-                'borderRadius': '5px',
-                'textAlign': 'center',
-                'margin': '10px'
-            },
-        )
-    ),
+    html.Div(className='row g-3', children=[
+        html.Div(
+            children=[
+                html.Label(children="CSV file with log messages: ", className='form-label'),
+                html.Div(className='input-group', children=[
+                    dcc.Upload(
+                        id='input-file',
+                        children=html.Div(children=[
+                            'Drag and drop or ',
+                            html.A('select a csv file')
+                        ]),
+                        className='form-control'
+                        # style={
+                        #     'color': 'grey',
+                        #     'borderStyle': 'dashed',
+                        #     'textAlign': 'center',
+                        # },
+                    )],
+                )
+            ],
+            className='col-sm-6'
+        ),
+
+        html.Div(
+            children=[
+                html.Label(children="Enter name of csv column with error description: ", className='form-label'),
+                dcc.Input(id='target-column', value='exeerrordiag', type='text', className='form-control')],
+            className='col-sm-6'
+        ),
+    ]),
 
     html.Br(),
-    html.Div([
+    html.Div(className='row g-3', children=[
         # html.P(
         #     children=[
         #         html.Span(children="Enter name of csv file: ",
@@ -38,23 +49,16 @@ parameters_layout = html.Div(children=[
         #                   style={"display": "table-cell", "width": "200%"})],
         #     style={"display": "table-row"}),
 
-        html.P(
+        html.Div(
             children=[
-                html.Span(children="Enter name of csv column with error description: ",
-                          style={"display": "table-cell"}),
-                dcc.Input(id='target-column', value='exeerrordiag', type='text',
-                          style={"display": "table-cell", "width": "200%"})],
-            style={"display": "table-row"}),
+                html.Label(children="Enter name of word2vec model file: ", className='form-label'),
+                dcc.Input(id='model-file', value='./models/exeerrors_01-01-20_05-20-20.model',
+                          type='text', className='form-control')],
+            className='col-sm-6'
+        )],
 
-        html.P(
-            children=[
-                html.Span(children="Enter name of word2vec model file: ",
-                          style={"display": "table-cell"}),
-                dcc.Input(id='model-file', value='./models/exeerrors_01-01-20_05-20-20.model', type='text',
-                          style={"display": "table-cell", "width": "200%"})],
-            style={"display": "table-row"})],
-
-        style={"display": "table", "border-spacing": "15px 0px", "margin": "-15px"}),
+        # style={"display": "table", "border-spacing": "15px 0px", "margin": "-15px"}
+    ),
 
     html.Br(),
 
@@ -79,9 +83,11 @@ parameters_layout = html.Div(children=[
     html.H5(children='Log clustering parameters'),
 
     html.Div(
-        ["Tokenizer type: ",
+        [html.Label(children="Tokenizer type", className='form-label'),
+         #  "Tokenizer type: ",
          dcc.Dropdown(
              id='tokenizer-type',
+             className='col-md-6',
              options=[
                 {'label': 'Conservative', 'value': 'conservative'},
                 {'label': 'Aggressive', 'value': 'aggressive'},
@@ -92,6 +98,7 @@ parameters_layout = html.Div(children=[
          "Clustering algorithm: ",
          dcc.Dropdown(
              id='clustering-algorithm',
+             className='col-md-6',
              options=[
                 {'label': 'Similarity', 'value': 'similarity'},
                 {'label': 'K-means', 'value': 'kmeans'},
@@ -105,6 +112,7 @@ parameters_layout = html.Div(children=[
          "Keyword extraction algorithm: ",
          dcc.Dropdown(
              id='keyword-extraction-algorithm',
+             className='col-md-6',
              options=[
                 {'label': 'RAKE', 'value': 'RAKE'},
                 {'label': 'RAKE (nltk version)', 'value': 'rake_nltk'},

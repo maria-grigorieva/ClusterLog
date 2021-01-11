@@ -66,7 +66,7 @@ page_contents = html.Main(
     ]
 )
 
-app.layout = html.Div([
+app.layout = html.Div(children=[
     html.Header(
         className='navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow',
         children=[

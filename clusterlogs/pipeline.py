@@ -217,7 +217,7 @@ class Chain(object):
         """
         Training word2vec model
         :param iterations:
-        :param min_count: minimium frequency count of words (recommended value is 1)
+        :param min_count: minimum frequency count of words (recommended value is 1)
         :return:
         """
         from .vectorization import Vector
