@@ -1,12 +1,10 @@
 import os
-import math
 import hashlib
 import multiprocessing
 import numpy as np
 import pandas as pd
 
 from time import time
-# from string import punctuation
 
 from .reporting import report
 from .validation import Output
@@ -298,6 +296,4 @@ class Chain(object):
         if self.timings['group_equals'] != 0 and self.timings['regroup'] != 0:
             self.timings['group_equals'] -= self.timings['regroup']  # group_equals contains regroup
 
-        print("\nTime taken:")
-        for timing in self.timings.items():
-            print(f" — {timing[0]}: {timing[1]:1.3}")
+        print(f"Timings:\n{self.timings}")
