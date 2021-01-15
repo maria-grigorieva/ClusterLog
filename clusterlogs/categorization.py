@@ -5,6 +5,7 @@ from functools import reduce
 from .utility import levenshtein_similarity_1_to_n
 
 
+# TODO: Categorization is not working, trying to iterate over float in line 37
 def execute_categorization(df):
     indices = []
     for row in df.itertuples():
@@ -15,7 +16,7 @@ def execute_categorization(df):
     s = similar_df.copy(deep=True)
     categories = []
     sequence_categorization(s, categories)
-    print(categories)
+    # print(categories)
 
     df['category'] = 0
     for idx, row in enumerate(categories):
@@ -35,10 +36,10 @@ def search_key_phrases_similarities(start, df, indices):
             similarities = levenshtein_similarity_1_to_n(matching_row, matcher)
             if len([x for x in similarities if x >= 0.9]) > 0:
                 matched_indices.append(row.Index)
-        print(matched_indices)
+        # print(matched_indices)
         rows[i] = np.unique(matched_indices)
     seq = [v for k, v in rows.items()]
-    print(seq)
+    # print(seq)
     merge_arr = []
     if len(seq) != 0:
         merge_arr = list(reduce(set.intersection, [set(v) for k, v in rows.items()]))

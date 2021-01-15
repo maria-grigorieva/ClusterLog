@@ -14,21 +14,26 @@ class Match:
     Create a new Match object for every pattern extraction task.
     '''
     def __init__(self, match_threshhold=0.8, add_placeholder=False):
-        #self.sequences = sequences
+        # self.sequences = sequences
         self.match_threshhold = match_threshhold
         self.add_placeholder = add_placeholder
 
     def sequence_matcher(self, sequences):
-        unique = np.unique(sequences).tolist()
-        if len(unique) <= 1:
-            return unique[0]
+        if len(sequences) <= 1:
+            return sequences[0]
 
+        # We have to do in this way because numpy.unique
+        # does not preserve types of sequence members and can
+        # transform an inner list into a string for some reason
+        unique = list(set([tuple(x) for x in sequences]))
+        unique = [list(x) for x in unique]
         random.shuffle(unique)
+
         for x in unique:
-            others = unique[:]
-            others.remove(x)
-            pattern = None
-            for sequence in others:
+            pattern = []
+            for sequence in unique:
+                if x == sequence:
+                    continue
                 matches = difflib.SequenceMatcher(None, x, sequence)
                 if matches.ratio() < self.match_threshhold:
                     continue
@@ -39,55 +44,52 @@ class Match:
                 match_ranges = matches.get_matching_blocks()[:-1]
                 matches = [x[m.a:m.a + m.size] for m in match_ranges]
                 if self.add_placeholder:  # Add a placeholder between matching subsequences
-                    [match + ['(.*?)'] for match in matches]
-                    matches[-1].pop()
+                    placeholder_matches = []
+                    # All the ifs in the following iteration are meant to
+                    # keep several placeholders in a row from appearing
+                    for match in matches:
+                        if match == ['▁'] or (len(match) > 1 and match[-2:] == ['(.*?)', '▁']):
+                            continue
+                        if match[:2] == ['▁', '(.*?)']:
+                            match = match[2:]
+                        placeholder_matches.append(match + ['(.*?)'])
+                    matches = placeholder_matches
+                    # x.a + x.size == len(x) means that the ends of the patterns match
+                    # so we don't need a placeholder at the end of the last match
+                    if match_ranges[-1].a + match_ranges[-1].size == len(x):
+                        matches[-1].pop()
+                    # If only first word is different, there will be no placeholder without this if
+                    if match_ranges[0].a != 0 or match_ranges[0].b != 0:
+                        matches = [['(.*?)']] + matches
                 pattern = list(chain(*matches))  # concatenate inner lists
 
             if not pattern:
                 continue
-            junk = list(punctuation) + ['_', '(.*?)', '']
+            junk = list(punctuation) + ['▁', '(.*?)', '']
             # if at least one of the items in sequence is not junk - return True
             correct = any([token not in junk for token in pattern])
             return pattern if correct else x
         return x
 
-    # This basically does the same as sequence_matcher, with a couple of differences:
-    # * sequence_matcher picks only unique sequences
-    # * SM picks random to compare to, this picks first one
-    # * SM only compares sequences that have more similarity than self.match_threshhold
-
-    def matcher(self, sequences):
-        x = sequences[0]
-        for s in sequences:
-            matches = difflib.SequenceMatcher(None, x, s)
-            match_ranges = matches.get_matching_blocks()[:-1]
-            matches = [x[m.a:m.a + m.size] for m in match_ranges]
-            if self.add_placeholder:
-                matches = [match + ['(.*?)'] for match in matches]
-                matches[-1].pop()
-            pattern = list(chain(*matches))  # concatenate inner lists
-            junk = list(punctuation) + ['_', '(.*?)', '']
-            # if at least one of the items in sequence is not junk - return True
-            correct = any([token not in junk for token in pattern])
-        return pattern if correct else x
-
-    def matching_clusters(self, sequences, patterns):
+    def matching_clusters(self, sequences):
+        if len(sequences) == 1:
+            return [sequences[0]]
+        # Degree of similarity of every sequence to the first
         similarities = levenshtein_similarity_1_to_n(sequences)
-        filtered, to_remove = [], []
+        similar, others = [sequences[0]], []
         for i, value in enumerate(similarities):
             if value >= self.match_threshhold:
-                filtered.append(sequences[i])
-                to_remove.append(i)
-        if not filtered:
-            filtered.append(sequences[0])
-            to_remove.append(0)
-        patterns.append(self.matcher(filtered))
-        sequences = np.delete(sequences, to_remove)
-        if len(sequences) > 1:
-            self.matching_clusters(sequences, patterns)
-        elif len(sequences) == 1:
-            patterns.append(sequences[0])
-            np.delete(sequences, 0)
+                similar.append(sequences[i + 1])
+            else:
+                others.append(sequences[i + 1])
+        patterns = [self.sequence_matcher(similar)]
+        if len(others) > 1:
+            patterns.extend(self.matching_clusters(others))
+        # We need this elif instead of an if in the beginning
+        # to check for messages being the same after sequence matching
+        elif len(others) == 1 and others[0] not in patterns:
+            patterns.append(others[0])
+        return patterns
 
     def matrix_matching(self, sequences):
         if len(sequences) == 1:

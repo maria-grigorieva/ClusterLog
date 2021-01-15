@@ -1,12 +1,10 @@
+import os
 import hashlib
 import multiprocessing
 import numpy as np
 import pandas as pd
 
-import math
-
 from time import time
-# from string import punctuation
 
 from .reporting import report
 from .validation import Output
@@ -23,13 +21,11 @@ comm = None
 comm_size = 1
 comm_rank = 0
 
-import os
 if os.environ.get("USE_MPI"):
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
     comm_size = comm.Get_size()
     comm_rank = comm.Get_rank()
-
 
 
 def safe_run(method):
@@ -181,10 +177,10 @@ class Chain(object):
         tokenized_pattern = matcher.sequence_matcher(gr['tokenized_pattern'].values)
 
         df = pd.DataFrame([{'indices': gr.index.values.tolist(),
-                              'pattern': detokenize_row(tokenized_pattern, self.tokenizer_type),
-                              'sequence': gr['sequence'].values[0],
-                              'tokenized_pattern': tokenized_pattern,
-                              'cluster_size': len(gr.index.values.tolist())}])
+                            'pattern': detokenize_row(tokenized_pattern, self.tokenizer_type),
+                            'sequence': gr['sequence'].values[0],
+                            'tokenized_pattern': tokenized_pattern,
+                            'cluster_size': len(gr.index.values.tolist())}])
         return df
 
     @safe_run
@@ -192,7 +188,7 @@ class Chain(object):
         """
         Training word2vec model
         :param iterations:
-        :param min_count: minimium frequency count of words (recommended value is 1)
+        :param min_count: minimum frequency count of words (recommended value is 1)
         :return:
         """
         from .vectorization import Vector
@@ -257,13 +253,14 @@ class Chain(object):
     def search_common_patterns(self, gb):
         m = Match(match_threshhold=self.matching_accuracy,
                   add_placeholder=self.add_placeholder)
-        tokenized_pattern = []
         sequences = gb['tokenized_pattern'].values
 
         if len(sequences) > 1:
-            m.matching_clusters(sequences, tokenized_pattern)
+            tokenized_pattern = m.matching_clusters(sequences)
         elif len(sequences) == 1:
-            tokenized_pattern.append(sequences[0])
+            tokenized_pattern = [sequences[0]]
+        else:
+            tokenized_pattern = [[]]
         return detokenize_messages(tokenized_pattern, self.tokenizer_type)
 
     @safe_run
