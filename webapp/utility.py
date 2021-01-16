@@ -1,5 +1,6 @@
 import pandas as pd
 import dash_html_components as html
+from dash_bootstrap_components import Table
 
 from io import StringIO
 from base64 import b64decode
@@ -7,7 +8,7 @@ from collections.abc import Sequence
 from typing import List, Optional
 
 
-def generate_table(dataframe: pd.DataFrame, columns: Optional[List[str]] = None, max_rows: Optional[int] = None) -> html.Table:
+def generate_table(dataframe: pd.DataFrame, columns: Optional[List[str]] = None, max_rows: Optional[int] = None) -> Table:
     if columns is None:
         columns = [col for col in dataframe.columns]
     if max_rows is None or max_rows > len(dataframe):
@@ -22,16 +23,19 @@ def generate_table(dataframe: pd.DataFrame, columns: Optional[List[str]] = None,
 
     column_names = [col.replace('_', ' ').title() for col in columns]
 
-    return html.Table(className='table table-striped table-sm', children=[
-        html.Thead(
-            html.Tr([html.Th(col) for col in column_names])
-        ),
-        html.Tbody([
-            html.Tr([
-                html.Td(format_item(dataframe.iloc[i][col])) for col in columns
-            ]) for i in range(max_rows)
-        ])
-    ])
+    return Table(
+        children=[
+            html.Thead(
+                html.Tr([html.Th(col) for col in column_names])
+            ),
+            html.Tbody([
+                html.Tr([
+                    html.Td(format_item(dataframe.iloc[i][col])) for col in columns
+                ]) for i in range(max_rows)
+            ])
+        ],
+        bordered=True, responsive=True, striped=True
+    )
 
 
 def parse_input_file(content: str) -> pd.DataFrame:

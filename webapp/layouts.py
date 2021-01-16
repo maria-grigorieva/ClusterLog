@@ -162,10 +162,13 @@ parameters_layout = html.Main(className='container px-6', children=[
     dbc.Row()
 ])
 
-results_table_layout = html.Div(children=[
+results_table_layout = html.Main(className='container px-6', children=[
+    html.Br(),
     html.Div(id='results-table', className='table-responsive', children=None),
 ])
 
-results_graph_layout = html.Div(children=[
-    html.Div(id='results-graph', className='my-4 w-100', children=None),
+results_graph_layout = html.Main(className='container px-6', children=[
+    html.Br(),
+    html.H4("Log message clusters"),
+    html.Div(id='results-graph', children=None),
 ])

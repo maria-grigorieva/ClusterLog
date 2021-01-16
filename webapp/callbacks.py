@@ -134,12 +134,11 @@ def update_graph(stored_groups: str, stored_embeddings: str) -> Optional[dcc.Gra
     ))
 
     fig.update_traces(mode="markers", hoverinfo="text")
-    fig.update_layout(title="Log message clusters",
-                      hovermode="closest",
+    fig.update_layout(hovermode="closest",
                       xaxis={"visible": False},
                       yaxis={"visible": False})
 
-    return dcc.Graph(figure=fig, style={'width': '80vw', 'height': '100vh'})
+    return dcc.Graph(figure=fig, responsive=True, style={'height': '90vh'})
 
 
 @app.callback(
