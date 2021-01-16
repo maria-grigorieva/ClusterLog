@@ -23,6 +23,8 @@ Jinja2==2.11.2
 spacy==2.3.2
 rake-nltk==1.0.4
 python-rake==1.4.5
+dash==1.17.0
+dash-bootstrap-components==0.11.1
 pke @ git+https://github.com/boudinfl/pke.git@6abbcd5d29d14f5151b79a20715ae06dbdd5e4b5
 ```
 
