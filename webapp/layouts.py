@@ -1,78 +1,52 @@
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_bootstrap_components as dbc
 
 
-parameters_layout = html.Main(className='container', children=[
+parameters_layout = html.Main(className='container px-6', children=[
     html.Br(),
-    html.H5(children='Files with data to cluster'),
+    html.H4(children='Files with data to cluster'),
 
     # TODO: Remove test values after app is done
 
-    html.Div(className='row g-3', children=[
-        html.Div(
-            children=[
-                html.Label(children="CSV file with log messages: ", className='form-label'),
-                html.Div(className='input-group', children=[
-                    dcc.Upload(
-                        id='input-file',
-                        children=html.Div(children=[
-                            'Drag and drop or ',
-                            html.A('select a csv file')
-                        ]),
-                        className='form-control'
-                        # style={
-                        #     'color': 'grey',
-                        #     'borderStyle': 'dashed',
-                        #     'textAlign': 'center',
-                        # },
-                    )],
-                )
-            ],
-            className='col-sm-6'
-        ),
-
-        html.Div(
-            children=[
-                html.Label(children="Enter name of csv column with error description: ", className='form-label'),
-                dcc.Input(id='target-column', value='exeerrordiag', type='text', className='form-control')],
-            className='col-sm-6'
-        ),
+    dbc.Row([
+        dbc.Col(dcc.Upload(
+            id='input-file',
+            children="Select a log file",
+            className='btn btn-outline-secondary'
+        ), width='auto'),
+        dbc.Col(html.P(id='input-file-name', children='No csv file selected', className='lh-lg fs-6 fw-light'))
     ]),
 
-    html.Br(),
-    html.Div(className='row g-3', children=[
-        # html.P(
-        #     children=[
-        #         html.Span(children="Enter name of csv file: ",
-        #                   style={"display": "table-cell"}),
-        #         dcc.Input(id='input-file', value='./samples/exeerror_1week.csv', type='text',
-        #                   style={"display": "table-cell", "width": "200%"})],
-        #     style={"display": "table-row"}),
-
-        html.Div(
-            children=[
-                html.Label(children="Enter name of word2vec model file: ", className='form-label'),
-                dcc.Input(id='model-file', value='./models/exeerrors_01-01-20_05-20-20.model',
-                          type='text', className='form-control')],
-            className='col-sm-6'
-        )],
-
-        # style={"display": "table", "border-spacing": "15px 0px", "margin": "-15px"}
+    dbc.Row(
+        dbc.Col(
+            dbc.FormGroup([
+                dbc.Label(children="Enter name of csv column with error description:", html_for='target-column'),
+                dbc.Input(id='target-column', value='exeerrordiag', type='text')
+            ]),
+            width=6
+        )
     ),
 
-    html.Br(),
-
-    html.Div(
-        dcc.Checklist(
-            id='update-model',
-            options=[
-                {'label': ' Use input data in word2vec model', 'value': 'update_model'},
-            ],
-            value=[]
-        ),
+    dbc.Row(
+        dbc.Col(
+            dbc.FormGroup([
+                dbc.Label(children="Enter name of word2vec model file:", html_for='model-file'),
+                dbc.Input(id='model-file', value='./models/exeerrors_01-01-20_05-20-20.model', type='text')
+            ]),
+            width=6
+        )
     ),
 
-    html.Br(),
+    dbc.Checklist(
+        id='update-model',
+        options=[
+            {'label': ' Use input data in word2vec model', 'value': 'update_model'},
+        ],
+        value=[]
+    ),
+
+    html.Hr(),
 
     dcc.ConfirmDialog(
         id='no-model-warning',
@@ -80,14 +54,14 @@ parameters_layout = html.Main(className='container', children=[
         displayed=False
     ),
 
-    html.H5(children='Log clustering parameters'),
+    html.H4(children='Log clustering parameters'),
 
     html.Div(
         [html.Label(children="Tokenizer type", className='form-label'),
          #  "Tokenizer type: ",
          dcc.Dropdown(
              id='tokenizer-type',
-             className='col-md-6',
+             className='col-lg-7',
              options=[
                 {'label': 'Conservative', 'value': 'conservative'},
                 {'label': 'Aggressive', 'value': 'aggressive'},
@@ -98,7 +72,7 @@ parameters_layout = html.Main(className='container', children=[
          "Clustering algorithm: ",
          dcc.Dropdown(
              id='clustering-algorithm',
-             className='col-md-6',
+             className='col-lg-7',
              options=[
                 {'label': 'Similarity', 'value': 'similarity'},
                 {'label': 'K-means', 'value': 'kmeans'},
@@ -112,7 +86,7 @@ parameters_layout = html.Main(className='container', children=[
          "Keyword extraction algorithm: ",
          dcc.Dropdown(
              id='keyword-extraction-algorithm',
-             className='col-md-6',
+             className='col-lg-7',
              options=[
                 {'label': 'RAKE', 'value': 'RAKE'},
                 {'label': 'RAKE (nltk version)', 'value': 'rake_nltk'},
@@ -150,7 +124,7 @@ parameters_layout = html.Main(className='container', children=[
                 html.Span(children="Sequence matching accuracy",
                           style={"display": "table-cell"}),
                 dcc.Input(id='matching-accuracy', value=0.8, type='number', debounce=True, min=0.0, max=1.0, step=0.01,
-                          style={"display": "table-cell"})],
+                          style={"display": "table-cell"}, className='input-group')],
             style={"display": "table-row"})],
 
         style={"display": "table", "border-spacing": "15px 0px", "margin": "-15px"}),
@@ -165,12 +139,13 @@ parameters_layout = html.Main(className='container', children=[
                 {'label': ' Dimensionality reduction', 'value': 'dimensionality_reduction'},
                 {'label': ' Perform categorization', 'value': 'categorization'}
             ],
-            value=[]
+            value=[],
+            className='form-check'
         ),
     ),
 
     html.Br(),
-    html.Button(id='submit-button-state', n_clicks=0, children='Submit'),
+    dbc.Button(id='submit-button-state', n_clicks=0, children='Submit', className='mr-1', color='secondary'),
 ])
 
 results_table_layout = html.Div(children=[

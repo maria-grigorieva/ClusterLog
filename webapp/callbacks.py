@@ -15,18 +15,15 @@ from webapp.utility import parse_input_file, generate_table
 
 
 @app.callback(
-    Output(component_id='input-file', component_property='children'),
+    Output(component_id='input-file-name', component_property='children'),
     [Input(component_id='input-file', component_property='contents')],
     [State(component_id='input-file', component_property='filename')]
 )
-def display_uploaded_filename(contents: str, filename: str) -> html.Div:
+def display_uploaded_filename(contents: str, filename: str) -> str:
     if contents:
         return html.Div(filename)
     else:
-        return html.Div([
-            'Drag and drop or ',
-            html.A('select a csv file')
-        ])
+        return "No csv file selected"
 
 
 @app.callback(
