@@ -56,96 +56,110 @@ parameters_layout = html.Main(className='container px-6', children=[
 
     html.H4(children='Log clustering parameters'),
 
-    html.Div(
-        [html.Label(children="Tokenizer type", className='form-label'),
-         #  "Tokenizer type: ",
-         dcc.Dropdown(
-             id='tokenizer-type',
-             className='col-lg-7',
-             options=[
-                {'label': 'Conservative', 'value': 'conservative'},
-                {'label': 'Aggressive', 'value': 'aggressive'},
-                {'label': 'Space', 'value': 'space'},
-             ],
-             value='space'),
-
-         "Clustering algorithm: ",
-         dcc.Dropdown(
-             id='clustering-algorithm',
-             className='col-lg-7',
-             options=[
-                {'label': 'Similarity', 'value': 'similarity'},
-                {'label': 'K-means', 'value': 'kmeans'},
-                {'label': 'DBSCAN', 'value': 'dbscan'},
-                {'label': 'OPTICS', 'value': 'optics'},
-                {'label': 'HDBSCAN', 'value': 'hdbscan'},
-                {'label': 'Hierarchical', 'value': 'hierarchical'},
-             ],
-             value='dbscan'),
-
-         "Keyword extraction algorithm: ",
-         dcc.Dropdown(
-             id='keyword-extraction-algorithm',
-             className='col-lg-7',
-             options=[
-                {'label': 'RAKE', 'value': 'RAKE'},
-                {'label': 'RAKE (nltk version)', 'value': 'rake_nltk'},
-                {'label': 'Latent Dirichle Allocation', 'value': 'lda'},
-                {'label': 'N-grams', 'value': 'ngrams'},
-                {'label': 'PageRank (Gensim)', 'value': 'gensim'},
-                {'label': 'TF-IDF', 'value': 'tfidf'},
-                {'label': 'KPMiner', 'value': 'KPMiner'},
-                {'label': 'YAKE', 'value': 'YAKE'},
-                {'label': 'TextRank (pke)', 'value': 'TextRank'},
-                {'label': 'TextRank (pyTextRank)', 'value': 'pyTextRank'},
-                {'label': 'SingleRank', 'value': 'SingleRank'},
-                {'label': 'TopicRank', 'value': 'TopicRank'},
-                {'label': 'TopicalPageRank', 'value': 'TopicalPageRank'},
-                {'label': 'PositionRank', 'value': 'PositionRank'},
-                {'label': 'MultipartiteRank', 'value': 'MultipartiteRank'},
-                {'label': 'Kea', 'value': 'Kea'},
-                {'label': 'WINGNUS', 'value': 'WINGNUS'},
-             ],
-             value='rake_nltk')]),
-
-    html.Br(),
-
-    html.Div([
-        html.P(
-            children=[
-                html.Span(children="Similarity threshold",
-                          style={"display": "table-cell"}),
-                dcc.Input(id='threshold', value=5000, type='number', debounce=True, min=1,
-                          style={"display": "table-cell"})],
-            style={"display": "table-row"}),
-
-        html.P(
-            children=[
-                html.Span(children="Sequence matching accuracy",
-                          style={"display": "table-cell"}),
-                dcc.Input(id='matching-accuracy', value=0.8, type='number', debounce=True, min=0.0, max=1.0, step=0.01,
-                          style={"display": "table-cell"}, className='input-group')],
-            style={"display": "table-row"})],
-
-        style={"display": "table", "border-spacing": "15px 0px", "margin": "-15px"}),
-
-    html.Br(),
-
-    html.Div(
-        dcc.Checklist(
-            id='boolean-options',
-            options=[
-                {'label': ' Add placeholders', 'value': 'add_placeholder'},
-                {'label': ' Dimensionality reduction', 'value': 'dimensionality_reduction'},
-                {'label': ' Perform categorization', 'value': 'categorization'}
-            ],
-            value=[],
-            className='form-check'
+    dbc.Row(
+        dbc.Col(
+            dbc.FormGroup([
+                dbc.Label(children="Tokenizer type", html_for='tokenizer-type'),
+                dbc.Select(
+                    id='tokenizer-type',
+                    options=[
+                        {'label': 'Conservative', 'value': 'conservative'},
+                        {'label': 'Aggressive', 'value': 'aggressive'},
+                        {'label': 'Space', 'value': 'space'},
+                    ],
+                    value='space'
+                )
+            ]),
+            width=6
         ),
     ),
 
+    dbc.Row(
+        dbc.Col(
+            dbc.FormGroup([
+                dbc.Label(children="Clustering algorithm", html_for='clustering-algorithm'),
+                dbc.Select(
+                    id='clustering-algorithm',
+                    options=[
+                        {'label': 'Similarity', 'value': 'similarity'},
+                        {'label': 'K-means', 'value': 'kmeans'},
+                        {'label': 'DBSCAN', 'value': 'dbscan'},
+                        {'label': 'OPTICS', 'value': 'optics'},
+                        {'label': 'HDBSCAN', 'value': 'hdbscan'},
+                        {'label': 'Hierarchical', 'value': 'hierarchical'},
+                    ],
+                    value='dbscan'
+                )
+            ]),
+            width=6
+        ),
+    ),
+
+    dbc.Row(
+        dbc.Col(
+            dbc.FormGroup([
+                dbc.Label(children="Keyword extraction algorithm", html_for='keyword-extraction-algorithm'),
+                dbc.Select(
+                    id='keyword-extraction-algorithm',
+                    options=[
+                        {'label': 'RAKE', 'value': 'RAKE'},
+                        {'label': 'RAKE (nltk version)', 'value': 'rake_nltk'},
+                        {'label': 'Latent Dirichle Allocation', 'value': 'lda'},
+                        {'label': 'N-grams', 'value': 'ngrams'},
+                        {'label': 'PageRank (Gensim)', 'value': 'gensim'},
+                        {'label': 'TF-IDF', 'value': 'tfidf'},
+                        {'label': 'KPMiner', 'value': 'KPMiner'},
+                        {'label': 'YAKE', 'value': 'YAKE'},
+                        {'label': 'TextRank (pke)', 'value': 'TextRank'},
+                        {'label': 'TextRank (pyTextRank)', 'value': 'pyTextRank'},
+                        {'label': 'SingleRank', 'value': 'SingleRank'},
+                        {'label': 'TopicRank', 'value': 'TopicRank'},
+                        {'label': 'TopicalPageRank', 'value': 'TopicalPageRank'},
+                        {'label': 'PositionRank', 'value': 'PositionRank'},
+                        {'label': 'MultipartiteRank', 'value': 'MultipartiteRank'},
+                        {'label': 'Kea', 'value': 'Kea'},
+                        {'label': 'WINGNUS', 'value': 'WINGNUS'},
+                    ],
+                    value='rake_nltk'
+                )
+            ]),
+            width=6
+        ),
+    ),
+
+    dbc.Row(
+        dbc.Col(
+            dbc.FormGroup([
+                dbc.Label(children="Similarity threshold", html_for='threshold'),
+                dbc.Input(id='threshold', value=5000, type='number', debounce=True, min=1)
+            ]),
+            width=4
+        )
+    ),
+
+    dbc.Row(
+        dbc.Col(
+            dbc.FormGroup([
+                dbc.Label(children="Sequence matching accuracy", html_for='matching-accuracy'),
+                dbc.Input(id='matching-accuracy', value=0.8, type='number', debounce=True, min=0.0, max=1.0, step=0.01)
+            ]),
+            width=4
+        )
+    ),
+
+    dbc.Checklist(
+        id='boolean-options',
+        options=[
+            {'label': ' Add placeholders', 'value': 'add_placeholder'},
+            {'label': ' Dimensionality reduction', 'value': 'dimensionality_reduction'},
+            {'label': ' Perform categorization', 'value': 'categorization'}
+        ],
+        value=[],
+    ),
+
     html.Br(),
-    dbc.Button(id='submit-button-state', n_clicks=0, children='Submit', className='mr-1', color='secondary'),
+    dbc.Button(id='submit-button-state', n_clicks=0, children='Submit', className='mr-1', color='primary'),
+    dbc.Row()
 ])
 
 results_table_layout = html.Div(children=[
