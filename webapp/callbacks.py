@@ -116,21 +116,28 @@ def update_graph(stored_groups: str, stored_embeddings: str) -> Optional[dcc.Gra
     embeddings = tsne.fit_transform(embeddings)
 
     cluster_x, cluster_y, cluster_labels, cluster_titles = [], [], [], []
+    cluster_sizes = []
     for i, row in groups.iterrows():
         cluster_x.append(embeddings[i, 0])
         cluster_y.append(embeddings[i, 1])
         cluster_labels.append(row['cluster'])
-        cluster_titles.append(f"Cluster №{row['cluster']}:<br>" + row['pattern'].replace("; ", ";<br>"))
+        hover_text = f"{row['cluster_size']} message{'s' if row['cluster_size'] > 1 else ''} in cluster №{row['cluster']}:<br>" + row['pattern'].replace("; ", ";<br>")
+        cluster_titles.append(hover_text)
+        cluster_sizes.append(row['cluster_size'])
+
+    cluster_sizes = list(np.log(cluster_sizes))  # type: ignore
+    max_size = max(cluster_sizes)
+    cluster_sizes = [max(6, size * 25 / max_size) for size in cluster_sizes]
 
     fig = Figure()
     fig.add_trace(Scatter(
         x=cluster_x, y=cluster_y,
         name="Clusters",
         marker_line_width=1,
-        marker_size=8,
+        marker_size=cluster_sizes,
         opacity=.8,
         marker_color=cluster_labels,
-        text=cluster_titles
+        text=cluster_titles,
     ))
 
     fig.update_traces(mode="markers", hoverinfo="text")
