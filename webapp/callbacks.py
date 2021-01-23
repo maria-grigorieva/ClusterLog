@@ -2,11 +2,12 @@ import numpy as np
 import pandas as pd
 import dash_core_components as dcc
 import dash_html_components as html
-from plotly.graph_objects import Figure, Scatter
 
 from os.path import exists
 from sklearn.manifold import TSNE
 from typing import List, Optional, Tuple
+from dash_bootstrap_components import Spinner
+from plotly.graph_objects import Figure, Scatter
 from dash.dependencies import Input, Output, State
 
 from webapp.app import app
@@ -161,3 +162,29 @@ def display_page(pathname):
         '/results-graph': ({'display': 'none'}, {'display': 'none'}, None)
     }
     return routing_table[pathname]
+
+
+@app.callback(
+    Output('submit-button-state', 'children'),
+    [Input('submit-button-state', 'n_clicks'),
+     Input('results-table', 'children'),
+     Input('results-graph', 'children')]
+)
+def set_submit_button_text(n_clicks, table, graph):
+    if n_clicks == 0:
+        return "Submit"
+    if graph and table:
+        return "Submit"
+    return html.Div([Spinner(size='sm'), " Loading"])
+
+
+@app.callback(
+    [Output('results-nav-item', 'style'),
+     Output('graph-nav-item', 'style')],
+    [Input('results-table', 'children'),
+     Input('results-graph', 'children')]
+)
+def hide_nav_items(table, graph):
+    if graph and table:
+        return None, None
+    return {'display': 'none'}, {'display': 'none'}

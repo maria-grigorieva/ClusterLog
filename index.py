@@ -26,6 +26,7 @@ navbar = html.Nav(
                 ),
 
                 html.Li(
+                    id='results-nav-item',
                     className='nav-item',
                     children=[
                         dcc.Link(
@@ -37,6 +38,7 @@ navbar = html.Nav(
                 ),
 
                 html.Li(
+                    id='graph-nav-item',
                     className='nav-item',
                     children=[
                         dcc.Link(
