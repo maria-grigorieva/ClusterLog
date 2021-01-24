@@ -2,6 +2,8 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 
+from os import listdir
+
 
 parameters_layout = html.Main(className='container px-6', children=[
     html.Br(),
@@ -28,15 +30,30 @@ parameters_layout = html.Main(className='container px-6', children=[
         )
     ),
 
-    dbc.Row(
+    dbc.Row(children=[
         dbc.Col(
             dbc.FormGroup([
-                dbc.Label(children="Enter name of word2vec model file:", html_for='model-file'),
-                dbc.Input(id='model-file', value='./models/exeerrors_01-01-20_05-20-20.model', type='text')
+                dbc.Label(children="Choose word2vec model file:", html_for='model-file'),
+                dbc.Select(
+                    id='model-file',
+                    options=[
+                        {'label': model_name, 'value': './models/' + model_name} for model_name in listdir('./models')
+                    ] + [{'label': 'Custom model', 'value': 'custom'}],
+                    value=None
+                )
             ]),
             width=6
+        ),
+        dbc.Col(
+            dbc.FormGroup([
+                dbc.Label(children="Enter path to word2vec model file:", html_for='custom-model-file'),
+                dbc.Input(id='custom-model-file', value='', type='text')
+            ]),
+            width=6,
+            style={'display': 'none'},
+            id='custom-model'
         )
-    ),
+    ]),
 
     dbc.Checklist(
         id='update-model',
@@ -164,7 +181,7 @@ parameters_layout = html.Main(className='container px-6', children=[
 
 results_table_layout = html.Main(className='container px-6', children=[
     html.Br(),
-    html.Div(id='results-table', className='table-responsive', children=None),
+    html.Div(id='results-table', children=None),
 ])
 
 results_graph_layout = html.Main(className='container px-6', children=[

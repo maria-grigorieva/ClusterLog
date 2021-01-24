@@ -34,7 +34,7 @@ def generate_table(dataframe: pd.DataFrame, columns: Optional[List[str]] = None,
                 ]) for i in range(max_rows)
             ])
         ],
-        bordered=True, responsive=True, striped=True
+        bordered=True, responsive='sm', striped=True
     )
 
 

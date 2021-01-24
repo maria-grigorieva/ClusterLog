@@ -31,9 +31,12 @@ def display_uploaded_filename(contents: str, filename: str) -> str:
     Output(component_id='no-model-warning', component_property='displayed'),
     [Input('submit-button-state', 'n_clicks')],
     [State(component_id='model-file', component_property='value'),
+     State(component_id='custom-model-file', component_property='value'),
      State(component_id='update-model', component_property='value')])
-def display_model_file_warning(_, model_name: str, update_model: bool) -> bool:
-    if not update_model and not exists(model_name):
+def display_model_file_warning(n_clicks, model_file: str, custom_model_file: str, update_model: bool) -> bool:
+    if n_clicks == 0:
+        return False
+    if not update_model and model_file == 'custom' and not exists(custom_model_file):
         return True
     return False
 
@@ -46,6 +49,7 @@ def display_model_file_warning(_, model_name: str, update_model: bool) -> bool:
     [State(component_id='input-file', component_property='contents'),
      State(component_id='target-column', component_property='value'),
      State(component_id='model-file', component_property='value'),
+     State(component_id='custom-model-file', component_property='value'),
      State(component_id='update-model', component_property='value'),
      State(component_id='tokenizer-type', component_property='value'),
      State(component_id='clustering-algorithm', component_property='value'),
@@ -55,13 +59,15 @@ def display_model_file_warning(_, model_name: str, update_model: bool) -> bool:
      State(component_id='boolean-options', component_property='value')])
 def update_results(n_clicks: int,
                    input_file: Optional[str], target_column: str,
-                   model_name: str, update_model: List[str],
+                   model_name: str, custom_model: str, update_model: List[str],
                    tokenizer_type: str, clustering_algorithm: str,
                    keywords_extraction: str, threshold: int,
                    matching_accuracy: float, boolean_options: List[str]) -> Tuple[Optional[str], Optional[str], Optional[str]]:
 
     if n_clicks == 0 or not input_file or not target_column:
         return None, None, None
+    if model_name == 'custom':
+        model_name = custom_model
     if not update_model and not exists(model_name):
         return None, None, None
 
@@ -188,3 +194,13 @@ def hide_nav_items(table, graph):
     if graph and table:
         return None, None
     return {'display': 'none'}, {'display': 'none'}
+
+
+@app.callback(
+    Output('custom-model', 'style'),
+    [Input('model-file', 'value')]
+)
+def custom_model_form_visibility(model_name):
+    if model_name == 'custom':
+        return None
+    return {'display': 'none'}
