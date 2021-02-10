@@ -56,15 +56,14 @@ def display_model_file_warning(n_clicks, model_file: str, custom_model_file: str
      State(component_id='tokenizer-type', component_property='value'),
      State(component_id='clustering-algorithm', component_property='value'),
      State(component_id='keyword-extraction-algorithm', component_property='value'),
-     State(component_id='threshold', component_property='value'),
      State(component_id='matching-accuracy', component_property='value'),
      State(component_id='boolean-options', component_property='value')])
 def update_results(n_clicks: int,
                    input_file: Optional[str], target_column: str,
                    model_name: str, custom_model: str, update_model: List[str],
                    tokenizer_type: str, clustering_algorithm: str,
-                   keywords_extraction: str, threshold: int,
-                   matching_accuracy: float, boolean_options: List[str]) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
+                   keywords_extraction: str, matching_accuracy: float,
+                   boolean_options: List[str]) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
 
     if n_clicks == 0 or not input_file or not target_column:
         return None, None, None, None
@@ -78,7 +77,6 @@ def update_results(n_clicks: int,
     options = {
         'add_placeholder': False,
         'dimensionality_reduction': False,
-        'categorization': False
     }
     for option in boolean_options:
         options[option] = True
@@ -87,7 +85,7 @@ def update_results(n_clicks: int,
                               model_name, bool(update_model),
                               tokenizer_type, clustering_algorithm,
                               keywords_extraction, options,
-                              threshold, matching_accuracy)
+                              matching_accuracy)
 
     groups: pd.DataFrame = result.groups
 

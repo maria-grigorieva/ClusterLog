@@ -9,7 +9,7 @@ from clusterlogs.pipeline import Chain
 def execute_pipeline(dataframe: pd.DataFrame, target_column: str,
                      model_name: str, update_model: bool, tokenizer_type: str,
                      clustering_algorithm: str, keywords_extraction: str,
-                     options: Dict[str, bool], threshold: int, matching_accuracy: float) -> Chain:
+                     options: Dict[str, bool], matching_accuracy: float) -> Chain:
     mode = 'process'
     if update_model:
         mode = 'update' if exists(model_name) else 'create'
@@ -18,7 +18,6 @@ def execute_pipeline(dataframe: pd.DataFrame, target_column: str,
                     add_placeholder=options['add_placeholder'],
                     dimensionality_reduction=options['dimensionality_reduction'],
                     categorization=options['categorization'],
-                    threshold=threshold,
                     matching_accuracy=matching_accuracy,
                     output_type='html',
                     tokenizer_type=tokenizer_type,

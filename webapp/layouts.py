@@ -7,14 +7,14 @@ from os import listdir
 
 parameters_layout = html.Main(className='container px-6', children=[
     html.Br(),
-    html.H4(children='Files with data to cluster'),
+    html.H4(children='Input data'),
 
     # TODO: Remove test values after app is done
 
     dbc.Row([
         dbc.Col(dcc.Upload(
             id='input-file',
-            children="Select a log file",
+            children="Select a file",
             className='btn btn-outline-secondary'
         ), width='auto'),
         dbc.Col(html.P(id='input-file-name', children='No csv file selected', className='lh-lg fs-6 fw-light'))
@@ -23,7 +23,7 @@ parameters_layout = html.Main(className='container px-6', children=[
     dbc.Row(
         dbc.Col(
             dbc.FormGroup([
-                dbc.Label(children="Enter name of csv column with error description:", html_for='target-column'),
+                dbc.Label(children="Target column:", html_for='target-column'),
                 dbc.Input(id='target-column', value='exeerrordiag', type='text')
             ]),
             width=6
@@ -33,7 +33,7 @@ parameters_layout = html.Main(className='container px-6', children=[
     dbc.Row(children=[
         dbc.Col(
             dbc.FormGroup([
-                dbc.Label(children="Choose word2vec model file:", html_for='model-file'),
+                dbc.Label(children="Word2vec model:", html_for='model-file'),
                 dbc.Select(
                     id='model-file',
                     options=[
@@ -137,11 +137,6 @@ parameters_layout = html.Main(className='container px-6', children=[
     dbc.Row(
         dbc.Col([
             dbc.FormGroup([
-                dbc.Label(children="Similarity threshold", html_for='threshold'),
-                dbc.Input(id='threshold', value=5000, type='number', debounce=True, min=1)
-            ]),
-
-            dbc.FormGroup([
                 dbc.Label(children="Sequence matching accuracy", html_for='matching-accuracy'),
                 dbc.Input(id='matching-accuracy', value=0.8, type='number', debounce=True, min=0.0, max=1.0, step=0.01)
             ])],
@@ -154,7 +149,6 @@ parameters_layout = html.Main(className='container px-6', children=[
         options=[
             {'label': ' Add placeholders', 'value': 'add_placeholder'},
             {'label': ' Dimensionality reduction', 'value': 'dimensionality_reduction'},
-            {'label': ' Perform categorization', 'value': 'categorization'}
         ],
         value=[],
     ),
