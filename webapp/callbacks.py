@@ -7,7 +7,7 @@ from os.path import exists
 from json import dumps, loads
 from sklearn.manifold import TSNE
 from typing import List, Optional, Tuple
-from dash_bootstrap_components import Spinner
+# from dash_bootstrap_components import Spinner
 from plotly.graph_objects import Figure, Scatter
 from dash.dependencies import Input, Output, State
 
@@ -47,6 +47,7 @@ def display_model_file_warning(n_clicks, model_file: str, custom_model_file: str
     Output(component_id='groups-storage', component_property='children'),
     Output(component_id='embeddings-storage', component_property='children'),
     Output(component_id='knee-data-storage', component_property='children'),
+    Output(component_id='loading-output', component_property='children'),
     [Input(component_id='submit-button-state', component_property='n_clicks')],
     [State(component_id='input-file', component_property='contents'),
      State(component_id='target-column', component_property='value'),
@@ -63,14 +64,14 @@ def update_results(n_clicks: int,
                    model_name: str, custom_model: str, update_model: List[str],
                    tokenizer_type: str, clustering_algorithm: str,
                    keywords_extraction: str, matching_accuracy: float,
-                   boolean_options: List[str]) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
+                   boolean_options: List[str]) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str], str]:
 
     if n_clicks == 0 or not input_file or not target_column:
-        return None, None, None, None
+        return None, None, None, None, "Submit"
     if model_name == 'custom':
         model_name = custom_model
     if not update_model and not exists(model_name):
-        return None, None, None, None
+        return None, None, None, None, "Submit"
 
     dataframe = parse_input_file(input_file)
 
@@ -99,7 +100,7 @@ def update_results(n_clicks: int,
     else:
         jsoned_embeddings = None
 
-    return result.result.to_json(), groups.to_json(), jsoned_embeddings, knee_data
+    return result.result.to_json(), groups.to_json(), jsoned_embeddings, knee_data, "Submit"
 
 
 @app.callback(
@@ -213,18 +214,17 @@ def display_page(pathname):
     return tuple(display_styles)
 
 
-@app.callback(
-    Output('submit-button-state', 'children'),
-    [Input('submit-button-state', 'n_clicks'),
-     Input('results-table', 'children'),
-     Input('knee-graph', 'children')]
-)
-def set_submit_button_text(n_clicks, table, knee_graph):
-    if n_clicks == 0:
-        return "Submit"
-    if table:
-        return "Submit"
-    return html.Div([Spinner(size='sm'), " Loading"])
+# @app.callback(
+#     Output('submit-button-state', 'children'),
+#     [Input('submit-button-state', 'n_clicks'),
+#      Input('results-table', 'children')]
+# )
+# def set_submit_button_text(n_clicks, table):
+#     if n_clicks == 0:
+#         return "Submit"
+#     if table:
+#         return "Submit"
+#     return html.Div([Spinner(size='sm'), " Loading"])
 
 
 @app.callback(

@@ -154,7 +154,8 @@ parameters_layout = html.Main(className='container px-6', children=[
     ),
 
     html.Br(),
-    dbc.Button(id='submit-button-state', n_clicks=0, children=['Submit'], className='mr-1', color='primary'),
+    dbc.Button(id='submit-button-state', n_clicks=0, className='mr-1', color='primary',
+               children=[dbc.Spinner(children=[html.Div(id='loading-output')], size='sm')]),
     dbc.Row()
 ])
 
