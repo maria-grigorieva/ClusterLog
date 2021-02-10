@@ -3,10 +3,12 @@ import pandas as pd
 import dash_core_components as dcc
 import dash_html_components as html
 
+from math import log
 from os.path import exists
 from json import dumps, loads
+from dataclasses import dataclass
 from sklearn.manifold import TSNE
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 # from dash_bootstrap_components import Spinner
 from plotly.graph_objects import Figure, Scatter
 from dash.dependencies import Input, Output, State
@@ -127,52 +129,52 @@ def update_graph(stored_groups: str, stored_embeddings: str) -> Optional[dcc.Gra
     tsne = TSNE(perplexity=25, random_state=42, verbose=False)
     embeddings = tsne.fit_transform(embeddings)
 
-    cluster_x, cluster_y, cluster_labels, cluster_patterns = [], [], [], []
-    cluster_sizes = []
+    @dataclass
+    class Cluster():
+        x: List[float]
+        y: List[float]
+        hover_text: List[str]
+        size: List[int]
+        marker_size: List[float]
+
+    clusters: Dict[int, Cluster] = {}
     for i, row in groups.iterrows():
-        cluster_x.append(embeddings[i, 0])
-        cluster_y.append(embeddings[i, 1])
-        cluster_labels.append(row['cluster'])
-        # hover_text = f"{row['cluster_size']} message{'s' if row['cluster_size'] > 1 else ''} in cluster №{row['cluster']}:<br>" + row['pattern'].replace("; ", ";<br>")
-        cluster_patterns.append(row['pattern'].replace("; ", ";<br>"))
-        cluster_sizes.append(row['cluster_size'])
-
-    cluster_marker_sizes = list(np.log(cluster_sizes))  # type: ignore
-    max_size = max(cluster_marker_sizes)
-    cluster_marker_sizes = [max(7, size * 25 / max_size) for size in cluster_marker_sizes]
-
-    traces = {}
-    for x, y, label, pattern, size, marker_size in zip(cluster_x, cluster_y, cluster_labels, cluster_patterns, cluster_sizes, cluster_marker_sizes):
-        if label not in traces:
-            traces[label] = {
-                'x': [x],
-                'y': [y],
-                'pattern': [pattern],
-                'size': [size],
-                'marker_size': [marker_size]
-            }
+        label: int = row['cluster']
+        pattern = row['pattern'].replace("; ", ";<br>")
+        if label not in clusters:
+            clusters[label] = Cluster(
+                x=[embeddings[i, 0]],
+                y=[embeddings[i, 1]],
+                hover_text=[pattern],
+                size=[row['cluster_size']],
+                marker_size=[log(row['cluster_size'])]
+            )
         else:
-            traces[label]['x'].append(x)
-            traces[label]['y'].append(y)
-            traces[label]['pattern'].append(pattern)
-            traces[label]['size'].append(size)
-            traces[label]['marker_size'].append(marker_size)
+            clusters[label].x.append(embeddings[i, 0])
+            clusters[label].y.append(embeddings[i, 1])
+            clusters[label].hover_text.append(pattern)
+            clusters[label].size.append(row['cluster_size'])
+            clusters[label].marker_size.append(log(row['cluster_size']))
 
-    sorted_traces = {i: trace for i, trace in enumerate(sorted(traces.values(), reverse=True, key=lambda t: sum(t['size'])))}
-    for label, trace in sorted_traces.items():
-        trace['hover_text'] = []
-        for i, size in enumerate(trace['size']):
-            trace['hover_text'].append(f"{size} message{'s' if size > 1 else ''} in cluster №{label}:<br>" + trace['pattern'][i])
+    clusters = {i + 1: cluster for i, cluster in enumerate(sorted(clusters.values(), reverse=True, key=lambda c: sum(c.size)))}
+
+    max_size = max([max(cluster.marker_size) for cluster in clusters.values()])
+    for label, cluster in clusters.items():
+        cluster.marker_size = [max(7, size * 25 / max_size) for size in cluster.marker_size]
+        hover_text = []
+        for size, pattern in zip(cluster.size, cluster.hover_text):
+            hover_text.append(f"{size} message{'s' if size > 1 else ''} in cluster №{label}:<br>{pattern}")
+        cluster.hover_text = hover_text
 
     fig = Figure()
-    for label, trace in sorted_traces.items():
+    for label, cluster in clusters.items():
         fig.add_trace(Scatter(
-            x=trace['x'], y=trace['y'],
+            x=cluster.x, y=cluster.y,
             name="Cluster № " + str(label),
             marker_line_width=1,
-            marker_size=trace['marker_size'],
+            marker_size=cluster.marker_size,
             opacity=.8,
-            text=trace['hover_text'],
+            text=cluster.hover_text,
         ))
 
     fig.update_traces(mode="markers", hoverinfo="text")
