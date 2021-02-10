@@ -69,6 +69,12 @@ class MLClustering:
         self.epsilon = np.mean(list(kneedle.all_elbows))
         if self.epsilon == 0.0:
             self.epsilon = np.mean(self.distances)
+        self.knee_data = {
+            'x': [float(x) for x in kneedle.x],
+            'y': [float(y) for y in kneedle.y],
+            'knees': [float(x) for x in kneedle.all_elbows],
+            'chosen_knee': self.epsilon
+        }
 
     def dbscan(self):
         """
@@ -127,7 +133,8 @@ class MLClustering:
         self.epsilon_search()
         self.cluster_labels = AgglomerativeClustering(n_clusters=None,
                                                       affinity='cosine',
-                                                      distance_threshold=self.epsilon) \
+                                                      distance_threshold=self.epsilon,
+                                                      linkage='average') \
             .fit_predict(self.vectors.sent2vec)
         self.groups['cluster'] = self.cluster_labels
         print('Hierarchical finished with {} clusters'.format(len(set(self.cluster_labels))))

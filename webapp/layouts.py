@@ -71,28 +71,10 @@ parameters_layout = html.Main(className='container px-6', children=[
         displayed=False
     ),
 
-    html.H4(children='Log clustering parameters'),
-
     dbc.Row(
-        dbc.Col(
-            dbc.FormGroup([
-                dbc.Label(children="Tokenizer type", html_for='tokenizer-type'),
-                dbc.Select(
-                    id='tokenizer-type',
-                    options=[
-                        {'label': 'Conservative', 'value': 'conservative'},
-                        {'label': 'Aggressive', 'value': 'aggressive'},
-                        {'label': 'Space', 'value': 'space'},
-                    ],
-                    value='space'
-                )
-            ]),
-            width=6
-        ),
-    ),
+        dbc.Col([
+            html.H4(children='Pipeline parameters'),
 
-    dbc.Row(
-        dbc.Col(
             dbc.FormGroup([
                 dbc.Label(children="Clustering algorithm", html_for='clustering-algorithm'),
                 dbc.Select(
@@ -108,12 +90,7 @@ parameters_layout = html.Main(className='container px-6', children=[
                     value='dbscan'
                 )
             ]),
-            width=6
-        ),
-    ),
 
-    dbc.Row(
-        dbc.Col(
             dbc.FormGroup([
                 dbc.Label(children="Keyword extraction algorithm", html_for='keyword-extraction-algorithm'),
                 dbc.Select(
@@ -140,26 +117,34 @@ parameters_layout = html.Main(className='container px-6', children=[
                     value='rake_nltk'
                 )
             ]),
+
+            dbc.FormGroup([
+                dbc.Label(children="Tokenizer type", html_for='tokenizer-type'),
+                dbc.Select(
+                    id='tokenizer-type',
+                    options=[
+                        {'label': 'Conservative', 'value': 'conservative'},
+                        {'label': 'Aggressive', 'value': 'aggressive'},
+                        {'label': 'Space', 'value': 'space'},
+                    ],
+                    value='space'
+                )
+            ])],
             width=6
         ),
     ),
 
     dbc.Row(
-        dbc.Col(
+        dbc.Col([
             dbc.FormGroup([
                 dbc.Label(children="Similarity threshold", html_for='threshold'),
                 dbc.Input(id='threshold', value=5000, type='number', debounce=True, min=1)
             ]),
-            width=4
-        )
-    ),
 
-    dbc.Row(
-        dbc.Col(
             dbc.FormGroup([
                 dbc.Label(children="Sequence matching accuracy", html_for='matching-accuracy'),
                 dbc.Input(id='matching-accuracy', value=0.8, type='number', debounce=True, min=0.0, max=1.0, step=0.01)
-            ]),
+            ])],
             width=4
         )
     ),
@@ -179,13 +164,17 @@ parameters_layout = html.Main(className='container px-6', children=[
     dbc.Row()
 ])
 
-results_table_layout = html.Main(className='container px-6', children=[
-    html.Br(),
-    html.Div(id='results-table', children=None),
-])
-
-results_graph_layout = html.Main(className='container px-6', children=[
+results_layout = html.Main(className='container px-6', children=[
     html.Br(),
     html.H4("Log message clusters"),
     html.Div(id='results-graph', children=None),
+    html.Hr(),
+    html.H4("Cluster table"),
+    html.Div(id='results-table', children=None),
+])
+
+knee_graph_layout = html.Main(className='container px-6', children=[
+    html.Br(),
+    html.H4("Knee points"),
+    html.Div(id='knee-graph', children=None),
 ])

@@ -4,7 +4,7 @@ import dash_html_components as html
 # the "noqa" comment tells the linter to ignore that import is unused
 import webapp.callbacks  # noqa: F401
 from webapp.app import app
-from webapp.layouts import parameters_layout, results_table_layout, results_graph_layout
+from webapp.layouts import parameters_layout, results_layout, knee_graph_layout
 
 
 navbar = html.Nav(
@@ -32,19 +32,19 @@ navbar = html.Nav(
                         dcc.Link(
                             className='nav-link',
                             children="Results",
-                            href='/results-table'
+                            href='/results'
                         )
                     ]
                 ),
 
                 html.Li(
-                    id='graph-nav-item',
+                    id='knee-graph-nav-item',
                     className='nav-item',
                     children=[
                         dcc.Link(
                             className='nav-link',
-                            children="Cluster Graph",
-                            href='/results-graph'
+                            children="Knee Graph",
+                            href='/knee-graph'
                         )
                     ]
                 )
@@ -61,10 +61,11 @@ page_contents = html.Main(
         html.Div(id='results-storage', children=None, style={'display': 'none'}),
         html.Div(id='groups-storage', children=None, style={'display': 'none'}),
         html.Div(id='embeddings-storage', children=None, style={'display': 'none'}),
+        html.Div(id='knee-data-storage', children=None, style={'display': 'none'}),
 
         html.Div(id='parameters-layout', children=parameters_layout),
-        html.Div(id='results-table-layout', children=results_table_layout),
-        html.Div(id='results-graph-layout', children=results_graph_layout),
+        html.Div(id='results-layout', children=results_layout),
+        html.Div(id='knee-graph-layout', children=knee_graph_layout),
     ]
 )
 
