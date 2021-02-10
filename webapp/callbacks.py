@@ -127,35 +127,59 @@ def update_graph(stored_groups: str, stored_embeddings: str) -> Optional[dcc.Gra
     tsne = TSNE(perplexity=25, random_state=42, verbose=False)
     embeddings = tsne.fit_transform(embeddings)
 
-    cluster_x, cluster_y, cluster_labels, cluster_titles = [], [], [], []
+    cluster_x, cluster_y, cluster_labels, cluster_patterns = [], [], [], []
     cluster_sizes = []
     for i, row in groups.iterrows():
         cluster_x.append(embeddings[i, 0])
         cluster_y.append(embeddings[i, 1])
         cluster_labels.append(row['cluster'])
-        hover_text = f"{row['cluster_size']} message{'s' if row['cluster_size'] > 1 else ''} in cluster №{row['cluster']}:<br>" + row['pattern'].replace("; ", ";<br>")
-        cluster_titles.append(hover_text)
+        # hover_text = f"{row['cluster_size']} message{'s' if row['cluster_size'] > 1 else ''} in cluster №{row['cluster']}:<br>" + row['pattern'].replace("; ", ";<br>")
+        cluster_patterns.append(row['pattern'].replace("; ", ";<br>"))
         cluster_sizes.append(row['cluster_size'])
 
-    cluster_sizes = list(np.log(cluster_sizes))  # type: ignore
-    max_size = max(cluster_sizes)
-    cluster_sizes = [max(6, size * 25 / max_size) for size in cluster_sizes]
+    cluster_marker_sizes = list(np.log(cluster_sizes))  # type: ignore
+    max_size = max(cluster_marker_sizes)
+    cluster_marker_sizes = [max(7, size * 25 / max_size) for size in cluster_marker_sizes]
+
+    traces = {}
+    for x, y, label, pattern, size, marker_size in zip(cluster_x, cluster_y, cluster_labels, cluster_patterns, cluster_sizes, cluster_marker_sizes):
+        if label not in traces:
+            traces[label] = {
+                'x': [x],
+                'y': [y],
+                'pattern': [pattern],
+                'size': [size],
+                'marker_size': [marker_size]
+            }
+        else:
+            traces[label]['x'].append(x)
+            traces[label]['y'].append(y)
+            traces[label]['pattern'].append(pattern)
+            traces[label]['size'].append(size)
+            traces[label]['marker_size'].append(marker_size)
+
+    sorted_traces = {i: trace for i, trace in enumerate(sorted(traces.values(), reverse=True, key=lambda t: sum(t['size'])))}
+    for label, trace in sorted_traces.items():
+        trace['hover_text'] = []
+        for i, size in enumerate(trace['size']):
+            trace['hover_text'].append(f"{size} message{'s' if size > 1 else ''} in cluster №{label}:<br>" + trace['pattern'][i])
 
     fig = Figure()
-    fig.add_trace(Scatter(
-        x=cluster_x, y=cluster_y,
-        name="Clusters",
-        marker_line_width=1,
-        marker_size=cluster_sizes,
-        opacity=.8,
-        marker_color=cluster_labels,
-        text=cluster_titles,
-    ))
+    for label, trace in sorted_traces.items():
+        fig.add_trace(Scatter(
+            x=trace['x'], y=trace['y'],
+            name="Cluster № " + str(label),
+            marker_line_width=1,
+            marker_size=trace['marker_size'],
+            opacity=.8,
+            text=trace['hover_text'],
+        ))
 
     fig.update_traces(mode="markers", hoverinfo="text")
     fig.update_layout(hovermode="closest",
                       xaxis={"visible": False},
-                      yaxis={"visible": False})
+                      yaxis={"visible": False},
+                      showlegend=True)
 
     return dcc.Graph(figure=fig, responsive=True, style={'height': '90vh'})
 
@@ -192,8 +216,6 @@ def update_knee_graph(knee_data_json: str) -> Optional[dcc.Graph]:
         line_dash='dash'
     )
 
-    # fig.update_layout(showlegend=True)
-
     return dcc.Graph(figure=fig, responsive=True, style={'height': '90vh'})
 
 
@@ -212,19 +234,6 @@ def display_page(pathname):
     }
     display_styles = [None if routing_table[pathname] == page else {'display': 'none'} for page in routing_table.values()]
     return tuple(display_styles)
-
-
-# @app.callback(
-#     Output('submit-button-state', 'children'),
-#     [Input('submit-button-state', 'n_clicks'),
-#      Input('results-table', 'children')]
-# )
-# def set_submit_button_text(n_clicks, table):
-#     if n_clicks == 0:
-#         return "Submit"
-#     if table:
-#         return "Submit"
-#     return html.Div([Spinner(size='sm'), " Loading"])
 
 
 @app.callback(
