@@ -9,7 +9,6 @@ from json import dumps, loads
 from dataclasses import dataclass
 from sklearn.manifold import TSNE
 from typing import List, Optional, Tuple, Dict
-# from dash_bootstrap_components import Spinner
 from plotly.graph_objects import Figure, Scatter
 from dash.dependencies import Input, Output, State
 
@@ -217,6 +216,9 @@ def update_knee_graph(knee_data_json: str) -> Optional[dcc.Graph]:
         line_color='green',
         line_dash='dash'
     )
+
+    fig.update_xaxes(title_text='Number of points')
+    fig.update_yaxes(title_text='Average k-neighbours distance')
 
     return dcc.Graph(figure=fig, responsive=True, style={'height': '90vh'})
 
