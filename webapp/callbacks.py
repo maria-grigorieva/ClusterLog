@@ -137,24 +137,34 @@ def update_graph(stored_groups: str, stored_embeddings: str, noise_threshold: in
         size: List[int]
         marker_size: List[float]
 
+        def __add__(self, other):
+            if not isinstance(other, Cluster):
+                return NotImplemented
+            return Cluster(
+                x=self.x + other.x,
+                y=self.y + other.y,
+                hover_text=self.hover_text + other.hover_text,
+                size=self.size + other.size,
+                marker_size=self.marker_size + other.marker_size,
+            )
+
     clusters: Dict[int, Cluster] = {}
     for i, row in groups.iterrows():
         label: int = row['cluster']
         pattern = row['pattern'].replace("; ", ";<br>")
+
+        cluster = Cluster(
+            x=[embeddings[i, 0]],
+            y=[embeddings[i, 1]],
+            hover_text=[pattern],
+            size=[row['cluster_size']],
+            marker_size=[log(row['cluster_size'])]
+        )
+
         if label not in clusters:
-            clusters[label] = Cluster(
-                x=[embeddings[i, 0]],
-                y=[embeddings[i, 1]],
-                hover_text=[pattern],
-                size=[row['cluster_size']],
-                marker_size=[log(row['cluster_size'])]
-            )
+            clusters[label] = cluster
         else:
-            clusters[label].x.append(embeddings[i, 0])
-            clusters[label].y.append(embeddings[i, 1])
-            clusters[label].hover_text.append(pattern)
-            clusters[label].size.append(row['cluster_size'])
-            clusters[label].marker_size.append(log(row['cluster_size']))
+            clusters[label] += cluster
 
     noise = clusters.pop(-1, Cluster([], [], [], [], []))
     clusters = {i + 1: cluster for i, cluster in enumerate(sorted(clusters.values(), reverse=True, key=lambda c: sum(c.size)))}
@@ -166,11 +176,7 @@ def update_graph(stored_groups: str, stored_embeddings: str, noise_threshold: in
         cluster.marker_size = [max(7, size * 25 / max_size) for size in cluster.marker_size]
 
         if sum(cluster.size) <= noise_threshold:
-            noise.x.extend(cluster.x)
-            noise.y.extend(cluster.y)
-            noise.size.extend(cluster.size)
-            noise.hover_text.extend(cluster.hover_text)
-            noise.marker_size.extend(cluster.marker_size)
+            noise += cluster
             del clusters[label]
             continue
 
@@ -246,8 +252,8 @@ def update_knee_graph(knee_data_json: str) -> Optional[dcc.Graph]:
         line_dash='dash'
     )
 
-    fig.update_xaxes(title_text='Number of points')
-    fig.update_yaxes(title_text='Average k-neighbours distance')
+    fig.update_yaxes(title_text='Number of points')
+    fig.update_xaxes(title_text='Average k-neighbours distance')
 
     return dcc.Graph(figure=fig, responsive=True, style={'height': '90vh'})
 
