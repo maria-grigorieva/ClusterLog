@@ -117,8 +117,9 @@ def update_table(stored_results: str) -> Optional[html.Table]:
 @app.callback(
     Output(component_id='results-graph', component_property='children'),
     [Input('groups-storage', 'children'),
-     Input('embeddings-storage', 'children')])
-def update_graph(stored_groups: str, stored_embeddings: str) -> Optional[dcc.Graph]:
+     Input('embeddings-storage', 'children'),
+     Input('noise-threshold', 'value')])
+def update_graph(stored_groups: str, stored_embeddings: str, noise_threshold: int) -> Optional[dcc.Graph]:
     if not stored_embeddings or not stored_groups:
         return None
 
@@ -155,15 +156,33 @@ def update_graph(stored_groups: str, stored_embeddings: str) -> Optional[dcc.Gra
             clusters[label].size.append(row['cluster_size'])
             clusters[label].marker_size.append(log(row['cluster_size']))
 
+    noise = clusters.pop(-1, Cluster([], [], [], [], []))
     clusters = {i + 1: cluster for i, cluster in enumerate(sorted(clusters.values(), reverse=True, key=lambda c: sum(c.size)))}
 
-    max_size = max([max(cluster.marker_size) for cluster in clusters.values()])
-    for label, cluster in clusters.items():
+    max_size = max([max(cluster.marker_size) for cluster in clusters.values()] + noise.marker_size)
+    noise.marker_size = [max(7, size * 25 / max_size) for size in noise.marker_size]
+
+    for label, cluster in clusters.copy().items():
         cluster.marker_size = [max(7, size * 25 / max_size) for size in cluster.marker_size]
+
+        if sum(cluster.size) <= noise_threshold:
+            noise.x.extend(cluster.x)
+            noise.y.extend(cluster.y)
+            noise.size.extend(cluster.size)
+            noise.hover_text.extend(cluster.hover_text)
+            noise.marker_size.extend(cluster.marker_size)
+            del clusters[label]
+            continue
+
         hover_text = []
         for size, pattern in zip(cluster.size, cluster.hover_text):
             hover_text.append(f"{size} message{'s' if size > 1 else ''} in cluster №{label}:<br>{pattern}")
         cluster.hover_text = hover_text
+
+    noise_hover_text = []
+    for size, pattern in zip(noise.size, noise.hover_text):
+        noise_hover_text.append(f"{size} message{'s' if size > 1 else ''} in noise cluster:<br>{pattern}")
+    noise.hover_text = noise_hover_text
 
     fig = Figure()
     for label, cluster in clusters.items():
@@ -175,6 +194,16 @@ def update_graph(stored_groups: str, stored_embeddings: str) -> Optional[dcc.Gra
             opacity=.8,
             text=cluster.hover_text,
         ))
+
+    fig.add_trace(Scatter(
+        x=noise.x, y=noise.y,
+        name="Noise",
+        marker_line_width=1,
+        marker_size=noise.marker_size,
+        marker_color='gray',
+        opacity=.8,
+        text=noise.hover_text,
+    ))
 
     fig.update_traces(mode="markers", hoverinfo="text")
     fig.update_layout(hovermode="closest",

@@ -163,6 +163,15 @@ results_layout = html.Main(className='container px-6', children=[
     html.Br(),
     html.H4("Log message clusters"),
     html.Div(id='results-graph', children=None),
+    dbc.Label(children="Noise threshold", html_for='noise-threshold'),
+    dcc.Slider(
+        id='noise-threshold',
+        min=0,
+        max=1000,
+        step=1,
+        value=100,
+        tooltip={'always_visible': True, 'placement': 'top'}
+    ),
     html.Hr(),
     html.H4("Cluster table"),
     html.Div(id='results-table', children=None),
