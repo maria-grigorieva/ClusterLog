@@ -8,7 +8,7 @@ from os.path import exists
 from json import dumps, loads
 from dataclasses import dataclass
 from sklearn.manifold import TSNE
-from typing import List, Optional, Tuple, Dict
+from typing import List, Optional, Tuple, Dict, Any
 from plotly.graph_objects import Figure, Scatter
 from dash.dependencies import Input, Output, State
 
@@ -31,16 +31,31 @@ def display_uploaded_filename(contents: str, filename: str) -> str:
 
 @app.callback(
     Output(component_id='no-model-warning', component_property='displayed'),
-    [Input('submit-button-state', 'n_clicks')],
+    [Input(component_id='submit-button-state', component_property='n_clicks')],
     [State(component_id='model-file', component_property='value'),
      State(component_id='custom-model-file', component_property='value'),
-     State(component_id='update-model', component_property='value')])
-def display_model_file_warning(n_clicks: int, model_file: str, custom_model_file: str, update_model: bool) -> bool:
+     State(component_id='model-usage-mode', component_property='value')])
+def display_model_file_warning(n_clicks: int, model_file: str, custom_model_file: str, model_usage_mode: str) -> bool:
     if n_clicks == 0:
         return False
-    if not update_model and model_file == 'custom' and not exists(custom_model_file):
+    if model_usage_mode != 'create' and model_file == 'custom' and not exists(custom_model_file):
         return True
     return False
+
+
+@app.callback(
+    Output(component_id='model-usage-mode', component_property='options'),
+    [Input(component_id='model-file', component_property='value')]
+)
+def enable_create_option(model_file: str) -> List[Dict[str, Any]]:
+    options: List[Dict[str, Any]] = [
+        {"label": "Use existing model", "value": 'process'},
+        {"label": "Update existing model", "value": 'update'},
+        {"label": "Create new model", "value": 'create'},
+    ]
+    if model_file != 'custom':
+        options[-1]['disabled'] = True
+    return options
 
 
 @app.callback(
@@ -54,7 +69,7 @@ def display_model_file_warning(n_clicks: int, model_file: str, custom_model_file
      State(component_id='target-column', component_property='value'),
      State(component_id='model-file', component_property='value'),
      State(component_id='custom-model-file', component_property='value'),
-     State(component_id='update-model', component_property='value'),
+     State(component_id='model-usage-mode', component_property='value'),
      State(component_id='tokenizer-type', component_property='value'),
      State(component_id='clustering-algorithm', component_property='value'),
      State(component_id='keyword-extraction-algorithm', component_property='value'),
@@ -65,7 +80,7 @@ def display_model_file_warning(n_clicks: int, model_file: str, custom_model_file
 def update_results(
         n_clicks: int,
         input_file: Optional[str], target_column: str,
-        model_name: str, custom_model: str, update_model: List[str],
+        model_name: str, custom_model: str, model_usage_mode: str,
         tokenizer_type: str, clustering_algorithm: str,
         keywords_extraction: str, matching_accuracy: float,
         boolean_options: List[str], word2vec_size: int,
@@ -75,7 +90,7 @@ def update_results(
         return None, None, None, None, "Submit"
     if model_name == 'custom':
         model_name = custom_model
-    if not update_model and not exists(model_name):
+    if model_usage_mode != 'create' and not exists(model_name):
         return None, None, None, None, "Submit"
 
     dataframe = parse_input_file(input_file)
@@ -93,7 +108,7 @@ def update_results(
     }
 
     result = execute_pipeline(dataframe, target_column,
-                              model_name, bool(update_model),
+                              model_name, model_usage_mode,
                               tokenizer_type, clustering_algorithm,
                               keywords_extraction, options,
                               matching_accuracy, word2vec_parameters)

@@ -55,19 +55,32 @@ parameters_layout = html.Main(className='container px-6', children=[
         )
     ]),
 
-    dbc.Checklist(
-        id='update-model',
-        options=[
-            {'label': ' Use input data in word2vec model', 'value': 'update_model'},
-        ],
-        value=[]
-    ),
+    # dbc.Checklist(
+    #     id='update-model',
+    #     options=[
+    #         {'label': ' Use input data in word2vec model', 'value': 'update_model'},
+    #     ],
+    #     value=[]
+    # ),
+
+    dbc.FormGroup([
+        dbc.Label("Word2Vec model usage mode", html_for='model-usage-mode'),
+        dbc.RadioItems(
+            options=[
+                {"label": "Use existing model", "value": 'process'},
+                {"label": "Update existing model", "value": 'update'},
+                {"label": "Create new model", "value": 'create'},
+            ],
+            value='process',
+            id="model-usage-mode",
+        ),
+    ]),
 
     html.Hr(),
 
     dcc.ConfirmDialog(
         id='no-model-warning',
-        message='Word2vec model file does not exist.\nEnter a valid path or use input data to create a new model',
+        message='Word2vec model file does not exist.\nEnter a valid path or create a new model',
         displayed=False
     ),
 
