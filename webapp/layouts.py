@@ -153,6 +153,22 @@ parameters_layout = html.Main(className='container px-6', children=[
         value=[],
     ),
 
+    html.Hr(),
+    dbc.Row(
+        dbc.Col([
+            html.H4("Word2Vec parameters"),
+            dbc.FormGroup([
+                dbc.Label(children="Word2Vec vector size", html_for='w2v-vector-size'),
+                dbc.Input(id='w2v-vector-size', value=300, type='number', debounce=True, min=1, max=1000, step=1)
+            ]),
+            dbc.FormGroup([
+                dbc.Label(children="Word2Vec window width", html_for='w2v-window'),
+                dbc.Input(id='w2v-window', value=7, type='number', debounce=True, min=1, max=20, step=1)
+            ]),
+
+        ], width=4)
+    ),
+
     html.Br(),
     dbc.Button(id='submit-button-state', n_clicks=0, className='mr-1', color='primary',
                children=[dbc.Spinner(children=[html.Div(id='loading-output')], size='sm')]),

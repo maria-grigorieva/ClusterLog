@@ -59,13 +59,17 @@ def display_model_file_warning(n_clicks: int, model_file: str, custom_model_file
      State(component_id='clustering-algorithm', component_property='value'),
      State(component_id='keyword-extraction-algorithm', component_property='value'),
      State(component_id='matching-accuracy', component_property='value'),
-     State(component_id='boolean-options', component_property='value')])
-def update_results(n_clicks: int,
-                   input_file: Optional[str], target_column: str,
-                   model_name: str, custom_model: str, update_model: List[str],
-                   tokenizer_type: str, clustering_algorithm: str,
-                   keywords_extraction: str, matching_accuracy: float,
-                   boolean_options: List[str]) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str], str]:
+     State(component_id='boolean-options', component_property='value'),
+     State(component_id='w2v-vector-size', component_property='value'),
+     State(component_id='w2v-window', component_property='value')])
+def update_results(
+        n_clicks: int,
+        input_file: Optional[str], target_column: str,
+        model_name: str, custom_model: str, update_model: List[str],
+        tokenizer_type: str, clustering_algorithm: str,
+        keywords_extraction: str, matching_accuracy: float,
+        boolean_options: List[str], word2vec_size: int,
+        word2vec_window: int) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str], str]:
 
     if n_clicks == 0 or not input_file or not target_column:
         return None, None, None, None, "Submit"
@@ -83,11 +87,16 @@ def update_results(n_clicks: int,
     for option in boolean_options:
         options[option] = True
 
+    word2vec_parameters = {
+        'w2v_size': word2vec_size,
+        'w2v_window': word2vec_window
+    }
+
     result = execute_pipeline(dataframe, target_column,
                               model_name, bool(update_model),
                               tokenizer_type, clustering_algorithm,
                               keywords_extraction, options,
-                              matching_accuracy)
+                              matching_accuracy, word2vec_parameters)
 
     groups: pd.DataFrame = result.groups
 
