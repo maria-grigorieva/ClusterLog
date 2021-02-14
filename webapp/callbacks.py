@@ -35,7 +35,7 @@ def display_uploaded_filename(contents: str, filename: str) -> str:
     [State(component_id='model-file', component_property='value'),
      State(component_id='custom-model-file', component_property='value'),
      State(component_id='update-model', component_property='value')])
-def display_model_file_warning(n_clicks, model_file: str, custom_model_file: str, update_model: bool) -> bool:
+def display_model_file_warning(n_clicks: int, model_file: str, custom_model_file: str, update_model: bool) -> bool:
     if n_clicks == 0:
         return False
     if not update_model and model_file == 'custom' and not exists(custom_model_file):
@@ -264,7 +264,7 @@ def update_knee_graph(knee_data_json: str) -> Optional[dcc.Graph]:
      Output('knee-graph-layout', 'style')],
     [Input('url', 'pathname')]
 )
-def display_page(pathname):
+def display_page(pathname: str) -> Tuple[Optional[Dict[str, str]], ...]:
     # The order in this dictionary should be the same as callback outputs
     routing_table = {
         '/': 'parameters-layout',
@@ -281,9 +281,9 @@ def display_page(pathname):
     [Input('results-table', 'children'),
      Input('knee-graph', 'children')]
 )
-def hide_nav_items(table, knee_graph):
-    results_style = {'display': 'none'}
-    knee_graph_style = {'display': 'none'}
+def hide_nav_items(table: Optional[html.Table], knee_graph: Optional[dcc.Graph]) -> Tuple[Optional[Dict[str, str]], ...]:
+    results_style: Optional[Dict[str, str]] = {'display': 'none'}
+    knee_graph_style: Optional[Dict[str, str]] = {'display': 'none'}
     if table:
         results_style = None
     if knee_graph:
@@ -295,7 +295,7 @@ def hide_nav_items(table, knee_graph):
     Output('custom-model', 'style'),
     [Input('model-file', 'value')]
 )
-def custom_model_form_visibility(model_name):
+def custom_model_form_visibility(model_name: str) -> Optional[Dict[str, str]]:
     if model_name == 'custom':
         return None
     return {'display': 'none'}
