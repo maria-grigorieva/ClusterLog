@@ -220,14 +220,16 @@ class Chain(object):
     @safe_run
     def ml_clustering(self):
 
-        self.clusters = MLClustering(self.df,
-                                     self.groups,
-                                     self.vectors,
-                                     self.cpu_number,
-                                     self.add_placeholder,
-                                     self.clustering_type,
-                                     self.tokenizer_type,
-                                     self.dimensionality_reduction)
+        self.clusters = MLClustering(
+            self.df,
+            self.groups,
+            self.vectors,
+            self.cpu_number,
+            self.add_placeholder,
+            self.clustering_type,
+            self.tokenizer_type,
+            self.dimensionality_reduction
+        )
         self.clusters.process()
 
     def clusters_description(self):
