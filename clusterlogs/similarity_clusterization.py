@@ -51,9 +51,8 @@ class SClustering:
         common_sequence = sequence.sequence_matcher(filtered['sequence'].values)
         # Detect indices for the group
         indices = [item for sublist in filtered['indices'].values for item in sublist]
-        # Convert list of sequences to text
-        text = '. '.join([' '.join(row) for row in filtered['sequence'].values])
         # Extract common phrases
+        text = [' '.join(row) for row in filtered['sequence'].values]
         common_phrases = extract_common_phrases(text, self.keywords_extraction)
 
         result.append({'pattern': [textual_pattern],

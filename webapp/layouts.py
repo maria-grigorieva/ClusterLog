@@ -163,7 +163,7 @@ parameters_layout = html.Main(className='container px-6', children=[
             {'label': ' Add placeholders', 'value': 'add_placeholder'},
             {'label': ' Dimensionality reduction', 'value': 'dimensionality_reduction'},
         ],
-        value=[],
+        value=['add_placeholder'],
     ),
 
     html.Hr(),
