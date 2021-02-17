@@ -283,6 +283,16 @@ def update_knee_graph(knee_data_json: str) -> Optional[dcc.Graph]:
 
 
 @app.callback(
+    Output('results-graph-group', 'style'),
+    [Input('clustering-algorithm', 'value')]
+)
+def hide_graph_headings(clustering_algorithm: str) -> Optional[Dict[str, str]]:
+    if clustering_algorithm == 'similarity':
+        return {'display': 'none'}
+    return None
+
+
+@app.callback(
     [Output('parameters-layout', 'style'),
      Output('results-layout', 'style'),
      Output('knee-graph-layout', 'style')],

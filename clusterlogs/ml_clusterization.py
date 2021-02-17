@@ -66,9 +66,9 @@ class MLClustering:
             'x': [float(x) for x in kneedle.x],
             'y': [float(y) for y in kneedle.y],
             'knees': [float(x) for x in kneedle.all_elbows],
-            'chosen_knee': epsilon
+            'chosen_knee': float(epsilon)
         }
-        return epsilon
+        return float(epsilon)
 
     def dbscan(self) -> np.ndarray:
         """
@@ -89,6 +89,7 @@ class MLClustering:
         Returns cluster labels
         """
         cluster_labels = OPTICS(min_samples=2,
+                                metric='cosine',
                                 n_jobs=self.cpu_number) \
             .fit_predict(self.vectors.sent2vec)
         return cluster_labels
