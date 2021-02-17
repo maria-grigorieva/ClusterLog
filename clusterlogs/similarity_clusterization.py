@@ -60,7 +60,7 @@ class SClustering:
                        'indices': indices,
                        'cluster_size': len(indices),
                        'sequence': common_sequence,
-                       'common_phrases': common_phrases})
+                       'common_phrases': common_phrases[:10]})
 
         df.drop(filtered.index, axis=0, inplace=True)
         while df.shape[0] > 0:

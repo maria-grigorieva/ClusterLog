@@ -89,7 +89,7 @@ class MLClustering:
         Returns cluster labels
         """
         cluster_labels = OPTICS(min_samples=2,
-                                metric='cosine',
+                                # metric='cosine',
                                 n_jobs=self.cpu_number) \
             .fit_predict(self.vectors.sent2vec)
         return cluster_labels
@@ -109,21 +109,11 @@ class MLClustering:
         """
         Agglomerative clustering
         """
-
-        # I left the following if as a comment because it was the only different
-        # way of calling dimensionality reduction. I am pretty sure we don't need it
-        # but I am leaving it up just in case. Delete after confirmation
-
-        # if len(self.vectors.sent2vec) >= 5000:
-        #     self.vectors.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 \
-        #         else self.dimensionality_reduction()
         distances = self.kneighbors()
         epsilon = self.epsilon_search(distances)
         model = AgglomerativeClustering(
             n_clusters=None,
-            affinity='cosine',
             distance_threshold=epsilon,
-            linkage='average'
         )
         cluster_labels = model.fit_predict(self.vectors.sent2vec)
         return cluster_labels
