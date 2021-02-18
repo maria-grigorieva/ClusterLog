@@ -65,8 +65,7 @@ class MLClustering:
         self.knee_data = {
             'x': [float(x) for x in kneedle.x],
             'y': [float(y) for y in kneedle.y],
-            'knees': [float(x) for x in kneedle.all_elbows],
-            'chosen_knee': float(epsilon)
+            'knees': [float(x) for x in kneedle.all_elbows]
         }
         return float(epsilon)
 
@@ -82,9 +81,11 @@ class MLClustering:
         }
         parameters.update(self.parameters)
 
+        distances = self.kneighbors(metric=parameters['metric'])
+        epsilon = self.epsilon_search(distances)
         if parameters['epsilon'] is None:
-            distances = self.kneighbors(metric=parameters['metric'])
-            parameters['epsilon'] = self.epsilon_search(distances)
+            parameters['epsilon'] = epsilon
+        self.knee_data['chosen_knee'] = parameters['epsilon']
 
         cluster_labels = DBSCAN(eps=parameters['epsilon'],
                                 metric=parameters['metric'],
@@ -104,7 +105,7 @@ class MLClustering:
         }
         parameters.update(self.parameters)
 
-        cluster_labels = OPTICS(min_samples=parameters['min_samples'],
+        cluster_labels = OPTICS(min_samples=max(2, parameters['min_samples']),  # type: ignore
                                 metric=parameters['metric'],
                                 n_jobs=self.cpu_number) \
             .fit_predict(self.vectors.sent2vec)
@@ -128,7 +129,7 @@ class MLClustering:
         parameters.update(self.parameters)
 
         clusterer = HDBSCAN(
-            min_cluster_size=2,
+            min_cluster_size=max(parameters['min_samples'], 2),  # type: ignore
             min_samples=parameters['min_samples']
         )
         cluster_labels = clusterer.fit_predict(self.vectors.sent2vec)

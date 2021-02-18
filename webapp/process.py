@@ -1,13 +1,14 @@
 import pandas as pd
 
-from typing import Dict
+from typing import Dict, Any
 
 from clusterlogs.pipeline import Chain
 
 
 def execute_pipeline(dataframe: pd.DataFrame, target_column: str,
                      model_name: str, model_usage_mode, tokenizer_type: str,
-                     clustering_algorithm: str, keywords_extraction: str,
+                     clustering_algorithm: str, clustering_parameters: Dict[str, Any],
+                     keywords_extraction: str,
                      options: Dict[str, bool], matching_accuracy: float,
                      word2vec_parameters: Dict[str, int]) -> Chain:
     cluster = Chain(dataframe, target_column,
@@ -18,6 +19,7 @@ def execute_pipeline(dataframe: pd.DataFrame, target_column: str,
                     output_type='html',
                     tokenizer_type=tokenizer_type,
                     clustering_type=clustering_algorithm,
+                    clustering_parameters=clustering_parameters,
                     keywords_extraction=keywords_extraction)
     cluster.set_cluster_settings(word2vec_parameters)
     cluster.process()

@@ -72,6 +72,7 @@ def enable_create_option(model_file: str) -> List[Dict[str, Any]]:
      State(component_id='model-usage-mode', component_property='value'),
      State(component_id='tokenizer-type', component_property='value'),
      State(component_id='clustering-algorithm', component_property='value'),
+     State(component_id='clustering-parameters-storage', component_property='children'),
      State(component_id='keyword-extraction-algorithm', component_property='value'),
      State(component_id='matching-accuracy', component_property='value'),
      State(component_id='boolean-options', component_property='value'),
@@ -82,6 +83,7 @@ def update_results(
         input_file: Optional[str], target_column: str,
         model_name: str, custom_model: str, model_usage_mode: str,
         tokenizer_type: str, clustering_algorithm: str,
+        clustering_parameters_json: str,
         keywords_extraction: str, matching_accuracy: float,
         boolean_options: List[str], word2vec_size: int,
         word2vec_window: int) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str], str]:
@@ -107,9 +109,12 @@ def update_results(
         'w2v_window': word2vec_window
     }
 
+    clustering_parameters = loads(clustering_parameters_json)
+
     result = execute_pipeline(dataframe, target_column,
                               model_name, model_usage_mode,
                               tokenizer_type, clustering_algorithm,
+                              clustering_parameters,
                               keywords_extraction, options,
                               matching_accuracy, word2vec_parameters)
 
@@ -272,7 +277,7 @@ def update_knee_graph(knee_data_json: str) -> Optional[dcc.Graph]:
     fig.add_vline(
         x=knee_data['chosen_knee'],
         annotation_text="Chosen epsilon value",
-        line_color='green',
+        line_color='red',
         line_dash='dash'
     )
 
@@ -333,3 +338,49 @@ def custom_model_form_visibility(model_name: str) -> Optional[Dict[str, str]]:
     if model_name == 'custom':
         return None
     return {'display': 'none'}
+
+
+@app.callback(
+    [Output('clustering-parameters-div', 'style'),
+     Output('form-metric', 'style'),
+     Output('form-epsilon', 'style'),
+     Output('form-min-samples', 'style'),
+     Output('form-cluster-number', 'style')],
+    [Input('clustering-algorithm', 'value')]
+)
+def parameter_visibility(clustering_method: str) -> Tuple[Optional[Dict[str, str]], ...]:
+    div_style = {'display': 'none'} if clustering_method == 'similarity' else None
+    parameter_styles: Dict[str, Optional[Dict[str, str]]] = {
+        'metric': {'display': 'none'},
+        'epsilon': {'display': 'none'},
+        'min_samples': {'display': 'none'},
+        'cluster_number': {'display': 'none'}
+    }
+    algorithm_parameters: Dict[str, List[str]] = {
+        'similarity': [],
+        'kmeans': ['cluster_number'],
+        'dbscan': ['metric', 'epsilon', 'min_samples'],
+        'optics': ['metric', 'min_samples'],
+        'hdbscan': ['metric', 'min_samples'],
+        'hierarchical': ['metric', 'epsilon']
+    }
+    for parameter in algorithm_parameters[clustering_method]:
+        parameter_styles[parameter] = None
+    return (div_style, ) + tuple(parameter_styles.values())
+
+
+@app.callback(
+    Output('clustering-parameters-storage', 'children'),
+    [Input('params-metric', 'value'),
+     Input('params-epsilon', 'value'),
+     Input('params-min-samples', 'value'),
+     Input('params-cluster-number', 'value')]
+)
+def get_clustering_parameters(metric: str, epsilon: Optional[float], min_samples: int, cluster_number: int) -> Optional[str]:
+    parameters = {
+        'metric': metric,
+        'epsilon': epsilon,
+        'min_samples': min_samples,
+        'cluster_number': cluster_number
+    }
+    return dumps(parameters)

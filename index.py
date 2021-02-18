@@ -62,6 +62,7 @@ page_contents = html.Main(
         html.Div(id='groups-storage', children=None, style={'display': 'none'}),
         html.Div(id='embeddings-storage', children=None, style={'display': 'none'}),
         html.Div(id='knee-data-storage', children=None, style={'display': 'none'}),
+        html.Div(id='clustering-parameters-storage', children=None, style={'display': 'none'}),
 
         html.Div(id='parameters-layout', children=parameters_layout),
         html.Div(id='results-layout', children=results_layout),

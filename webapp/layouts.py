@@ -26,7 +26,7 @@ parameters_layout = html.Main(className='container px-6', children=[
                 dbc.Label(children="Target column:", html_for='target-column'),
                 dbc.Input(id='target-column', value='exeerrordiag', type='text')
             ]),
-            width=6
+            width=4
         )
     ),
 
@@ -42,7 +42,7 @@ parameters_layout = html.Main(className='container px-6', children=[
                     value=None
                 )
             ]),
-            width=6
+            width=4
         ),
         dbc.Col(
             dbc.FormGroup([
@@ -143,7 +143,7 @@ parameters_layout = html.Main(className='container px-6', children=[
                     value='space'
                 )
             ])],
-            width=6
+            width=4
         ),
     ),
 
@@ -166,6 +166,39 @@ parameters_layout = html.Main(className='container px-6', children=[
         value=['add_placeholder'],
     ),
 
+    html.Div(id='clustering-parameters-div', children=[
+        html.Hr(),
+        html.H4("Clustering method parameters"),
+        dbc.Row(
+            dbc.Col([
+                dbc.FormGroup(id='form-metric', children=[
+                    dbc.Label(children="Metric", html_for='params-metric'),
+                    dbc.Select(
+                        id='params-metric',
+                        options=[
+                            {'label': 'Euclidean', 'value': 'euclidean'},
+                            {'label': 'Manhattan', 'value': 'manhattan'},
+                            {'label': 'Cosine', 'value': 'cosine'},
+                        ],
+                        value='euclidean'
+                    )
+                ]),
+                dbc.FormGroup(id='form-epsilon', children=[
+                    dbc.Label(children="Maximum neighbour distance (epsilon)", html_for='params-epsilon'),
+                    dbc.Input(id='params-epsilon', value=None, placeholder="Leave empty to calculate automatically", type='number', debounce=True)
+                ]),
+                dbc.FormGroup(id='form-min-samples', children=[
+                    dbc.Label(children="Number of neighbours for core point", html_for='params-min-samples'),
+                    dbc.Input(id='params-min-samples', value=1, type='number', debounce=True, min=1, max=1000, step=1)
+                ]),
+                dbc.FormGroup(id='form-cluster-number', children=[
+                    dbc.Label(children="Cluster number", html_for='params-cluster-number'),
+                    dbc.Input(id='params-cluster-number', value=30, type='number', debounce=True, min=1, max=1000, step=1)
+                ]),
+            ], width=4)
+        ),
+    ]),
+
     html.Hr(),
     dbc.Row(
         dbc.Col([
@@ -178,7 +211,6 @@ parameters_layout = html.Main(className='container px-6', children=[
                 dbc.Label(children="Word2Vec window width", html_for='w2v-window'),
                 dbc.Input(id='w2v-window', value=7, type='number', debounce=True, min=1, max=20, step=1)
             ]),
-
         ], width=4)
     ),
 
