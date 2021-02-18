@@ -17,7 +17,7 @@ nlp = spacy.load("en_core_web_sm")
 
 class MLClustering:
 
-    def __init__(self, df, groups, vectors, cpu_number, add_placeholder, method, tokenizer_type, pca):
+    def __init__(self, df, groups, vectors, cpu_number, add_placeholder, method, tokenizer_type, pca, parameters):
         self.df = df
         self.groups = groups
         self.vectors = vectors
@@ -26,7 +26,7 @@ class MLClustering:
         self.method = method
         self.tokenizer_type = tokenizer_type
         self.pca = pca
-        self.min_samples = 1
+        self.parameters = parameters
         self.diversity_factor = 0
 
     def process(self):
@@ -44,13 +44,13 @@ class MLClustering:
         pca.fit(self.vectors.sent2vec)
         return pca.transform(self.vectors.sent2vec)
 
-    def kneighbors(self):
+    def kneighbors(self, metric='euclidean'):
         """
         Calculates average distances for k-nearest neighbors
         """
         k = round(math.sqrt(len(self.vectors.sent2vec)))
         print('K-neighbours = {}'.format(k))
-        nbrs = NearestNeighbors(n_neighbors=k, n_jobs=-1, algorithm='auto').fit(self.vectors.sent2vec)
+        nbrs = NearestNeighbors(n_neighbors=k, metric=metric, n_jobs=-1, algorithm='auto').fit(self.vectors.sent2vec)
         distances, _ = nbrs.kneighbors(self.vectors.sent2vec)
         return [np.mean(d) for d in np.sort(distances, axis=0)]
 
@@ -75,10 +75,20 @@ class MLClustering:
         Execution of the DBSCAN clustering algorithm.
         Returns cluster labels
         """
-        distances = self.kneighbors()
-        epsilon = self.epsilon_search(distances)
-        cluster_labels = DBSCAN(eps=epsilon,
-                                min_samples=self.min_samples,
+        parameters = {
+            'epsilon': None,
+            'metric': 'euclidean',
+            'min_samples': 1
+        }
+        parameters.update(self.parameters)
+
+        if parameters['epsilon'] is None:
+            distances = self.kneighbors(metric=parameters['metric'])
+            parameters['epsilon'] = self.epsilon_search(distances)
+
+        cluster_labels = DBSCAN(eps=parameters['epsilon'],
+                                metric=parameters['metric'],
+                                min_samples=parameters['min_samples'],
                                 n_jobs=self.cpu_number) \
             .fit_predict(self.vectors.sent2vec)
         return cluster_labels
@@ -88,20 +98,39 @@ class MLClustering:
         Execution of the OPTICS clustering algorithm.
         Returns cluster labels
         """
-        cluster_labels = OPTICS(min_samples=2,
-                                # metric='cosine',
+        parameters = {
+            'metric': 'euclidean',
+            'min_samples': 2
+        }
+        parameters.update(self.parameters)
+
+        cluster_labels = OPTICS(min_samples=parameters['min_samples'],
+                                metric=parameters['metric'],
                                 n_jobs=self.cpu_number) \
             .fit_predict(self.vectors.sent2vec)
         return cluster_labels
 
     def kmeans(self) -> np.ndarray:
-        n_clusters = 30
-        model = MiniBatchKMeans(n_clusters=n_clusters)
+        parameters = {
+            'n': 30
+        }
+        parameters.update(self.parameters)
+
+        model = MiniBatchKMeans(n_clusters=parameters['n'])
         cluster_labels = model.fit_predict(self.vectors.sent2vec)
         return cluster_labels  # type: ignore
 
     def hdbscan(self) -> np.ndarray:
-        clusterer = HDBSCAN(min_cluster_size=2, min_samples=self.min_samples)
+        parameters = {
+            'metric': 'euclidean',
+            'min_samples': 1
+        }
+        parameters.update(self.parameters)
+
+        clusterer = HDBSCAN(
+            min_cluster_size=2,
+            min_samples=parameters['min_samples']
+        )
         cluster_labels = clusterer.fit_predict(self.vectors.sent2vec)
         return cluster_labels
 
@@ -109,11 +138,22 @@ class MLClustering:
         """
         Agglomerative clustering
         """
-        distances = self.kneighbors()
-        epsilon = self.epsilon_search(distances)
+        parameters = {
+            'epsilon': None,
+            'metric': 'euclidean'
+        }
+        parameters.update(self.parameters)
+
+        if parameters['epsilon'] is None:
+            distances = self.kneighbors(metric=parameters['metric'])
+            parameters['epsilon'] = self.epsilon_search(distances)
+        linkage = 'ward' if parameters['metric'] == 'euclidean' else 'complete'
+
         model = AgglomerativeClustering(
             n_clusters=None,
-            distance_threshold=epsilon,
+            affinity=parameters['metric'],
+            distance_threshold=parameters['epsilon'],
+            linkage=linkage
         )
         cluster_labels = model.fit_predict(self.vectors.sent2vec)
         return cluster_labels

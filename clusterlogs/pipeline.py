@@ -46,9 +46,9 @@ def safe_run(method):
     return func_wrapper
 
 
-CLUSTERING_DEFAULTS = {"w2v_size": 300,
-                       "w2v_window": 7,
-                       "min_samples": 1}
+WORD2VEC_DEFAULTS = {"w2v_size": 300,
+                     "w2v_window": 7,
+                     "min_samples": 1}
 
 
 class Chain(object):
@@ -65,12 +65,13 @@ class Chain(object):
                  threshold=5000,
                  matching_accuracy=0.8,
                  clustering_type='dbscan',
+                 clustering_parameters={},
                  keywords_extraction='rake_nltk',
                  categorization=False):
         self.df = df
         self.target = target
         self.tokenizer_type = tokenizer_type
-        self.set_cluster_settings(cluster_settings or CLUSTERING_DEFAULTS)
+        self.set_cluster_settings(cluster_settings or WORD2VEC_DEFAULTS)
         self.cpu_number = self.get_cpu_number()
         self.timings = {}
         self.model_name = model_name
@@ -78,6 +79,7 @@ class Chain(object):
         self.threshold = threshold
         self.matching_accuracy = matching_accuracy
         self.clustering_type = clustering_type
+        self.clustering_parameters = clustering_parameters
         self.add_placeholder = add_placeholder
         self.output_type = output_type
         self.output_fname = output_fname
@@ -90,7 +92,7 @@ class Chain(object):
         return multiprocessing.cpu_count()
 
     def set_cluster_settings(self, params):
-        for key, value in CLUSTERING_DEFAULTS.items():
+        for key, value in WORD2VEC_DEFAULTS.items():
             if params.get(key) is not None:
                 setattr(self, key, params.get(key))
             else:
@@ -228,7 +230,8 @@ class Chain(object):
             self.add_placeholder,
             self.clustering_type,
             self.tokenizer_type,
-            self.dimensionality_reduction
+            self.dimensionality_reduction,
+            self.clustering_parameters
         )
         self.clusters.process()
 
