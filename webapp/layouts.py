@@ -185,7 +185,7 @@ parameters_layout = html.Main(className='container px-6', children=[
                 ]),
                 dbc.FormGroup(id='form-epsilon', children=[
                     dbc.Label(children="Maximum neighbour distance (epsilon)", html_for='params-epsilon'),
-                    dbc.Input(id='params-epsilon', value=None, placeholder="Leave empty to calculate automatically", type='number', debounce=True)
+                    dbc.Input(id='params-epsilon', value=None, placeholder="Leave empty to calculate automatically", type='number', step=0.01, debounce=True)
                 ]),
                 dbc.FormGroup(id='form-min-samples', children=[
                     dbc.Label(children="Number of neighbours for core point", html_for='params-min-samples'),
@@ -200,7 +200,7 @@ parameters_layout = html.Main(className='container px-6', children=[
     ]),
 
     html.Hr(),
-    dbc.Row(
+    dbc.Row(id='word2vec-parameters-group', children=[
         dbc.Col([
             html.H4("Word2Vec parameters"),
             dbc.FormGroup([
@@ -212,7 +212,7 @@ parameters_layout = html.Main(className='container px-6', children=[
                 dbc.Input(id='w2v-window', value=7, type='number', debounce=True, min=1, max=20, step=1)
             ]),
         ], width=4)
-    ),
+    ]),
 
     html.Br(),
     dbc.Button(id='submit-button-state', n_clicks=0, className='mr-1', color='primary',

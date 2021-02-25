@@ -276,13 +276,14 @@ def update_knee_graph(knee_data_json: str) -> Optional[dcc.Graph]:
 
     fig.add_vline(
         x=knee_data['chosen_knee'],
-        annotation_text="Chosen epsilon value",
+        annotation_text=" Chosen epsilon value",
+        annotation_font_size=15,
         line_color='red',
         line_dash='dash'
     )
 
-    fig.update_yaxes(title_text='Number of points')
-    fig.update_xaxes(title_text='Average k-neighbours distance')
+    fig.update_yaxes(title_text='Number of points', title_font={"size": 18}, tickfont={'size': 14})
+    fig.update_xaxes(title_text='Average k-neighbours distance', title_font={"size": 18}, tickfont={'size': 14})
 
     return dcc.Graph(figure=fig, responsive=True, style={'height': '90vh'})
 
@@ -338,6 +339,16 @@ def custom_model_form_visibility(model_name: str) -> Optional[Dict[str, str]]:
     if model_name == 'custom':
         return None
     return {'display': 'none'}
+
+
+@app.callback(
+    Output('word2vec-parameters-group', 'style'),
+    [Input('clustering-algorithm', 'value')]
+)
+def word2vec_parameters_visibility(clustering_method: str) -> Optional[Dict[str, str]]:
+    if clustering_method == 'similarity':
+        return {'display': 'none'}
+    return None
 
 
 @app.callback(
