@@ -269,7 +269,7 @@ class Chain(object):
                 'pattern_indices': pattern_indices,
                 'indices': indices,
                 'cluster_size': size,
-                'cluster_number': gb['cluster'][0],
+                'cluster_number': gb['cluster'].values[0],
                 'common_phrases': phrases[:10]}
 
     @safe_run
