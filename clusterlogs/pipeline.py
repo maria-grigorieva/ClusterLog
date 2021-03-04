@@ -130,6 +130,8 @@ class Chain(object):
 
                 self.result.apply(axis="columns", func=extend_source)
 
+                self.df.drop(columns=["tokenized_pattern", "hash", "sequence"], inplace=True)
+
                 self.df.to_csv(f'{self.output_fname}.orig.csv')
 
             self.process_timings()
