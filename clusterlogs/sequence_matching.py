@@ -71,25 +71,33 @@ class Match:
             return pattern if correct else x
         return x
 
-    def matching_clusters(self, sequences):
+    def matching_clusters(self, sequences, indices):
         if len(sequences) == 1:
-            return [sequences[0]]
+            return [sequences[0]], [indices[0]]
         # Degree of similarity of every sequence to the first
         similarities = levenshtein_similarity_1_to_n(sequences)
         similar, others = [sequences[0]], []
+        indices_sim, indices_other = [indices[0]], []
         for i, value in enumerate(similarities):
             if value >= self.match_threshhold:
                 similar.append(sequences[i + 1])
+                indices_sim.append(indices[i + 1])
             else:
                 others.append(sequences[i + 1])
+                indices_other.append(indices[i + 1])
         patterns = [self.sequence_matcher(similar)]
+        final_indices = [[i for sublist in indices_sim for i in sublist]]
         if len(others) > 1:
-            patterns.extend(self.matching_clusters(others))
+            res_patterns, res_indices = self.matching_clusters(others, indices_other)
+            patterns.extend(res_patterns)
+            final_indices.extend(res_indices)
+
         # We need this elif instead of an if in the beginning
         # to check for messages being the same after sequence matching
         elif len(others) == 1 and others[0] not in patterns:
             patterns.append(others[0])
-        return patterns
+            final_indices.append(indices_other[0])
+        return patterns, final_indices
 
     def matrix_matching(self, sequences):
         if len(sequences) == 1:
