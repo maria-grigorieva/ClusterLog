@@ -116,6 +116,24 @@ class Chain(object):
                 self.ml_clustering()
                 self.clusters_description()
 
+                self.df["common_pattern"] = None
+                self.df["key_phrases"] = None
+                self.df["cluster_num"] = None
+
+                self.df["key_phrases"] = self.df["key_phrases"].astype('object')
+
+                def extend_source(x):
+                    for p, indices in x["pattern_indices"].items():
+                        self.df.loc[indices, "common_pattern"] = p
+                        self.df.loc[indices, "key_phrases"] = str(x["common_phrases"])
+                        self.df.loc[indices, "cluster_num"] = x["cluster_number"]
+
+                self.result.apply(axis="columns", func=extend_source)
+
+                self.df.drop(columns=["tokenized_pattern", "hash", "sequence"], inplace=True)
+
+                self.df.to_csv(f'{self.output_fname}.orig.csv')
+
             self.process_timings()
 
             # Categorization
@@ -241,17 +259,19 @@ class Chain(object):
             orient='columns').sort_values(by=['cluster_size'], ascending=False)
 
     def clusters_regroup(self, gb):
-        pattern = self.search_common_patterns(gb)
+        pattern_indices = self.search_common_patterns(gb)
 
         # Get all indices for the group
         indices = [i for sublist in gb['indices'].values for i in sublist]
         size = len(indices)
 
-        phrases = self.search_keyphrases(pattern)
+        phrases = self.search_keyphrases(pattern_indices.keys())
 
-        return {'pattern': pattern,
+        return {'patterns': pattern_indices.keys(),
+                'pattern_indices': pattern_indices,
                 'indices': indices,
                 'cluster_size': size,
+                'cluster_number': gb['cluster'].values[0],
                 'common_phrases': phrases[:10]}
 
     @safe_run
@@ -259,14 +279,23 @@ class Chain(object):
         m = Match(match_threshhold=self.matching_accuracy,
                   add_placeholder=self.add_placeholder)
         sequences = gb['tokenized_pattern'].values
+        indices = gb['indices'].values
 
         if len(sequences) > 1:
-            tokenized_pattern = m.matching_clusters(sequences)
+            tokenized_pattern, indices = m.matching_clusters(sequences, indices)
         elif len(sequences) == 1:
-            tokenized_pattern = [sequences[0]]
+            tokenized_pattern, indices = [sequences[0]], [indices[0]]
         else:
-            tokenized_pattern = [[]]
-        return detokenize_messages(tokenized_pattern, self.tokenizer_type)
+            tokenized_pattern, indices = [[]], [[]]
+
+        pattern_indices = dict()
+
+        patterns = detokenize_messages(tokenized_pattern, self.tokenizer_type)
+
+        for p, i in zip(patterns, indices):
+            pattern_indices[p] = i
+
+        return pattern_indices
 
     @safe_run
     def search_keyphrases(self, pattern):
