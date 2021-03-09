@@ -4,6 +4,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 
 from math import log
+from os import listdir
 from os.path import exists
 from json import dumps, loads
 from dataclasses import dataclass
@@ -41,21 +42,6 @@ def display_model_file_warning(n_clicks: int, model_file: str, custom_model_file
     if model_usage_mode != 'create' and model_file == 'custom' and not exists(custom_model_file):
         return True
     return False
-
-
-@app.callback(
-    Output(component_id='model-usage-mode', component_property='options'),
-    [Input(component_id='model-file', component_property='value')]
-)
-def enable_create_option(model_file: str) -> List[Dict[str, Any]]:
-    options: List[Dict[str, Any]] = [
-        {"label": "Use existing model", "value": 'process'},
-        {"label": "Update existing model", "value": 'update'},
-        {"label": "Create new model", "value": 'create'},
-    ]
-    if model_file != 'custom':
-        options[-1]['disabled'] = True
-    return options
 
 
 @app.callback(
@@ -302,47 +288,20 @@ def disable_tabs(clustering_algorithm: str) -> Tuple[bool, bool]:
     return disable_graph, disable_knee_graph
 
 
-# @app.callback(
-#     Output('results-graph-group', 'style'),
-#     [Input('clustering-algorithm', 'value')]
-# )
-# def hide_graph_headings(clustering_algorithm: str) -> Optional[Dict[str, str]]:
-#     if clustering_algorithm == 'similarity':
-#         return {'display': 'none'}
-#     return None
-
-
-# @app.callback(
-#     [Output('parameters-layout', 'style'),
-#      Output('results-layout', 'style'),
-#      Output('knee-graph-layout', 'style')],
-#     [Input('url', 'pathname')]
-# )
-# def display_page(pathname: str) -> Tuple[Optional[Dict[str, str]], ...]:
-#     # The order in this dictionary should be the same as callback outputs
-#     routing_table = {
-#         '/': 'parameters-layout',
-#         '/results': 'results-layout',
-#         '/knee-graph': 'knee-graph-layout'
-#     }
-#     display_styles = [None if routing_table[pathname] == page else {'display': 'none'} for page in routing_table.values()]
-#     return tuple(display_styles)
-
-
-# @app.callback(
-#     [Output('results-nav-item', 'style'),
-#      Output('knee-graph-nav-item', 'style')],
-#     [Input('results-table', 'children'),
-#      Input('knee-graph', 'children')]
-# )
-# def hide_nav_items(table: Optional[html.Table], knee_graph: Optional[dcc.Graph]) -> Tuple[Optional[Dict[str, str]], ...]:
-#     results_style: Optional[Dict[str, str]] = {'display': 'none'}
-#     knee_graph_style: Optional[Dict[str, str]] = {'display': 'none'}
-#     if table:
-#         results_style = None
-#     if knee_graph:
-#         knee_graph_style = None
-#     return results_style, knee_graph_style
+@app.callback(
+    [Output(component_id='model-file', component_property='options'),
+     Output(component_id='model-file', component_property='value')],
+    [Input(component_id='model-usage-mode', component_property='value')],
+    [State(component_id='model-file', component_property='value')]
+)
+def only_custom_model_if_create(usage_mode: str, model_file: Optional[str]) -> Tuple[List[Dict[str, Any]], Optional[str]]:
+    model_names = [{
+        'label': model_name,
+        'value': './models/' + model_name,
+        'disabled': True if usage_mode == 'create' else False
+    } for model_name in listdir('./models')]
+    model_file = 'custom' if usage_mode == 'create' else model_file
+    return model_names + [{'label': 'Custom model', 'value': 'custom'}], model_file
 
 
 @app.callback(
