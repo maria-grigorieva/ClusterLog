@@ -289,46 +289,60 @@ def update_knee_graph(knee_data_json: str) -> Optional[dcc.Graph]:
 
 
 @app.callback(
-    Output('results-graph-group', 'style'),
+    [Output('graph-tab', 'disabled'),
+     Output('knee-graph-tab', 'disabled')],
     [Input('clustering-algorithm', 'value')]
 )
-def hide_graph_headings(clustering_algorithm: str) -> Optional[Dict[str, str]]:
+def disable_tabs(clustering_algorithm: str) -> Tuple[bool, bool]:
+    disable_graph, disable_knee_graph = False, True
     if clustering_algorithm == 'similarity':
-        return {'display': 'none'}
-    return None
+        disable_graph = True
+    if clustering_algorithm == 'dbscan':
+        disable_knee_graph = False
+    return disable_graph, disable_knee_graph
 
 
-@app.callback(
-    [Output('parameters-layout', 'style'),
-     Output('results-layout', 'style'),
-     Output('knee-graph-layout', 'style')],
-    [Input('url', 'pathname')]
-)
-def display_page(pathname: str) -> Tuple[Optional[Dict[str, str]], ...]:
-    # The order in this dictionary should be the same as callback outputs
-    routing_table = {
-        '/': 'parameters-layout',
-        '/results': 'results-layout',
-        '/knee-graph': 'knee-graph-layout'
-    }
-    display_styles = [None if routing_table[pathname] == page else {'display': 'none'} for page in routing_table.values()]
-    return tuple(display_styles)
+# @app.callback(
+#     Output('results-graph-group', 'style'),
+#     [Input('clustering-algorithm', 'value')]
+# )
+# def hide_graph_headings(clustering_algorithm: str) -> Optional[Dict[str, str]]:
+#     if clustering_algorithm == 'similarity':
+#         return {'display': 'none'}
+#     return None
 
 
-@app.callback(
-    [Output('results-nav-item', 'style'),
-     Output('knee-graph-nav-item', 'style')],
-    [Input('results-table', 'children'),
-     Input('knee-graph', 'children')]
-)
-def hide_nav_items(table: Optional[html.Table], knee_graph: Optional[dcc.Graph]) -> Tuple[Optional[Dict[str, str]], ...]:
-    results_style: Optional[Dict[str, str]] = {'display': 'none'}
-    knee_graph_style: Optional[Dict[str, str]] = {'display': 'none'}
-    if table:
-        results_style = None
-    if knee_graph:
-        knee_graph_style = None
-    return results_style, knee_graph_style
+# @app.callback(
+#     [Output('parameters-layout', 'style'),
+#      Output('results-layout', 'style'),
+#      Output('knee-graph-layout', 'style')],
+#     [Input('url', 'pathname')]
+# )
+# def display_page(pathname: str) -> Tuple[Optional[Dict[str, str]], ...]:
+#     # The order in this dictionary should be the same as callback outputs
+#     routing_table = {
+#         '/': 'parameters-layout',
+#         '/results': 'results-layout',
+#         '/knee-graph': 'knee-graph-layout'
+#     }
+#     display_styles = [None if routing_table[pathname] == page else {'display': 'none'} for page in routing_table.values()]
+#     return tuple(display_styles)
+
+
+# @app.callback(
+#     [Output('results-nav-item', 'style'),
+#      Output('knee-graph-nav-item', 'style')],
+#     [Input('results-table', 'children'),
+#      Input('knee-graph', 'children')]
+# )
+# def hide_nav_items(table: Optional[html.Table], knee_graph: Optional[dcc.Graph]) -> Tuple[Optional[Dict[str, str]], ...]:
+#     results_style: Optional[Dict[str, str]] = {'display': 'none'}
+#     knee_graph_style: Optional[Dict[str, str]] = {'display': 'none'}
+#     if table:
+#         results_style = None
+#     if knee_graph:
+#         knee_graph_style = None
+#     return results_style, knee_graph_style
 
 
 @app.callback(
