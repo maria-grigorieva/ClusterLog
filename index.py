@@ -1,9 +1,13 @@
 import dash_core_components as dcc
 import dash_html_components as html
 
+from os.path import join
+from atexit import register
+from os import remove, listdir
+
 # the "noqa" comment tells the linter to ignore that import is unused
 import webapp.callbacks  # noqa: F401
-from webapp.app import app
+from webapp.app import app, CUSTOM_MODEL_DIR
 from webapp.layouts import parameters_layout, results_table_layout, results_graph_layout, knee_graph_layout
 
 
@@ -12,47 +16,6 @@ parameters = html.Div(
     className='col-md-3 col-lg-3 bg-light',
     children=[
         html.Div(id='parameters-layout', children=parameters_layout)
-
-        # html.Div(className='position-sticky pt-3', children=[
-        # html.Ul(
-        #     className='nav flex-column',
-        #     children=[
-        #         html.Li(
-        #             className='nav-item',
-        #             children=[
-        #                 dcc.Link(
-        #                     className='nav-link',
-        #                     children="Parameters",
-        #                     href='/'
-        #                 )
-        #             ]
-        #         ),
-
-        #         html.Li(
-        #             id='results-nav-item',
-        #             className='nav-item',
-        #             children=[
-        #                 dcc.Link(
-        #                     className='nav-link',
-        #                     children="Results",
-        #                     href='/results'
-        #                 )
-        #             ]
-        #         ),
-
-        #         html.Li(
-        #             id='knee-graph-nav-item',
-        #             className='nav-item',
-        #             children=[
-        #                 dcc.Link(
-        #                     className='nav-link',
-        #                     children="Knee Graph",
-        #                     href='/knee-graph'
-        #                 )
-        #             ]
-        #         )
-        #     ]
-        # )
     ]
 )
 
@@ -93,5 +56,15 @@ app.layout = html.Div(children=[
 ])
 
 
+def delete_temp_files() -> None:
+    model_files = listdir(CUSTOM_MODEL_DIR)
+    file_num = len(model_files)
+    for file in model_files:
+        remove(join(CUSTOM_MODEL_DIR, file))
+    if file_num > 0:
+        print(f"Deleted {file_num} temporary model file{'' if file_num == 1 else 's'}")
+
+
 if __name__ == '__main__':
+    register(delete_temp_files)
     app.run_server(debug=True)

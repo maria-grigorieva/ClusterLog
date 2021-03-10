@@ -4,18 +4,20 @@ import dash_core_components as dcc
 import dash_html_components as html
 
 from math import log
-from os import listdir
-from os.path import exists
 from json import dumps, loads
+from os import listdir
 from dataclasses import dataclass
+from tempfile import NamedTemporaryFile
+from typing import List, Optional, Tuple, Dict, Any, Union
+
 from sklearn.manifold import TSNE
-from typing import List, Optional, Tuple, Dict, Any
+from dash_extensions.snippets import send_file
 from plotly.graph_objects import Figure, Scatter
 from dash.dependencies import Input, Output, State
 
-from webapp.app import app
 from webapp.process import execute_pipeline
-from webapp.utility import parse_input_file, generate_table
+from webapp.app import app, CUSTOM_MODEL_DIR
+from webapp.utility import parse_input_file, parse_model_file, generate_table
 
 
 @app.callback(
@@ -31,17 +33,28 @@ def display_uploaded_filename(contents: str, filename: str) -> str:
 
 
 @app.callback(
-    Output(component_id='no-model-warning', component_property='displayed'),
-    [Input(component_id='submit-button-state', component_property='n_clicks')],
-    [State(component_id='model-file', component_property='value'),
-     State(component_id='custom-model-file', component_property='value'),
-     State(component_id='model-usage-mode', component_property='value')])
-def display_model_file_warning(n_clicks: int, model_file: str, custom_model_file: str, model_usage_mode: str) -> bool:
-    if n_clicks == 0:
-        return False
-    if model_usage_mode != 'create' and model_file == 'custom' and not exists(custom_model_file):
-        return True
-    return False
+    Output(component_id='custom-model-name', component_property='children'),
+    [Input(component_id='custom-model-upload', component_property='contents')],
+    [State(component_id='custom-model-upload', component_property='filename')]
+)
+def display_custom_model_filename(contents: str, filename: str) -> str:
+    if contents:
+        return html.Div(filename)
+    else:
+        return "No model file selected"
+
+# @app.callback(
+#     Output(component_id='no-model-warning', component_property='displayed'),
+#     [Input(component_id='submit-button-state', component_property='n_clicks')],
+#     [State(component_id='model-file', component_property='value'),
+#      State(component_id='custom-model-file', component_property='value'),
+#      State(component_id='model-usage-mode', component_property='value')])
+# def display_model_file_warning(n_clicks: int, model_file: str, custom_model_file: str, model_usage_mode: str) -> bool:
+#     if n_clicks == 0:
+#         return False
+#     if model_usage_mode != 'create' and model_file == 'custom' and not exists(custom_model_file):
+#         return True
+#     return False
 
 
 @app.callback(
@@ -50,11 +63,12 @@ def display_model_file_warning(n_clicks: int, model_file: str, custom_model_file
     Output(component_id='embeddings-storage', component_property='children'),
     Output(component_id='knee-data-storage', component_property='children'),
     Output(component_id='loading-output', component_property='children'),
+    Output(component_id='custom-model-download', component_property='data'),
     [Input(component_id='submit-button-state', component_property='n_clicks')],
     [State(component_id='input-file', component_property='contents'),
      State(component_id='target-column', component_property='value'),
      State(component_id='model-file', component_property='value'),
-     State(component_id='custom-model-file', component_property='value'),
+     State(component_id='custom-model-upload', component_property='contents'),
      State(component_id='model-usage-mode', component_property='value'),
      State(component_id='tokenizer-type', component_property='value'),
      State(component_id='clustering-algorithm', component_property='value'),
@@ -67,21 +81,28 @@ def display_model_file_warning(n_clicks: int, model_file: str, custom_model_file
 def update_results(
         n_clicks: int,
         input_file: Optional[str], target_column: str,
-        model_name: str, custom_model: str, model_usage_mode: str,
+        model_name: str, custom_model: Optional[str], model_usage_mode: str,
         tokenizer_type: str, clustering_algorithm: str,
         clustering_parameters_json: str,
         keywords_extraction: str, matching_accuracy: float,
         boolean_options: List[str], word2vec_size: int,
-        word2vec_window: int) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str], str]:
+        word2vec_window: int) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str], str, Optional[Dict[Any, Union[str, bool]]]]:
 
     if n_clicks == 0 or not input_file or not target_column:
-        return None, None, None, None, "Submit"
-    if model_name == 'custom':
-        model_name = custom_model
-    if model_usage_mode != 'create' and not exists(model_name):
-        return None, None, None, None, "Submit"
+        return None, None, None, None, "Submit", None
 
     dataframe = parse_input_file(input_file)
+
+    custom_model_name = ''
+    if model_name == 'custom':
+        if custom_model is None:
+            if model_usage_mode != 'create':
+                return None, None, None, None, "Submit", None
+            else:
+                new_model_file = NamedTemporaryFile(mode='w+b', dir=CUSTOM_MODEL_DIR, delete=False, suffix='.model')
+                model_name = custom_model_name = new_model_file.name
+        else:
+            model_name = custom_model_name = parse_model_file(custom_model)
 
     options = {
         'add_placeholder': False,
@@ -116,7 +137,11 @@ def update_results(
     else:
         jsoned_embeddings = None
 
-    return result.result.to_json(), groups.to_json(), jsoned_embeddings, knee_data, "Submit"
+    download_file = None
+    if custom_model_name and model_usage_mode != 'process':
+        download_file = send_file(custom_model_name)
+
+    return result.result.to_json(), groups.to_json(), jsoned_embeddings, knee_data, "Submit", download_file
 
 
 @app.callback(
@@ -126,7 +151,7 @@ def update_table(stored_results: str) -> Optional[html.Table]:
     if not stored_results:
         return None
     result: pd.DataFrame = pd.read_json(stored_results)  # type: ignore
-    return generate_table(result, columns=['cluster_size', 'pattern', 'common_phrases'])
+    return generate_table(result, columns=['cluster_size', 'patterns', 'common_phrases'])
 
 
 @app.callback(
@@ -304,11 +329,12 @@ def immutable_models_on_server(usage_mode: str) -> Tuple[List[Dict[str, Any]], O
 
 
 @app.callback(
-    Output('custom-model', 'style'),
-    [Input('model-file', 'value')]
+    Output('custom-model-group', 'style'),
+    [Input('model-file', 'value'),
+     Input('model-usage-mode', 'value')]
 )
-def custom_model_form_visibility(model_name: str) -> Optional[Dict[str, str]]:
-    if model_name == 'custom':
+def custom_model_form_visibility(model_name: str, usage_mode: str) -> Optional[Dict[str, str]]:
+    if model_name == 'custom' and usage_mode != 'create':
         return None
     return {'display': 'none'}
 

@@ -3,6 +3,7 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 
 from os import listdir
+from dash_extensions import Download
 
 
 parameters_layout = html.Main(className='container px-6', children=[
@@ -17,9 +18,8 @@ parameters_layout = html.Main(className='container px-6', children=[
             children="Select a file",
             className='btn btn-outline-secondary'
         ), width='auto'),
-        dbc.Col(html.P(id='input-file-name', children='No csv file selected', className='lh-lg fs-6 fw-light'))
-    ]),
-
+        dbc.Col(html.P(id='input-file-name', children='No csv file selected', className='font-weight-light mt-2'))
+    ], className='mt-3 mb-2'),
 
     dbc.FormGroup([
         dbc.Label(children="Target column:", html_for='target-column'),
@@ -37,18 +37,29 @@ parameters_layout = html.Main(className='container px-6', children=[
         )
     ]),
 
-    dbc.FormGroup(id='custom-model', style={'display': 'none'}, children=[
-        dbc.Label(children="Enter path to word2vec model file:", html_for='custom-model-file'),
-        dbc.Input(id='custom-model-file', value='', type='text')
+    # dbc.FormGroup(id='custom-model', style={'display': 'none'}, children=[
+    #     dbc.Label(children="Enter path to word2vec model file:", html_for='custom-model-file'),
+    #     dbc.Input(id='custom-model-file', value='', type='text')
+    # ]),
+
+    dbc.Row(id='custom-model-group', style={'display': 'none'}, children=[
+        dbc.Col(dcc.Upload(
+            id='custom-model-upload',
+            children="Select a file",
+            className='btn btn-outline-secondary'
+        ), width='auto'),
+        dbc.Col(html.P(id='custom-model-name', children='No model file selected', className='font-weight-light mt-2'))
     ]),
+
+    Download(id='custom-model-download'),
 
     dbc.FormGroup([
         dbc.Label("Word2Vec model usage mode", html_for='model-usage-mode'),
         dbc.RadioItems(
             options=[
-                {"label": "Use existing model", "value": 'process'},
-                {"label": "Update existing model", "value": 'update'},
-                {"label": "Create new model", "value": 'create'},
+                {"label": "Use an existing model", "value": 'process'},
+                {"label": "Update an existing model", "value": 'update'},
+                {"label": "Create a new model", "value": 'create'},
             ],
             value='process',
             id="model-usage-mode",
@@ -57,11 +68,11 @@ parameters_layout = html.Main(className='container px-6', children=[
 
     html.Hr(),
 
-    dcc.ConfirmDialog(
-        id='no-model-warning',
-        message='Word2vec model file does not exist.\nEnter a valid path or create a new model',
-        displayed=False
-    ),
+    # dcc.ConfirmDialog(
+    #     id='no-model-warning',
+    #     message='Word2vec model file does not exist.\nEnter a valid path or create a new model',
+    #     displayed=False
+    # ),
 
     html.H4(children='Pipeline parameters'),
 

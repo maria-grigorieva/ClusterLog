@@ -1,5 +1,5 @@
 import dash
-import dash_bootstrap_components as dbc
 
 
+CUSTOM_MODEL_DIR = './webapp/downloads/'
 app = dash.Dash(__name__, title="ClusterLogs")
