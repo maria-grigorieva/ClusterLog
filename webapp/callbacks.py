@@ -291,16 +291,15 @@ def disable_tabs(clustering_algorithm: str) -> Tuple[bool, bool]:
 @app.callback(
     [Output(component_id='model-file', component_property='options'),
      Output(component_id='model-file', component_property='value')],
-    [Input(component_id='model-usage-mode', component_property='value')],
-    [State(component_id='model-file', component_property='value')]
+    [Input(component_id='model-usage-mode', component_property='value')]
 )
-def only_custom_model_if_create(usage_mode: str, model_file: Optional[str]) -> Tuple[List[Dict[str, Any]], Optional[str]]:
+def immutable_models_on_server(usage_mode: str) -> Tuple[List[Dict[str, Any]], Optional[str]]:
     model_names = [{
         'label': model_name,
         'value': './models/' + model_name,
-        'disabled': True if usage_mode == 'create' else False
+        'disabled': False if usage_mode == 'process' else True
     } for model_name in listdir('./models')]
-    model_file = 'custom' if usage_mode == 'create' else model_file
+    model_file = None if usage_mode == 'process' else 'custom'
     return model_names + [{'label': 'Custom model', 'value': 'custom'}], model_file
 
 
