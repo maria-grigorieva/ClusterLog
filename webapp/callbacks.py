@@ -4,17 +4,20 @@ import dash_core_components as dcc
 import dash_html_components as html
 
 from math import log
-from os.path import exists
 from json import dumps, loads
+from os import listdir
 from dataclasses import dataclass
+from tempfile import NamedTemporaryFile
+from typing import List, Optional, Tuple, Dict, Any, Union
+
 from sklearn.manifold import TSNE
-from typing import List, Optional, Tuple, Dict, Any
+from dash_extensions.snippets import send_file
 from plotly.graph_objects import Figure, Scatter
 from dash.dependencies import Input, Output, State
 
-from webapp.app import app
 from webapp.process import execute_pipeline
-from webapp.utility import parse_input_file, generate_table
+from webapp.app import app, CUSTOM_MODEL_DIR
+from webapp.utility import parse_input_file, parse_model_file, generate_table
 
 
 @app.callback(
@@ -30,32 +33,28 @@ def display_uploaded_filename(contents: str, filename: str) -> str:
 
 
 @app.callback(
-    Output(component_id='no-model-warning', component_property='displayed'),
-    [Input(component_id='submit-button-state', component_property='n_clicks')],
-    [State(component_id='model-file', component_property='value'),
-     State(component_id='custom-model-file', component_property='value'),
-     State(component_id='model-usage-mode', component_property='value')])
-def display_model_file_warning(n_clicks: int, model_file: str, custom_model_file: str, model_usage_mode: str) -> bool:
-    if n_clicks == 0:
-        return False
-    if model_usage_mode != 'create' and model_file == 'custom' and not exists(custom_model_file):
-        return True
-    return False
-
-
-@app.callback(
-    Output(component_id='model-usage-mode', component_property='options'),
-    [Input(component_id='model-file', component_property='value')]
+    Output(component_id='custom-model-name', component_property='children'),
+    [Input(component_id='custom-model-upload', component_property='contents')],
+    [State(component_id='custom-model-upload', component_property='filename')]
 )
-def enable_create_option(model_file: str) -> List[Dict[str, Any]]:
-    options: List[Dict[str, Any]] = [
-        {"label": "Use existing model", "value": 'process'},
-        {"label": "Update existing model", "value": 'update'},
-        {"label": "Create new model", "value": 'create'},
-    ]
-    if model_file != 'custom':
-        options[-1]['disabled'] = True
-    return options
+def display_custom_model_filename(contents: str, filename: str) -> str:
+    if contents:
+        return html.Div(filename)
+    else:
+        return "No model file selected"
+
+# @app.callback(
+#     Output(component_id='no-model-warning', component_property='displayed'),
+#     [Input(component_id='submit-button-state', component_property='n_clicks')],
+#     [State(component_id='model-file', component_property='value'),
+#      State(component_id='custom-model-file', component_property='value'),
+#      State(component_id='model-usage-mode', component_property='value')])
+# def display_model_file_warning(n_clicks: int, model_file: str, custom_model_file: str, model_usage_mode: str) -> bool:
+#     if n_clicks == 0:
+#         return False
+#     if model_usage_mode != 'create' and model_file == 'custom' and not exists(custom_model_file):
+#         return True
+#     return False
 
 
 @app.callback(
@@ -64,11 +63,12 @@ def enable_create_option(model_file: str) -> List[Dict[str, Any]]:
     Output(component_id='embeddings-storage', component_property='children'),
     Output(component_id='knee-data-storage', component_property='children'),
     Output(component_id='loading-output', component_property='children'),
+    Output(component_id='custom-model-download', component_property='data'),
     [Input(component_id='submit-button-state', component_property='n_clicks')],
     [State(component_id='input-file', component_property='contents'),
      State(component_id='target-column', component_property='value'),
      State(component_id='model-file', component_property='value'),
-     State(component_id='custom-model-file', component_property='value'),
+     State(component_id='custom-model-upload', component_property='contents'),
      State(component_id='model-usage-mode', component_property='value'),
      State(component_id='tokenizer-type', component_property='value'),
      State(component_id='clustering-algorithm', component_property='value'),
@@ -81,21 +81,28 @@ def enable_create_option(model_file: str) -> List[Dict[str, Any]]:
 def update_results(
         n_clicks: int,
         input_file: Optional[str], target_column: str,
-        model_name: str, custom_model: str, model_usage_mode: str,
+        model_name: str, custom_model: Optional[str], model_usage_mode: str,
         tokenizer_type: str, clustering_algorithm: str,
         clustering_parameters_json: str,
         keywords_extraction: str, matching_accuracy: float,
         boolean_options: List[str], word2vec_size: int,
-        word2vec_window: int) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str], str]:
+        word2vec_window: int) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str], str, Optional[Dict[Any, Union[str, bool]]]]:
 
     if n_clicks == 0 or not input_file or not target_column:
-        return None, None, None, None, "Submit"
-    if model_name == 'custom':
-        model_name = custom_model
-    if model_usage_mode != 'create' and not exists(model_name):
-        return None, None, None, None, "Submit"
+        return None, None, None, None, "Submit", None
 
     dataframe = parse_input_file(input_file)
+
+    custom_model_name = ''
+    if model_name == 'custom':
+        if custom_model is None:
+            if model_usage_mode != 'create':
+                return None, None, None, None, "Submit", None
+            else:
+                new_model_file = NamedTemporaryFile(mode='w+b', dir=CUSTOM_MODEL_DIR, delete=False, suffix='.model')
+                model_name = custom_model_name = new_model_file.name
+        else:
+            model_name = custom_model_name = parse_model_file(custom_model)
 
     options = {
         'add_placeholder': False,
@@ -130,7 +137,11 @@ def update_results(
     else:
         jsoned_embeddings = None
 
-    return result.result.to_json(), groups.to_json(), jsoned_embeddings, knee_data, "Submit"
+    download_file = None
+    if custom_model_name and model_usage_mode != 'process':
+        download_file = send_file(custom_model_name)
+
+    return result.result.to_json(), groups.to_json(), jsoned_embeddings, knee_data, "Submit", download_file
 
 
 @app.callback(
@@ -140,7 +151,7 @@ def update_table(stored_results: str) -> Optional[html.Table]:
     if not stored_results:
         return None
     result: pd.DataFrame = pd.read_json(stored_results)  # type: ignore
-    return generate_table(result, columns=['cluster_size', 'pattern', 'common_phrases'])
+    return generate_table(result, columns=['cluster_size', 'patterns', 'common_phrases'])
 
 
 @app.callback(
@@ -289,54 +300,41 @@ def update_knee_graph(knee_data_json: str) -> Optional[dcc.Graph]:
 
 
 @app.callback(
-    Output('results-graph-group', 'style'),
+    [Output('graph-tab', 'disabled'),
+     Output('knee-graph-tab', 'disabled')],
     [Input('clustering-algorithm', 'value')]
 )
-def hide_graph_headings(clustering_algorithm: str) -> Optional[Dict[str, str]]:
+def disable_tabs(clustering_algorithm: str) -> Tuple[bool, bool]:
+    disable_graph, disable_knee_graph = False, True
     if clustering_algorithm == 'similarity':
-        return {'display': 'none'}
-    return None
+        disable_graph = True
+    if clustering_algorithm == 'dbscan':
+        disable_knee_graph = False
+    return disable_graph, disable_knee_graph
 
 
 @app.callback(
-    [Output('parameters-layout', 'style'),
-     Output('results-layout', 'style'),
-     Output('knee-graph-layout', 'style')],
-    [Input('url', 'pathname')]
+    [Output(component_id='model-file', component_property='options'),
+     Output(component_id='model-file', component_property='value')],
+    [Input(component_id='model-usage-mode', component_property='value')]
 )
-def display_page(pathname: str) -> Tuple[Optional[Dict[str, str]], ...]:
-    # The order in this dictionary should be the same as callback outputs
-    routing_table = {
-        '/': 'parameters-layout',
-        '/results': 'results-layout',
-        '/knee-graph': 'knee-graph-layout'
-    }
-    display_styles = [None if routing_table[pathname] == page else {'display': 'none'} for page in routing_table.values()]
-    return tuple(display_styles)
+def immutable_models_on_server(usage_mode: str) -> Tuple[List[Dict[str, Any]], Optional[str]]:
+    model_names = [{
+        'label': model_name,
+        'value': './models/' + model_name,
+        'disabled': False if usage_mode == 'process' else True
+    } for model_name in listdir('./models')]
+    model_file = None if usage_mode == 'process' else 'custom'
+    return model_names + [{'label': 'Custom model', 'value': 'custom'}], model_file
 
 
 @app.callback(
-    [Output('results-nav-item', 'style'),
-     Output('knee-graph-nav-item', 'style')],
-    [Input('results-table', 'children'),
-     Input('knee-graph', 'children')]
+    Output('custom-model-group', 'style'),
+    [Input('model-file', 'value'),
+     Input('model-usage-mode', 'value')]
 )
-def hide_nav_items(table: Optional[html.Table], knee_graph: Optional[dcc.Graph]) -> Tuple[Optional[Dict[str, str]], ...]:
-    results_style: Optional[Dict[str, str]] = {'display': 'none'}
-    knee_graph_style: Optional[Dict[str, str]] = {'display': 'none'}
-    if table:
-        results_style = None
-    if knee_graph:
-        knee_graph_style = None
-    return results_style, knee_graph_style
-
-
-@app.callback(
-    Output('custom-model', 'style'),
-    [Input('model-file', 'value')]
-)
-def custom_model_form_visibility(model_name: str) -> Optional[Dict[str, str]]:
-    if model_name == 'custom':
+def custom_model_form_visibility(model_name: str, usage_mode: str) -> Optional[Dict[str, str]]:
+    if model_name == 'custom' and usage_mode != 'create':
         return None
     return {'display': 'none'}
 

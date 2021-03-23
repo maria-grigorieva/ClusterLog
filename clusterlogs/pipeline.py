@@ -267,7 +267,7 @@ class Chain(object):
 
         phrases = self.search_keyphrases(pattern_indices.keys())
 
-        return {'patterns': pattern_indices.keys(),
+        return {'patterns': list(pattern_indices.keys()),
                 'pattern_indices': pattern_indices,
                 'indices': indices,
                 'cluster_size': size,

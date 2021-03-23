@@ -7,7 +7,7 @@ def generate_html_report(df, output_file):
     template = env.get_template("template.html")
     original_list = df.to_dict('records')
     new_list = [{k: v for k, v in d.items() if
-                 k in ['cluster_size', 'pattern', 'common_phrases']} for d in
+                 k in ['cluster_size', 'patterns', 'common_phrases']} for d in
                 original_list]
     template_vars = {"values": new_list}
     html_out = template.render(template_vars)

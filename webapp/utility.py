@@ -6,6 +6,9 @@ from io import StringIO
 from base64 import b64decode
 from collections.abc import Sequence
 from typing import List, Optional
+from tempfile import NamedTemporaryFile
+
+from webapp.app import CUSTOM_MODEL_DIR
 
 
 def generate_table(dataframe: pd.DataFrame, columns: Optional[List[str]] = None, max_rows: Optional[int] = None) -> Table:
@@ -43,3 +46,11 @@ def parse_input_file(content: str) -> pd.DataFrame:
     decoded = b64decode(content_string)
     df = pd.read_csv(StringIO(decoded.decode('utf-8')))
     return df  # type: ignore
+
+
+def parse_model_file(content: str) -> str:
+    _, content_string = content.split(',')
+    decoded = b64decode(content_string)
+    with NamedTemporaryFile(mode='w+b', dir=CUSTOM_MODEL_DIR, delete=False, suffix='.model') as model_file:
+        model_file.write(decoded)
+    return model_file.name

@@ -128,3 +128,8 @@ dmypy.json
 
 # IDE stuff
 .vscode/
+
+# Results of clustering
+report.html
+report.csv
+report.orig.csv
