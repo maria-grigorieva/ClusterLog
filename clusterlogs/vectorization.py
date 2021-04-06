@@ -1,22 +1,24 @@
 import math
 import numpy as np
 
-from gensim.models import Word2Vec
-from sklearn.feature_extraction.text import TfidfVectorizer
 from collections import defaultdict
+from gensim.models import Word2Vec
+from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 from .pipeline import Chain
 
 
 class Vector(Chain):
 
-    def __init__(self, tokenized, w2v_size, w2v_window, cpu_number, model_name):
+    def __init__(self, tokenized, w2v_size, w2v_window, cpu_number, model_name, tf_idf=False):
         self.word2vec = None
         self.tokenized = tokenized
         self.w2v_size = w2v_size
         self.w2v_window = w2v_window
         self.cpu_number = cpu_number
         self.model_name = model_name
+        self.tf_idf = tf_idf
 
     def create_word2vec_model(self, min_count=1, iterations=30):
         """
@@ -61,13 +63,13 @@ class Vector(Chain):
             w2c[item] = self.word2vec.wv.vocab[item].count
         return w2c
 
-    def vectorize_messages(self, tf_idf=False):
+    def vectorize_messages(self):
         """
         Calculates mathematical average of the word vector representations
         of all the words in each sentence
         """
         sent2vec = []
-        if tf_idf:
+        if self.tf_idf:
             tfidf = TfidfVectorizer(analyzer=lambda x: x)
             tfidf.fit(self.tokenized)
             # if a word was never seen - it must be at least as infrequent
@@ -100,6 +102,36 @@ class Vector(Chain):
         """
         print('Vocabulary size = {}'.format(len(vocab)))
         embedding_size = round(math.sqrt(len(vocab)))
+        if embedding_size >= 300:
+            embedding_size = 300
+        return embedding_size
+
+
+class BertVectorization():
+    def __init__(self, messages, model_name):
+        self.messages = messages
+        self.model_name = model_name
+
+    def create_model(self):
+        pass
+
+    def update_model(self):
+        pass
+
+    def load_model(self):
+        pass
+
+    def vectorize_messages(self):
+        model = SentenceTransformer('paraphrase-distilroberta-base-v1')
+        print("Started text encoding:")
+        sentence_embeddings = model.encode(self.messages, convert_to_numpy=True, show_progress_bar=True)
+        self.sent2vec = sentence_embeddings
+        return sentence_embeddings
+
+    @staticmethod
+    def detect_embedding_size(vocabulary):
+        print('Vocabulary size = {}'.format(len(vocabulary)))
+        embedding_size = round(math.sqrt(len(vocabulary)))
         if embedding_size >= 300:
             embedding_size = 300
         return embedding_size

@@ -27,7 +27,7 @@ parameters_layout = html.Main(className='container px-6', children=[
     ]),
 
     dbc.FormGroup([
-        dbc.Label(children="Word2vec model:", html_for='model-file'),
+        dbc.Label(children="Transformer model:", html_for='model-file'),
         dbc.Select(
             id='model-file',
             options=[
@@ -54,7 +54,7 @@ parameters_layout = html.Main(className='container px-6', children=[
     Download(id='custom-model-download'),
 
     dbc.FormGroup([
-        dbc.Label("Word2Vec model usage mode", html_for='model-usage-mode'),
+        dbc.Label("Transformer model usage mode", html_for='model-usage-mode'),
         dbc.RadioItems(
             options=[
                 {"label": "Use an existing model", "value": 'process'},
@@ -67,12 +67,6 @@ parameters_layout = html.Main(className='container px-6', children=[
     ]),
 
     html.Hr(),
-
-    # dcc.ConfirmDialog(
-    #     id='no-model-warning',
-    #     message='Word2vec model file does not exist.\nEnter a valid path or create a new model',
-    #     displayed=False
-    # ),
 
     html.H4(children='Pipeline parameters'),
 
@@ -116,6 +110,18 @@ parameters_layout = html.Main(className='container px-6', children=[
                 {'label': 'WINGNUS', 'value': 'WINGNUS'},
             ],
             value='rake_nltk'
+        )
+    ]),
+
+    dbc.FormGroup([
+        dbc.Label(children="Vectorization type", html_for='vectorization-type'),
+        dbc.Select(
+            id='vectorization-type',
+            options=[
+                {'label': 'Word2vec', 'value': 'word2vec'},
+                {'label': 'BERT', 'value': 'bert'},
+            ],
+            value='word2vec'
         )
     ]),
 

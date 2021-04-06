@@ -70,6 +70,7 @@ def display_custom_model_filename(contents: str, filename: str) -> str:
      State(component_id='model-file', component_property='value'),
      State(component_id='custom-model-upload', component_property='contents'),
      State(component_id='model-usage-mode', component_property='value'),
+     State(component_id='vectorization-type', component_property='value'),
      State(component_id='tokenizer-type', component_property='value'),
      State(component_id='clustering-algorithm', component_property='value'),
      State(component_id='clustering-parameters-storage', component_property='children'),
@@ -82,8 +83,8 @@ def update_results(
         n_clicks: int,
         input_file: Optional[str], target_column: str,
         model_name: str, custom_model: Optional[str], model_usage_mode: str,
-        tokenizer_type: str, clustering_algorithm: str,
-        clustering_parameters_json: str,
+        vectorization_type: str, tokenizer_type: str,
+        clustering_algorithm: str, clustering_parameters_json: str,
         keywords_extraction: str, matching_accuracy: float,
         boolean_options: List[str], word2vec_size: int,
         word2vec_window: int) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str], str, Optional[Dict[Any, Union[str, bool]]]]:
@@ -120,7 +121,8 @@ def update_results(
 
     result = execute_pipeline(dataframe, target_column,
                               model_name, model_usage_mode,
-                              tokenizer_type, clustering_algorithm,
+                              tokenizer_type, vectorization_type,
+                              clustering_algorithm,
                               clustering_parameters,
                               keywords_extraction, options,
                               matching_accuracy, word2vec_parameters)
@@ -132,7 +134,7 @@ def update_results(
         knee_data = dumps(result.clusters.knee_data)
 
     if clustering_algorithm != "similarity":
-        embeddings: np.ndarray = result.vectors.sent2vec
+        embeddings: np.ndarray = result.vectors.sent2vec  # type: ignore
         jsoned_embeddings = pd.DataFrame(embeddings).to_json(orient='split')
     else:
         jsoned_embeddings = None

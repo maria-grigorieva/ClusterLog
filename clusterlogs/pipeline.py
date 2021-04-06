@@ -56,6 +56,7 @@ class Chain(object):
     def __init__(self, df, target,
                  tokenizer_type='space',
                  cluster_settings=None,
+                 vectorization_method='word2vec',
                  model_name='word2vec.model',
                  mode='create',
                  output_type='csv',
@@ -74,6 +75,7 @@ class Chain(object):
         self.set_cluster_settings(cluster_settings or WORD2VEC_DEFAULTS)
         self.cpu_number = self.get_cpu_number()
         self.timings = {}
+        self.vectorization_method = vectorization_method
         self.model_name = model_name
         self.mode = mode
         self.threshold = threshold
@@ -111,8 +113,7 @@ class Chain(object):
             if self.clustering_type == 'similarity' and self.groups.shape[0] <= self.threshold:
                 self.similarity_clustering()
             else:
-                self.tokens_vectorization()
-                self.sentence_vectorization()
+                self.vectorize_messages()
                 self.ml_clustering()
                 self.clusters_description()
 
@@ -204,7 +205,23 @@ class Chain(object):
         return df
 
     @safe_run
-    def tokens_vectorization(self):
+    def vectorize_messages(self):
+        if self.vectorization_method == 'word2vec':
+            self.w2v_tokens_vectorization()
+            self.w2v_sentence_vectorization()
+        elif self.vectorization_method == 'bert':
+            self.bert_vectorization()
+        else:
+            print(f"No vectorization method '{self.vectorization_method}' found")
+
+    @safe_run
+    def bert_vectorization(self):
+        from .vectorization import BertVectorization
+        self.vectors = BertVectorization(self.groups['sequence'].values, self.model_name)
+        self.vectors.vectorize_messages()
+
+    @safe_run
+    def w2v_tokens_vectorization(self):
         """
         Training word2vec model
         :param iterations:
@@ -227,13 +244,13 @@ class Chain(object):
         print('Vectorization of tokens finished')
 
     @safe_run
-    def sentence_vectorization(self):
+    def w2v_sentence_vectorization(self):
         """
         Calculates mathematical average of the word vector representations
         of all the words in each sentence
         :return:
         """
-        self.vectors.vectorize_messages(tf_idf=False)
+        self.vectors.vectorize_messages()
         print('Vectorization of messages is finished')
         return self
 
