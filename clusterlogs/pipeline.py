@@ -117,16 +117,34 @@ class Chain(object):
         """
         Chain of methods, providing data preparation, vectorization and clusterization
         """
+        # Adds 'tokenized_pattern' column to the dataframe
+        # * This can be done after gathering the dataframe, that should be much faster
         self.tokenization()
+        # Adds 'hash' and 'sequence' columns
         self.cleaning()
+        # ? Is this really useful? It seems to broadcast block number and then gather the dataframe
+        # ? Even if we assume that separate Chain is created for every block of initial file,
+        # ? there's no need for df split on every process
         self.df = gather_df(comm, self.df)
         if comm_rank == 0:
+            # Creates a new dataframe - self.groups with
+            # 'indices', 'pattern', 'sequence', 'tokenized_pattern', 'cluster_size' columns
             self.group_equals(self.df, 'hash')
+            # ? Why do we need the threshold parameter?
+            # ? If someone wants to use similarity on big file, it seems logical to let them,
+            # ? maybe warn them at most. Especially considering this parameter is user-supplied
             if self.clustering_type == 'similarity' and self.groups.shape[0] <= self.threshold:
+                # Creates a self.result dataframe with the following columns:
+                # 'pattern', 'tokenized_pattern', 'indices', 'cluster_size', 'sequence', 'common_phrases'
                 self.similarity_clustering()
             else:
+                # Adds self.vectors which has word2vec and sent2vec attributes
                 self.vectorize_messages()
+                # Adds 'cluster' column to self.groups
+                # and creates self.knee_data if DBSCAN is used
                 self.ml_clustering()
+                # Creates a self.result dataframe with the following columns:
+                # 'patterns', 'pattern_indices', 'indices', 'cluster_size', 'cluster_number', 'common_phrases'
                 self.clusters_description()
 
                 self.df["common_pattern"] = None
@@ -135,13 +153,14 @@ class Chain(object):
 
                 self.df["key_phrases"] = self.df["key_phrases"].astype('object')
 
+                # ? Why a function if it is used only once?
                 def extend_source(x):
                     for p, indices in x["pattern_indices"].items():
                         self.df.loc[indices, "common_pattern"] = p
                         self.df.loc[indices, "key_phrases"] = str(x["common_phrases"])
                         self.df.loc[indices, "cluster_num"] = x["cluster_number"]
 
-                self.result.apply(axis="columns", func=extend_source)
+                self.result.apply(func=extend_source, axis="columns")
 
                 self.df.drop(columns=["tokenized_pattern", "hash", "sequence"], inplace=True)
 
@@ -330,6 +349,7 @@ class Chain(object):
     def search_keyphrases(self, pattern):
         return extract_common_phrases(pattern, self.keywords_extraction, self.cleaning_patterns)
 
+    # ! Not used anywhere
     def in_cluster(self, groups, cluster_label):
         indices = groups.loc[cluster_label, 'indices']
         return self.df.loc[indices][self.target].values
@@ -344,10 +364,13 @@ class Chain(object):
         self.result = clusters.process()
         print('Finished with {} clusters'.format(self.result.shape[0]))
 
+    # ! This class has several default parameters that do not correspond to Chain
+    # ! It is also unused so far
     @safe_run
     def validation(self, groups):
         return Output().statistics(self.df, self.target, groups)
 
+    # ! Not used anywhere
     @staticmethod
     def split_clusters(df, column, threshold=100):
         if np.max(df[column].values) < threshold:
