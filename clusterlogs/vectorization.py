@@ -122,7 +122,7 @@ class BertVectorization():
         pass
 
     def vectorize_messages(self):
-        model = SentenceTransformer('paraphrase-distilroberta-base-v1')
+        model = SentenceTransformer('stsb-roberta-base')
         print("Started text encoding:")
         sentence_embeddings = model.encode(self.messages, convert_to_numpy=True, show_progress_bar=True)
         self.sent2vec = sentence_embeddings
@@ -132,6 +132,6 @@ class BertVectorization():
     def detect_embedding_size(vocabulary):
         print('Vocabulary size = {}'.format(len(vocabulary)))
         embedding_size = round(math.sqrt(len(vocabulary)))
-        if embedding_size >= 300:
-            embedding_size = 300
+        if embedding_size >= 768:
+            embedding_size = 768
         return embedding_size

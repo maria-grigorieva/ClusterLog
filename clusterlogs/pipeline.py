@@ -27,6 +27,16 @@ if os.environ.get("USE_MPI"):
     comm_size = comm.Get_size()
     comm_rank = comm.Get_rank()
 
+default_cleaning_patterns = [
+    # Anything other than whitespace that contains '.' inside,
+    # not including words that start or end in '.'
+    r'\S+\.\S+',
+    # Words that contain at least one digit inside but not in the last place
+    r'([a-zA-Z_.|:;-]*\d+[a-zA-Z_.|:;-]*)+',
+    # Every symbol other than letters, whitespace and '_'
+    r'[^\w\s]'
+]
+
 
 def safe_run(method):
 
@@ -53,7 +63,8 @@ WORD2VEC_DEFAULTS = {"w2v_size": 300,
 
 class Chain(object):
 
-    def __init__(self, df, target,
+    def __init__(self, df, target, *,
+                 cleaning_patterns=default_cleaning_patterns,
                  tokenizer_type='space',
                  cluster_settings=None,
                  vectorization_method='word2vec',
@@ -71,6 +82,7 @@ class Chain(object):
                  categorization=False):
         self.df = df
         self.target = target
+        self.cleaning_patterns = [] if cleaning_patterns is None else cleaning_patterns
         self.tokenizer_type = tokenizer_type
         self.set_cluster_settings(cluster_settings or WORD2VEC_DEFAULTS)
         self.cpu_number = self.get_cpu_number()
@@ -154,7 +166,7 @@ class Chain(object):
 
     @safe_run
     def cleaning(self):
-        cleaned_strings = clean_messages(self.df[self.target].values)
+        cleaned_strings = clean_messages(self.df[self.target].values, self.cleaning_patterns)
         cleaned_tokens = tokenize_messages(cleaned_strings, self.tokenizer_type, spacer_annotate=False, spacer_new=False)
         self.df['hash'] = self.generateHash(cleaned_strings)
         self.df['sequence'] = cleaned_tokens
@@ -316,7 +328,7 @@ class Chain(object):
 
     @safe_run
     def search_keyphrases(self, pattern):
-        return extract_common_phrases(pattern, self.keywords_extraction)
+        return extract_common_phrases(pattern, self.keywords_extraction, self.cleaning_patterns)
 
     def in_cluster(self, groups, cluster_label):
         indices = groups.loc[cluster_label, 'indices']

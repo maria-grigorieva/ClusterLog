@@ -59,9 +59,9 @@ class MLClustering:
         Search epsilon for the DBSCAN clusterization
         """
         kneedle = KneeLocator(distances, list(range(len(distances))), online=True)
-        epsilon = np.mean(list(kneedle.all_elbows))
-        if epsilon == 0.0:
-            epsilon = np.mean(distances)
+        epsilon = np.mean(list(kneedle.all_elbows)) if kneedle.all_elbows else np.mean(distances)
+        # if epsilon == 0.0:
+        #     epsilon = np.mean(distances)
         self.knee_data = {
             'x': [float(x) for x in kneedle.x],
             'y': [float(y) for y in kneedle.y],

@@ -12,7 +12,7 @@ from nltk.collocations import BigramCollocationFinder, TrigramCollocationFinder
 from gensim.summarization import keywords  # , summarize
 
 
-def extract_common_phrases(pattern, algorithm):
+def extract_common_phrases(pattern, algorithm, cleaning_patterns):
     dispatch = {
         "RAKE": _extract_common_phrases_rake,
         "pyTextRank": _extract_common_phrases_pytextrank,
@@ -34,19 +34,19 @@ def extract_common_phrases(pattern, algorithm):
         "WINGNUS": partial(_extract_common_phrases_pke, algorithm="WINGNUS"),
     }
     try:
-        return dispatch[algorithm](pattern)
+        return dispatch[algorithm](pattern, cleaning_patterns)
     except KeyError as key:
         raise KeyError(f"Invalid keyword extraction method name: {key}! Available methods are: {tuple(dispatch.keys())}")
 
 
-def _extract_common_phrases_gensim(pattern):
-    return keywords('. '.join(clean_messages(pattern)), words=10).split("\n")
+def _extract_common_phrases_gensim(pattern, cleaning_patterns):
+    return keywords('. '.join(clean_messages(pattern, cleaning_patterns)), words=10).split("\n")
 
 
-def _extract_common_phrases_ngrams(pattern):
+def _extract_common_phrases_ngrams(pattern, cleaning_patterns):
     bigram_measures = nltk.collocations.BigramAssocMeasures()
     trigram_measures = nltk.collocations.TrigramAssocMeasures()
-    text = ' '.join(clean_messages(pattern))
+    text = ' '.join(clean_messages(pattern, cleaning_patterns))
     bi_finder = BigramCollocationFinder.from_words(text.split())
     bi_finder.apply_freq_filter(1)
     tri_finder = TrigramCollocationFinder.from_words(text.split())
@@ -54,8 +54,8 @@ def _extract_common_phrases_ngrams(pattern):
     return bi_finder.nbest(bigram_measures.pmi, 5) + tri_finder.nbest(trigram_measures.pmi, 5)
 
 
-def _extract_common_phrases_rake(pattern):
-    text = '. '.join(clean_messages(pattern))
+def _extract_common_phrases_rake(pattern, cleaning_patterns):
+    text = '. '.join(clean_messages(pattern, cleaning_patterns))
     Rake = RAKE.Rake(RAKE.GoogleSearchStopList())
     phrases = sorted(Rake.run(text, minFrequency=1, minCharacters=3, maxWords=5),
                      key=lambda x: x[1], reverse=True)
@@ -65,8 +65,8 @@ def _extract_common_phrases_rake(pattern):
         return [item[0] for item in phrases]
 
 
-def _extract_common_phrases_pytextrank(pattern):
-    text = '. '.join(clean_messages(pattern))
+def _extract_common_phrases_pytextrank(pattern, cleaning_patterns):
+    text = '. '.join(clean_messages(pattern, cleaning_patterns))
     # load a spaCy model, depending on language, scale, etc.
     nlp = spacy.load("en_core_web_sm")
     # nlp = en_core_web_sm.load()
@@ -84,8 +84,8 @@ def _extract_common_phrases_pytextrank(pattern):
     return phrases
 
 
-def _extract_common_phrases_rake_nltk(pattern):
-    text = '. '.join(clean_messages(pattern))
+def _extract_common_phrases_rake_nltk(pattern, cleaning_patterns):
+    text = '. '.join(clean_messages(pattern, cleaning_patterns))
     r = Rake(min_length=2, max_length=5, ranking_metric=Metric.WORD_DEGREE)
     # Uses stopwords for english from NLTK, and all puntuation characters.
     # r = Rake(ranking_metric=Metric.DEGREE_TO_FREQUENCY_RATIO)
@@ -95,7 +95,7 @@ def _extract_common_phrases_rake_nltk(pattern):
     return r.get_ranked_phrases()  # To get keyword phrases ranked highest to lowest.
 
 
-def _extract_common_phrases_pke(pattern, algorithm):
+def _extract_common_phrases_pke(pattern, cleaning_patterns, algorithm):
     dispatch = {
         "tfidf": pke.unsupervised.TfIdf,
         "KPMiner": pke.unsupervised.KPMiner,
@@ -110,7 +110,7 @@ def _extract_common_phrases_pke(pattern, algorithm):
         "WINGNUS": pke.supervised.WINGNUS
     }
     extractor = dispatch[algorithm]()
-    extractor.load_document(input='. '.join(clean_messages(pattern)), language='en')
+    extractor.load_document(input='. '.join(clean_messages(pattern, cleaning_patterns)), language='en')
 
     selection_arguments = {
         "tfidf": {"n": 3, "stoplist": None},
@@ -146,7 +146,7 @@ def _extract_common_phrases_pke(pattern, algorithm):
     return [item[0] for item in keyphrases]
 
 
-def _extract_common_phrases_lda(pattern):
+def _extract_common_phrases_lda(pattern, cleaning_patterns):
     vectorizer = CountVectorizer(stop_words='english',
                                  lowercase=True,
                                  token_pattern='[-a-zA-Z][-a-zA-Z]{2,}')
