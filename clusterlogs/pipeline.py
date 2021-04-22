@@ -123,8 +123,8 @@ class Chain(object):
         # Adds 'hash' and 'sequence' columns
         self.cleaning()
         # ? Is this really useful? It seems to broadcast block number and then gather the dataframe
-        # ? Even if we assume that separate Chain is created for every block of initial file,
-        # ? there's no need for df split on every process
+        # ? unless separate Chain is created for every block of initial file.
+        # ? Do I have to use the Chain in a different way if using MPI?
         self.df = gather_df(comm, self.df)
         if comm_rank == 0:
             # Creates a new dataframe - self.groups with
@@ -162,7 +162,8 @@ class Chain(object):
 
                 self.result.apply(func=extend_source, axis="columns")
 
-                self.df.drop(columns=["tokenized_pattern", "hash", "sequence"], inplace=True)
+                self.df.drop(columns=["tokenized_pattern", "hash"], inplace=True)
+                # self.df.drop(columns=["tokenized_pattern", "hash", "sequence"], inplace=True)
 
                 self.df.to_csv(f'{self.output_fname}.orig.csv')
 
@@ -186,10 +187,12 @@ class Chain(object):
     @safe_run
     def cleaning(self):
         cleaned_strings = clean_messages(self.df[self.target].values, self.cleaning_patterns)
-        cleaned_tokens = tokenize_messages(cleaned_strings, self.tokenizer_type, spacer_annotate=False, spacer_new=False)
+        # cleaned_tokens = tokenize_messages(cleaned_strings, self.tokenizer_type, spacer_annotate=False, spacer_new=False)
         self.df['hash'] = self.generateHash(cleaned_strings)
-        self.df['sequence'] = cleaned_tokens
+        self.df['cleaned_string'] = cleaned_strings
+        # self.df['sequence'] = cleaned_tokens
 
+    # ! Not used anywhere
     @safe_run
     def remove_unique_tokens(self, tokens):
         frequency = get_term_frequencies(tokens)
@@ -206,6 +209,9 @@ class Chain(object):
     def group_equals(self, df, column):
         self.groups = df.groupby(column).apply(func=self.regroup)
         self.groups.reset_index(drop=True, inplace=True)
+        sequence = tokenize_messages(self.groups['cleaned_string'], self.tokenizer_type, spacer_annotate=False, spacer_new=False)
+        self.groups['sequence'] = sequence
+        self.groups.drop(columns=['cleaned_string'], inplace=True)
         print('Found {} equal groups of cleaned messages'.format(self.groups.shape[0]))
 
     @safe_run
@@ -230,7 +236,8 @@ class Chain(object):
 
         df = pd.DataFrame([{'indices': gr.index.values.tolist(),
                             'pattern': detokenize_row(tokenized_pattern, self.tokenizer_type),
-                            'sequence': gr['sequence'].values[0],
+                            # 'sequence': gr['sequence'].values[0],
+                            'cleaned_string': gr['cleaned_string'].values[0],
                             'tokenized_pattern': tokenized_pattern,
                             'cluster_size': len(gr.index.values.tolist())}])
         return df
