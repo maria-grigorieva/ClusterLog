@@ -25,7 +25,6 @@ def parallel_file_read(comm, file_name):
         comm_size = comm.Get_size()
         comm_rank = comm.Get_rank()
 
-        print("file name: {}".format(file_name))
         file_size = os.path.getsize(file_name)
         file_chunk = math.ceil(file_size / comm_size)
         f = open (file_name, "rb")
