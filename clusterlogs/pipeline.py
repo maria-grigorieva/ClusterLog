@@ -1,3 +1,27 @@
+comm = None
+comm_size = 1
+comm_rank = 0
+
+import os
+if os.environ.get("USE_MPI"):
+    from mpi4py import MPI
+    comm = MPI.COMM_WORLD
+    comm_size = comm.Get_size()
+    comm_rank = comm.Get_rank()
+
+parallel_profile = dict()
+
+from time import time
+
+def time_start(key):
+    parallel_profile[key] = time()    
+
+def time_stop(key):
+    parallel_profile[key] = time() - parallel_profile[key]
+
+time_start("pipeline_def_time")
+time_start("pipeline_import_time")
+
 import hashlib
 import multiprocessing
 import numpy as np
@@ -5,7 +29,6 @@ import pandas as pd
 
 import math
 
-from time import time
 # from string import punctuation
 
 from .reporting import report
@@ -19,18 +42,7 @@ from .categorization import execute_categorization
 from .phraser import extract_common_phrases
 from .utility import gather_df
 
-comm = None
-comm_size = 1
-comm_rank = 0
-
-import os
-if os.environ.get("USE_MPI"):
-    from mpi4py import MPI
-    comm = MPI.COMM_WORLD
-    comm_size = comm.Get_size()
-    comm_rank = comm.Get_rank()
-
-
+time_stop("pipeline_import_time")
 
 def safe_run(method):
 
@@ -105,28 +117,70 @@ class Chain(object):
         """
         Chain of methods, providing data preparation, vectorization and clusterization
         """
-        if comm_rank == 0:
-            print("clever index")
+        
+        time_start("messages_index_time")
         # e2e indexing for df
         self.df.set_index(pd.RangeIndex(comm_rank, comm_rank + comm_size * self.df.shape[0], comm_size), inplace=True)
+        time_stop("messages_index_time")
 
+        parallel_profile["justloaded_messages_size"] = int(self.df.memory_usage(deep=True, index=True).sum())
+        parallel_profile["justloaded_messages_num"] = self.df.shape[0]
+
+        time_start("tokenizing_time")
         self.tokenization()
-        self.cleaning()
-        self.group_equals(self.df, 'hash')
+        time_stop("tokenizing_time")
 
+        time_start("cleaning_time")
+        self.cleaning()
+        time_stop("cleaning_time")
+
+        time_start("grouping_time")
+        self.group_equals(self.df, 'hash')
+        time_stop("grouping_time")
+        
+        time_start("group_index_time")
         # e2e indexing for groups
         self.groups.set_index(pd.RangeIndex(comm_rank, comm_rank + comm_size * self.groups.shape[0], comm_size), inplace=True)
-
+        time_stop("group_index_time")
+    
+        time_start("mem_before_gather_time")
+        parallel_profile["preprocessed_messages_size"] = int(self.df.memory_usage(deep=True, index=True).sum())
+        parallel_profile["preprocessed_messages_num"] = self.df.shape[0]
+        parallel_profile["local_groups_size"] = int(self.groups.memory_usage(deep=True, index=True).sum())
+        parallel_profile["local_groups_num"] = self.groups.shape[0]
+        time_stop("mem_before_gather_time")
+        
+        time_start("gather_df_time")
         self.df = gather_df(comm, self.df)
+        time_stop("gather_df_time")
+
+        time_start("gather_groups_time")
         self.groups = gather_df(comm, self.groups)
+        time_stop("gather_groups_time")
+        
         if comm_rank == 0:
+            parallel_profile["gathered_groups_size"] = int(self.groups.memory_usage(deep=True, index=True).sum())
+            parallel_profile["gathered_groups_shape"] = self.groups.shape[0]
             if comm_size > 1:
+                time_start("merge_groups_time")
                 self.groups["sequence_str"] = self.groups["sequence"].apply(str)
                 self.groups = self.groups.groupby("sequence_str").aggregate({"indices": "sum", "pattern": "first",
                                                                              "sequence": "first",
                                                                              "tokenized_pattern": "first",
                                                                              "cluster_size": "sum"}).reset_index()
+                time_stop("merge_groups_time")
+            else:
+                parallel_profile["merge_groups_time"] = 0
 
+            
+            time_start("mem_after_gather_time")
+            parallel_profile["gathered_messages_size"] = int(self.df.memory_usage(deep=True, index=True).sum())
+            parallel_profile["gathered_messages_num"] = self.df.shape[0]
+            parallel_profile["merged_groups_size"] = int(self.groups.memory_usage(deep=True, index=True).sum())
+            parallel_profile["merged_groups_shape"] = self.groups.shape[0]
+            time_stop("mem_after_gather_time")
+
+            time_start("clustering_time")
             if self.clustering_type == 'similarity' and self.groups.shape[0] <= self.threshold:
                 self.similarity_clustering()
             else:
@@ -134,9 +188,13 @@ class Chain(object):
                 self.sentence_vectorization()
                 self.ml_clustering()
                 self.clusters_description()
+            time_stop("clustering_time")
 
             self.process_timings()
+            
+            parallel_profile["clusters_num"] = self.result.shape[0]
 
+            time_start("outputing_time")
             # Categorization
             fname = f'{self.output_fname}.{self.output_type}'
             if self.output_type == 'html':
@@ -147,6 +205,9 @@ class Chain(object):
                     report.generate_html_report(self.result, fname)
             elif self.output_type == 'csv':
                 self.result.to_csv(fname)
+            time_stop("outputing_time")
+        
+        return parallel_profile
 
     @safe_run
     def tokenization(self):
@@ -317,3 +378,5 @@ class Chain(object):
             self.timings['group_equals'] -= self.timings['regroup']  # group_equals contains regroup
 
         print(f"Timings:\n{self.timings}")
+
+time_stop("pipeline_def_time")
