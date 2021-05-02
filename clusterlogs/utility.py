@@ -21,7 +21,7 @@ def parallel_file_read(comm, file_name):
     import math
     import os
 
-    if comm != None:
+    if comm != None and comm.Get_size() > 1:
         comm_size = comm.Get_size()
         comm_rank = comm.Get_rank()
 
@@ -50,7 +50,7 @@ def parallel_file_read(comm, file_name):
     return portion
 
 def gather_df(comm, df):
-    if comm != None:
+    if comm != None and comm.Get_size() > 1:
         import math
         import pandas as pd
 
