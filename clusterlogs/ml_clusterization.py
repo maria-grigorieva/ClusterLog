@@ -50,7 +50,7 @@ class MLClustering:
         """
         k = round(math.sqrt(len(self.vectors.sent2vec)))
         print('K-neighbours = {}'.format(k))
-        nbrs = NearestNeighbors(n_neighbors=k, metric=metric, n_jobs=-1, algorithm='auto').fit(self.vectors.sent2vec)
+        nbrs = NearestNeighbors(n_neighbors=k, metric=metric, n_jobs=1, algorithm='auto').fit(self.vectors.sent2vec)
         distances, _ = nbrs.kneighbors(self.vectors.sent2vec)
         return [np.mean(d) for d in np.sort(distances, axis=0)]
 
@@ -90,7 +90,7 @@ class MLClustering:
         cluster_labels = DBSCAN(eps=parameters['epsilon'],
                                 metric=parameters['metric'],
                                 min_samples=parameters['min_samples'],
-                                n_jobs=self.cpu_number) \
+                                n_jobs=1) \
             .fit_predict(self.vectors.sent2vec)
         return cluster_labels
 

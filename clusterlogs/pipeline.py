@@ -122,9 +122,6 @@ class Chain(object):
         self.tokenization()
         # Adds 'hash' and 'sequence' columns
         self.cleaning()
-        # ? Is this really useful? It seems to broadcast block number and then gather the dataframe
-        # ? unless separate Chain is created for every block of initial file.
-        # ? Do I have to use the Chain in a different way if using MPI?
         self.df = gather_df(comm, self.df)
         if comm_rank == 0:
             # Creates a new dataframe - self.groups with
@@ -186,10 +183,13 @@ class Chain(object):
 
     @safe_run
     def cleaning(self):
-        cleaned_strings = clean_messages(self.df[self.target].values, self.cleaning_patterns)
+        if self.cleaning_patterns:
+            cleaned_strings = clean_messages(self.df[self.target].values, self.cleaning_patterns)
+        else:
+            cleaned_strings = self.df[self.target].values
+        self.df['cleaned_string'] = cleaned_strings
         # cleaned_tokens = tokenize_messages(cleaned_strings, self.tokenizer_type, spacer_annotate=False, spacer_new=False)
         self.df['hash'] = self.generateHash(cleaned_strings)
-        self.df['cleaned_string'] = cleaned_strings
         # self.df['sequence'] = cleaned_tokens
 
     # ! Not used anywhere
@@ -229,13 +229,18 @@ class Chain(object):
         :param gr:
         :return:
         """
-        matcher = Match(match_threshhold=self.matching_accuracy,
-                        add_placeholder=self.add_placeholder)
-        # pprint.pprint(gr['tokenized_pattern'].values)
-        tokenized_pattern = matcher.sequence_matcher(gr['tokenized_pattern'].values)
+        if self.cleaning_patterns:
+            matcher = Match(match_threshhold=self.matching_accuracy,
+                            add_placeholder=self.add_placeholder)
+            # pprint.pprint(gr['tokenized_pattern'].values)
+            tokenized_pattern = matcher.sequence_matcher(gr['tokenized_pattern'].values)
+            pattern = detokenize_row(tokenized_pattern, self.tokenizer_type)
+        else:
+            tokenized_pattern = gr['tokenized_pattern'].values[0]
+            pattern = gr[self.target].values[0]
 
         df = pd.DataFrame([{'indices': gr.index.values.tolist(),
-                            'pattern': detokenize_row(tokenized_pattern, self.tokenizer_type),
+                            'pattern': pattern,
                             # 'sequence': gr['sequence'].values[0],
                             'cleaned_string': gr['cleaned_string'].values[0],
                             'tokenized_pattern': tokenized_pattern,

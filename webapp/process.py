@@ -21,6 +21,7 @@ def execute_pipeline(dataframe: pd.DataFrame, target_column: str,
                     tokenizer_type=tokenizer_type,
                     clustering_type=clustering_algorithm,
                     clustering_parameters=clustering_parameters,
+                    cleaning_patterns=None,
                     keywords_extraction=keywords_extraction)
     cluster.set_cluster_settings(word2vec_parameters)
     cluster.process()
