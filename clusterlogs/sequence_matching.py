@@ -43,12 +43,10 @@ class Match:
                     matches[-1].pop()
                 pattern = list(chain(*matches))  # concatenate inner lists
 
-            if not pattern:
-                continue
-            junk = list(punctuation) + ['_', '(.*?)', '']
-            # if at least one of the items in sequence is not junk - return True
-            correct = any([token not in junk for token in pattern])
-            return pattern if correct else x
+                junk = list(punctuation) + ['_', '(.*?)', '']
+                # if at least one of the items in sequence is not junk - return True
+                correct = any([token not in junk for token in pattern])
+                return pattern if correct else x
         return x
 
     # This basically does the same as sequence_matcher, with a couple of differences:
