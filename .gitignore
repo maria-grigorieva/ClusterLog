@@ -133,3 +133,4 @@ dmypy.json
 report.html
 report.csv
 report.orig.csv
+BERT_model/
