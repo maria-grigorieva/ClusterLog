@@ -5,6 +5,7 @@ from gensim.models import Word2Vec
 from clusterlogs.data_preparation import clean_messages
 import pprint
 import numpy as np
+import pandas as pd
 
 from clusterlogs.tokenization import tokenize_messages
 
@@ -46,10 +47,11 @@ def main(argv):
 
     # Read messages from log file
     messages = [line[:-1] for line in parallel_file_read(comm, inputfile)]
+    print(messages[0:500])
 
-    if comm_rank == 0:
-        pprint.pprint("First 10 messages: ")
-        pprint.pprint(messages[0:10])
+    # if comm_rank == 0:
+    #     pprint.pprint("First 10 messages: ")
+    #     pprint.pprint(messages[0:10])
 
     print('Log file contains {} lines'.format(len(messages)))
 
@@ -61,10 +63,14 @@ def main(argv):
 
     tokenized = tokenize_messages(unique, 'space', spacer_annotate=False, spacer_new=False)
 
+    # tokenized = tokenize_messages(messages, 'space', spacer_annotate=False, spacer_new=False)
+
     print('Messages has been tokenized')
 
-    tokenized = gather_df(comm, pd.DataFrame(tokenized)).values.tolist()
-    
+    # tokenized = gather_df(comm, pd.DataFrame(tokenized).head(500)).values.tolist()
+
+    # print(tokenized)
+    #
     if comm_rank == 0:
         try:
             word2vec = Word2Vec(tokenized,

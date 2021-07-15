@@ -86,7 +86,8 @@ class Match:
                 others.append(sequences[i + 1])
                 indices_other.append(indices[i + 1])
         patterns = [self.sequence_matcher(similar)]
-        final_indices = [[i for sublist in indices_sim for i in sublist]]
+        #final_indices = [[i for sublist in indices_sim for i in sublist]]
+        final_indices = indices_sim
         if len(others) > 1:
             res_patterns, res_indices = self.matching_clusters(others, indices_other)
             patterns.extend(res_patterns)

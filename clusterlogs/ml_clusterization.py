@@ -17,9 +17,8 @@ nlp = spacy.load("en_core_web_sm")
 
 class MLClustering:
 
-    def __init__(self, df, groups, vectors, cpu_number, add_placeholder, method, tokenizer_type, pca, parameters):
+    def __init__(self, df, vectors, cpu_number, add_placeholder, method, tokenizer_type, pca, parameters):
         self.df = df
-        self.groups = groups
         self.vectors = vectors
         self.cpu_number = cpu_number
         self.add_placeholder = add_placeholder
@@ -34,7 +33,7 @@ class MLClustering:
             self.vectors.sent2vec = self.dimensionality_reduction()
         # Call a method with the corresponding name
         self.cluster_labels = getattr(self, self.method.lower())()
-        self.groups['cluster'] = self.cluster_labels
+        self.df['cluster'] = self.cluster_labels
         print(f"{self.method.title()} clustering finished with {len(set(self.cluster_labels))} clusters")
 
     def dimensionality_reduction(self):

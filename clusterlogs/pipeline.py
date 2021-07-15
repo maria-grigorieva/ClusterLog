@@ -104,10 +104,10 @@ class Chain(object):
         Chain of methods, providing data preparation, vectorization and clusterization
         """
         self.tokenization()
-        self.cleaning()
-        self.df = gather_df(comm, self.df)
+        # self.cleaning()
+        # self.df = gather_df(comm, self.df)
         if comm_rank == 0:
-            self.group_equals(self.df, 'hash')
+            # self.group_equals(self.df, 'hash')
             if self.clustering_type == 'similarity' and self.groups.shape[0] <= self.threshold:
                 self.similarity_clustering()
             else:
@@ -116,23 +116,23 @@ class Chain(object):
                 self.ml_clustering()
                 self.clusters_description()
 
-                self.df["common_pattern"] = None
-                self.df["key_phrases"] = None
-                self.df["cluster_num"] = None
-
-                self.df["key_phrases"] = self.df["key_phrases"].astype('object')
-
-                def extend_source(x):
-                    for p, indices in x["pattern_indices"].items():
-                        self.df.loc[indices, "common_pattern"] = p
-                        self.df.loc[indices, "key_phrases"] = str(x["common_phrases"])
-                        self.df.loc[indices, "cluster_num"] = x["cluster_number"]
-
-                self.result.apply(axis="columns", func=extend_source)
-
-                self.df.drop(columns=["tokenized_pattern", "hash", "sequence"], inplace=True)
-
-                self.df.to_csv(f'{self.output_fname}.orig.csv')
+                # self.df["common_pattern"] = None
+                # self.df["key_phrases"] = None
+                # self.df["cluster_num"] = None
+                #
+                # self.df["key_phrases"] = self.df["key_phrases"].astype('object')
+                #
+                # def extend_source(x):
+                #     for p, indices in x["pattern_indices"].items():
+                #         self.df.loc[indices, "common_pattern"] = p
+                #         self.df.loc[indices, "key_phrases"] = str(x["common_phrases"])
+                #         self.df.loc[indices, "cluster_num"] = x["cluster_number"]
+                #
+                # self.result.apply(axis="columns", func=extend_source)
+                #
+                # self.df.drop(columns=["tokenized_pattern", "hash", "sequence"], inplace=True)
+                #
+                # self.df.to_csv(f'{self.output_fname}.orig.csv')
 
             self.process_timings()
 
@@ -212,7 +212,7 @@ class Chain(object):
         :return:
         """
         from .vectorization import Vector
-        self.vectors = Vector(self.groups['sequence'].values,
+        self.vectors = Vector(self.df['tokenized_pattern'].values,
                               self.w2v_size,
                               self.w2v_window,
                               self.cpu_number,
@@ -242,7 +242,6 @@ class Chain(object):
 
         self.clusters = MLClustering(
             self.df,
-            self.groups,
             self.vectors,
             self.cpu_number,
             self.add_placeholder,
@@ -254,16 +253,19 @@ class Chain(object):
         self.clusters.process()
 
     def clusters_description(self):
+        self.df.reset_index(inplace=True)
         self.result = pd.DataFrame.from_dict(
-            [item for item in self.groups.groupby('cluster').apply(func=self.clusters_regroup)],
+            [item for item in self.df.groupby('cluster').apply(func=self.clusters_regroup)],
             orient='columns').sort_values(by=['cluster_size'], ascending=False)
 
     def clusters_regroup(self, gb):
-        pattern_indices = self.search_common_patterns(gb)
 
         # Get all indices for the group
-        indices = [i for sublist in gb['indices'].values for i in sublist]
+        indices = gb['pandaid'].values
         size = len(indices)
+        gb['indices'] = indices
+
+        pattern_indices = self.search_common_patterns(gb)
 
         phrases = self.search_keyphrases(pattern_indices.keys())
 
@@ -327,7 +329,7 @@ class Chain(object):
             return df[df[column] >= threshold], df[df[column] < threshold]
 
     def process_timings(self):
-        if self.timings['group_equals'] != 0 and self.timings['regroup'] != 0:
-            self.timings['group_equals'] -= self.timings['regroup']  # group_equals contains regroup
+        # if self.timings['group_equals'] != 0 and self.timings['regroup'] != 0:
+        #     self.timings['group_equals'] -= self.timings['regroup']  # group_equals contains regroup
 
         print(f"Timings:\n{self.timings}")
