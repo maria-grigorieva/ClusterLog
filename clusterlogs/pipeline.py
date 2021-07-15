@@ -16,6 +16,7 @@ from .similarity_clusterization import SClustering
 from .categorization import execute_categorization
 from .phraser import extract_common_phrases
 from .utility import gather_df
+from .relevant_parts import extract_relevant_part
 
 comm = None
 comm_size = 1
@@ -327,12 +328,18 @@ class Chain(object):
 
         phrases = self.search_keyphrases(pattern_indices.keys())
 
-        return {'patterns': list(pattern_indices.keys()),
-                'pattern_indices': pattern_indices,
-                'indices': indices,
-                'cluster_size': size,
-                'cluster_number': gb['cluster'].values[0],
-                'common_phrases': phrases[:10]}
+        patterns = list(pattern_indices.keys())
+        relevant_parts = [extract_relevant_part(pattern) for pattern in patterns]
+
+        return {
+            'patterns': patterns,
+            'pattern_indices': pattern_indices,
+            'indices': indices,
+            'cluster_size': size,
+            'cluster_number': gb['cluster'].values[0],
+            'common_phrases': phrases[:10],
+            'relevant_parts': relevant_parts
+        }
 
     @safe_run
     def search_common_patterns(self, gb):

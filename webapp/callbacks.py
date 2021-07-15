@@ -153,7 +153,7 @@ def update_table(stored_results: str) -> Optional[html.Table]:
     if not stored_results:
         return None
     result: pd.DataFrame = pd.read_json(stored_results)  # type: ignore
-    return generate_table(result, columns=['cluster_size', 'patterns', 'common_phrases'])
+    return generate_table(result, columns=['cluster_size', 'patterns', 'relevant_parts'])
 
 
 @app.callback(
