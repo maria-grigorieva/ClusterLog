@@ -105,7 +105,7 @@ class Chain(object):
         """
         self.tokenization()
         # self.cleaning()
-        # self.df = gather_df(comm, self.df)
+        self.df = gather_df(comm, self.df)
         if comm_rank == 0:
             # self.group_equals(self.df, 'hash')
             if self.clustering_type == 'similarity' and self.groups.shape[0] <= self.threshold:
