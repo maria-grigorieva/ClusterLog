@@ -58,3 +58,6 @@ After you followed the instructions described [After installation](##-after-inst
 `python3 training_corpus.py <modelname>.model <number_of_days>`
 
 ex:`python3 training_corpus.py test.model 3`
+
+# Analysis schema
+![schema](analysis_schema.PNG)
