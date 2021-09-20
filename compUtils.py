@@ -40,6 +40,7 @@ def readData(date,spark):
     _schema = StructType([
     StructField('metadata', StructType([StructField('timestamp',LongType(), nullable=True)])),
     StructField('data', StructType([
+        StructField('endpnt', StringType(), nullable=True),
         StructField('src_hostname', StringType(), nullable=True),
         StructField('dst_hostname', StringType(), nullable=True),
         StructField('t_error_code', IntegerType(), nullable=True),
@@ -51,6 +52,7 @@ def readData(date,spark):
     fts_df = fts_df.select(
     col('metadata.timestamp').alias('time'),
     col('data.src_hostname').alias('src'),
+    col('data.endpnt').alias('endpnt'),
     col('data.dst_hostname').alias('dst'),
     col('data.t_error_code').alias('error_code'),
     col('data.tr_error_category').alias('error_category'),
