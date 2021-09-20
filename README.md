@@ -52,7 +52,7 @@ Now your virtual env is set up correctly. Next time you access to lxplus follow 
 
 `source "/cvmfs/sft.cern.ch/lcg/etc/hadoop-confext/hadoop-swan-setconf.sh" analytix`
 
-## How tu run training_corpus.py
+## How to run training_corpus.py
 After you followed the instructions described [After installation](##-after-installation) section, enter:
 
 `python3 training_corpus.py <modelname>.model <number_of_days>`
