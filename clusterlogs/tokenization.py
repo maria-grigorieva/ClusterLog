@@ -60,17 +60,20 @@ def to_lower(tokenized_messages):
 #     return [[token for token in row if token.lower().isalpha()]
 #             for row in tokenized_messages]
 
-def clean_tokenized(tokenized_messages):
+def clean_tokenized(tokenized_messages,min_freq=False):
     """
-    This function removes tokens appearing once and stopwords
+    This function removes stopwords and eventually tokens appearing once
     """
-    frequency=get_term_frequencies(tokenized_messages)
-            
+                
     stoplist = ['the','with','a','an','but','of','on','to','all','has','have','been','for','in','it','its','itself',
                 'this','that','those','these','is','are','were','was','be','being','having','had','does','did','doing',
-                'and','if','about','again','then','so','too','cern','cms','atlas','by','srm','ifce', 'err']
-    
-    return [[token for token in row if token not in stoplist and frequency[token] != 1]
+                'and','if','about','again','then','so','too','by','error']
+    if min_freq==True:
+        frequency=get_term_frequencies(tokenized_messages)
+        return [[token for token in row if token not in stoplist and frequency[token] > 1]
+            for row in tokenized_messages]
+    else:
+        return [[token for token in row if token not in stoplist ]
             for row in tokenized_messages]
 
 # def remove_adjacent(L):

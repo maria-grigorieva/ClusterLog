@@ -25,39 +25,45 @@ def pre_cleaning(messages):
         message=re.sub(r'(?i)(commu.+err:)', '', message)
         message=re.sub(r'(?i)(globus.+\d+\s\d+-)', '', message)
         message=re.sub(r'(?i)(ser.+res.+ror)', '', message)
-        #message = re.sub(r' +', r' ', message)# remove addictional whitespace  
+        message = re.sub(r' +', r' ', message)# remove addictional whitespace  
         message = re.sub(r'\A ', '', message)#removes whitespace at the beginning
         message = re.sub(r' \Z', '', message)#removes whitespace at the end
         messages_cleaned.append(message)  
     return messages_cleaned
 
-def clean_messages(messages):
+def clean_messages(messages,clean_short):
     messages_cleaned = []
     for message in messages:
+        message = re.sub(r'[^!"()*+,-\\\/:;<=>?@[\]^_`{|}\w\s]', '', message)  # removes any foreign character
         message=message.lower()
         message = re.sub(r'(\w+:)*\/\S*', ' ', message)  # removes filepath/url
-        message = re.sub(r'\S+\s=\s\S+', ' ', message)#string equality
-        message = re.sub(r'\S+=(\w+)*', ' ', message)
-
+        message=re.sub(r'/\((.*?)\)/g',' ',message)#removes stuff in () 
+        message = re.sub(r'\S+@\S+', ' ', message) #removes strings with @
+        message = re.sub(r' \Z', '', message)#removes whitespace at the end
         message = re.sub(r'(\w+-)*\w+((\.|:)\w+)*(\.|:)\w+', ' ', message) #removes no-textual strings with . : - inside 
-
-        message = re.sub(r'\.\w+', ' ', message)#removes strings with .
-        #message = re.sub(r'(\w+\.)+\w+ ', ' ', message)
-        message = re.sub(r'\w+_\S+', ' ', message)#remove strings with underscore
-        message = re.sub(r'(\S+-){2,}', ' ', message)#remove strings with more than two - 
         message = re.sub(r'(\w+\d+\w*)|(\d+\w+)', ' ', message)#remove alpha-numerical string
+        message = re.sub(r'\w+_\S+', ' ', message)#remove strings with underscore
+        message = re.sub(r'\.\w+', ' ', message)#removes strings with .
+        message = re.sub(r'-\S+-', ' ', message)#remove strings between - 
+        message = re.sub(r' \Z', '', message)#removes whitespace at the end
+        message = re.sub(r'([^:]+:\s(?=[^:]+:[^:]))', ' ', message)#nucleus selection
+        message = re.sub(r'\S+\s=\s\S+', ' ', message)#string equality
+        message = re.sub(r'\S+=(\w+)*', ' ', message)    
+        
+#         
+        
 
-        #message = re.sub(r'(o=)(\w+\s)+\w+', 'o=', message) 
-        #message = re.sub(r'(ou=)(\w+\s)+\w+', 'ou=', message) 
-        #message = re.sub(r'=\w+','=', message)
+       
         message = re.sub(r'\[\w+\]', ' ', message)# removes [string]
         message = re.sub(r'(\d+)', ' ', message)#removes digits
         message = re.sub(r'[^\w\s]', ' ', message) # removes punctuation 
-        message = re.sub(r'\\', ' ', message)#removes \
-        message = re.sub(r'\s([a-mp-z]){1,2}(\s|\Z)', ' ', message) #removes strings of one or two terms except for 'no'
+#         message = re.sub(r'\\', ' ', message)#removes \
+        if(clean_short):
+            message = re.sub(r'\s\w{1,2}\b(?<!\bno)', ' ', message) #removes strings up to 2 characters long except for no    
+        else:
+            message = re.sub(r'\s[a-zA-Z]{1}(\s|\Z)', ' ', message) #removes strings of one term
         
-        #message = re.sub(r'\s=\s', ' ', message)
-        message = re.sub(r' +', r' ', message)# remove addictional whitespace  
+        message = re.sub(r' +', r' ', message)# remove additional whitespace  
         message = re.sub(r'\A ', '', message)#removes whitespace at the beginning
         message = re.sub(r' \Z', '', message)#removes whitespace at the end
         messages_cleaned.append(message)
