@@ -1,3 +1,16 @@
+# Abstract
+ This thesis work develops within the [WLCG Operational Intelligence](https://operational-intelligence.web.cern.ch/) (OpInt) project. OpInt is born as a common project among the Worldwide LHC Computing Grid ([WLCG](https://wlcg.web.cern.ch/)) communities with the purpose of creating solutions to increase the level of automation in computing operations and reduce human interventions.  Indeed the currently deployed systems have been successful in satisfying the experiment goals; however, the High Luminosity LHC era will significantly increase the volume of data around the world therefore requiring to automate the computing operations in order to efficiently manage the
+computing infrastructures. 
+
+The system responsible for file transfer across the LHC Computing Grid is FTS. The File Transfer Service ([FTS](https://fts.web.cern.ch/fts/)) allows to sustain a data transfer rate of 20-40 GB/s, and it
+transfers daily a few millions files. When a transfer fails, it produces an error message that is managed by the system allowing to reach the shifters. The number of error
+messages per day to be monitored is of the order of a few hundred thousand. It is in this context that we look at Machine Learning as a tool to develop smart solutions
+and optimize our resources. 
+
+In particular, in this thesis, we apply Natural Language Processing techniques to analyze FTS error messages. **The aim of the work is to group the error messages
+into meaningful clusters in order to trustingly speed up the error detection process.**
+
+
 # How to install clusterlogs module on lxplus
 Firstly, connect to lxplus:
 
