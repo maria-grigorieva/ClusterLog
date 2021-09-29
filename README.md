@@ -18,13 +18,13 @@ The package used is `clusterlogs` ([here](https://github.com/maria-grigorieva/Cl
 This package doesn't work currently with python 2.7 because of` kneed` library, and with python 3.8 because of `gensim`.
 
 `editdistance==0.5.3`  
-gensim==3.4.0  
-kneed==0.4.1  
-nltk==3.4.5  
-numpy==1.16.4  
-pandas==0.25.1  
-pyonmttok==1.10.1  
-scikit-learn==0.21.2`  
+`gensim==3.4.0`  
+`kneed==0.4.1`  
+`nltk==3.4.5`  
+`numpy==1.16.4`  
+`pandas==0.25.1`  
+`pyonmttok==1.10.1`  
+`scikit-learn==0.21.2`  
 Input: Pandas DataFrame with error log messages. DataFrame may have arbitrary columns and column names, but it must contain index column with IDs and column with text log messages. The name of log column is not fixed, but it must be specified explicitly in settings as 'target'. Possible structure of DataFrame is the following (in this example, `target='log_message'`):
 
 ID   |   log_message                                                            | timestamp
