@@ -1,18 +1,14 @@
 # Abstract
- This thesis work develops within the WLCG Operational Intelligence ([OpInt](https://operational-intelligence.web.cern.ch/)) project. OpInt is born as a common project among the Worldwide LHC Computing Grid ([WLCG](https://wlcg.web.cern.ch/)) communities with the purpose of creating solutions to increase the level of automation in computing operations and reduce human interventions.  Indeed the currently deployed systems have been successful in satisfying the experiment goals; however, the High Luminosity LHC era will significantly increase the volume of data around the world therefore requiring to automate the computing operations in order to efficiently manage the
-computing infrastructures. 
+ This project work develops within the WLCG Operational Intelligence ([OpInt](https://operational-intelligence.web.cern.ch/)) group. OpInt is born as a common project among the Worldwide LHC Computing Grid ([WLCG](https://wlcg.web.cern.ch/)) communities with the purpose of creating solutions to increase the level of automation in computing operations and reduce human interventions.  Indeed the currently deployed systems have been successful in satisfying the experiment goals; however, the High Luminosity LHC era will significantly increase the volume of data around the world therefore requiring to automate the computing operations in order to efficiently manage the computing infrastructures. 
 
-The system responsible for file transfer across the LHC Computing Grid is FTS. The File Transfer Service ([FTS](https://fts.web.cern.ch/fts/)) allows to sustain a data transfer rate of 20-40 GB/s, and it
-transfers daily a few millions files. When a transfer fails, it produces an error message that is managed by the system allowing to reach the shifters. The number of error
-messages per day to be monitored is of the order of a few hundred thousand. It is in this context that we look at Machine Learning as a tool to develop smart solutions
-and optimize our resources. 
+The system responsible for file transfer across the LHC Computing Grid is FTS. The File Transfer Service ([FTS](https://fts.web.cern.ch/fts/)) allows to sustain a data transfer rate of 20-40 GB/s, and it transfers daily a few millions files. When a transfer fails, it produces an error message that is managed by the system allowing to reach the shifters. The number of error messages per day to be monitored is of the order of a few hundred thousand. It is in this context that Machine Learning is looked at as a tool to develop smart solutions and optimize the resources. 
 
-In particular, in this thesis, we apply Natural Language Processing techniques to analyze FTS error messages. **The aim of the work is to group the error messages
+In particular, Natural Language Processing techniques can be applied to analyze FTS error messages. **The aim of this work is to group the error messages
 into meaningful clusters in order to trustingly speed up the error detection process.**
 
-The package used is `clusterlogs` ([here](https://github.com/maria-grigorieva/ClusterLog/tree/master)). In the following section you can find a brief description of the package.
+The package used is `clusterlogs` ([here](https://github.com/maria-grigorieva/ClusterLog/tree/master)). In the following section you can find a brief description of the package (I'll report the author's description.)
 
-# Clusterlogs package (credits to Maria Grigorieva)
+# Clusterlogs package 
 **Requirements:**
 ```
 Python >= 3.7 < 3.8
@@ -129,6 +125,16 @@ from clusterlogs import pipeline
 **Author:**
 maria.grigorieva@cern.ch (Maria Grigorieva)
 
+# Error message analysis workflow
+To follow, a schema of my analsyis workflow. In particular, I'll compare the clusters obtained:
+* by computing the error message similarity (defined as Levenshtein Distance);
+* by applying the DBSCAN algorithm after vectorizing the error messages (Word2Vec).
+
+![schema](analysis_schema.PNG)
+
+Once the error messages are cleaned and tokenized, the patterns that are equal are grouped together (equal groups) and clustered. In
+case of the Machine Learning approach (ML), a Word2Vec model (already trained) allows to obtain the tokens vectorization and the error message is vectorized by averaging its
+token-vectors. Finally the sentence-vectors feed the DBSCAN clustering algorithm. The state-of-the-art analysis clusters by Levenshtein distance (LD).
 # How to install clusterlogs module on lxplus
 Firstly, connect to lxplus:
 
@@ -190,5 +196,4 @@ After you followed the instructions described [After installation](##-after-inst
 
 ex:`python3 training_corpus.py test.model 3`
 
-# Analysis schema
-![schema](analysis_schema.PNG)
+
