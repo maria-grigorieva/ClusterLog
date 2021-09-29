@@ -40,7 +40,7 @@ python -m spacy download en_core_web_sm
    Pandas DataFrame with error log messages. DataFrame may have arbitrary columns and column names, but
    it must contain index column with IDs and column with text log messages. The name of log column is not
    fixed, but it must be specified explicitly in settings as 'target'.
-   Possible structure of DataFrame is the following (in this example, `tagret='log_message'`):
+   Possible structure of DataFrame is the following (in this example, `target='log_message'`):
    ```
    ID   |   log_message                                                            | timestamp
    -----------------------------------------------------------------------------------------------------
