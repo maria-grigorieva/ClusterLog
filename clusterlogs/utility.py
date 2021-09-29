@@ -49,6 +49,23 @@ def parallel_file_read(comm, file_name):
 
     return portion
 
+def parallel_es_read(comm, uri, es_index, lines_num):
+    if comm != None:
+        comm_size = comm.Get_size()
+        comm_rank = comm.Get_rank()
+
+    from elasticsearch import Elasticsearch
+    import elasticsearch.helpers as helpers
+    es = Elasticsearch([uri])
+
+    lines_num_p = int(lines_num / comm_size);
+    if comm != None and comm_size > 1:
+        js_iter = helpers.scan(es, index=es_index, query={"slice":{"id": comm_rank, "max": comm_size}})
+    else:
+        js_iter = helpers.scan(es, index=es_index)
+    lines = [x["_source"]["0"] for x in js_iter]
+    es.close()
+
 def gather_df(comm, df):
     if comm != None:
         import math
