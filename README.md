@@ -12,7 +12,7 @@ into meaningful clusters in order to trustingly speed up the error detection pro
 
 The package used is `clusterlogs` ([here](https://github.com/maria-grigorieva/ClusterLog/tree/master)). In the following section you can find a brief description of the package.
 # Clusterlogs package (credits to Maria Grigorieva)
-**Requirements:
+**Requirements:**
 
 `Python >= 3.6 < 3.8`
 This package doesn't work currently with python 2.7 because of` kneed` library, and with python 3.8 because of `gensim`.
@@ -60,7 +60,7 @@ clusterization_settings
 3. `update`
  * Load word2vec model from file and train (update) this model with new error logs
  * Save updated model in file
-**Clusterization of error log messages is implemented as a chain of methods:
+**Clusterization of error log messages is implemented as a chain of methods:**
 
 * `data_preparation` - cleaning initial log messages from all substrings with digits
 * `grouping equals` - group dataframe by equal cleaned messages
@@ -90,12 +90,12 @@ Clusters Statistics returns DataFrame or dictionary with statistic for all clust
 * `mean_similarity` - average similarity of log messages in cluster
 * `std_similarity` - standard deviation of similarity of log messages in cluster
 * `indices` - indices of the initial dataframe, corresponding to the cluster
-Installation:
+Installation:  
 
-`pip install clusterlogs`
-Usage:
+`pip install clusterlogs`  
+Usage:  
 
-`from clusterlogs import pipeline`
+`from clusterlogs import pipeline`  
 
 Author: maria.grigorieva@cern.ch (Maria Grigorieva)
 
