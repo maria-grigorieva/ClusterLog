@@ -17,7 +17,7 @@ The package used is `clusterlogs` ([here](https://github.com/maria-grigorieva/Cl
 `Python >= 3.6 < 3.8`
 This package doesn't work currently with python 2.7 because of` kneed` library, and with python 3.8 because of `gensim`.
 
-`editdistance==0.5.3  
+`editdistance==0.5.3`  
 gensim==3.4.0  
 kneed==0.4.1  
 nltk==3.4.5  
