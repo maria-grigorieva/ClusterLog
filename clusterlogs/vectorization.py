@@ -84,7 +84,7 @@ class Vector(Chain):
                 [(w, tfidf.idf_[i]) for w, i in tfidf.vocabulary_.items()])
             self.sent2vec = np.array([
                 np.mean([self.word2vec[w] * word2weight[w]
-                         for w in words if w in self.word2vec] or
+                         for w in words if w in self.word2vec.wv] or
                         [np.zeros(self.w2v_size)], axis=0)
                 for words in self.tokenized
             ])
@@ -98,7 +98,7 @@ class Vector(Chain):
 
 
     @staticmethod
-    def detect_embedding_size(vocab):#non credo che l'embedding size dipenda dal vocab. da quel che ho capito è il numero di nodi nell'hidden layer
+    def detect_embedding_size(vocab):
         """
         Automatic detection of word2vec embedding vector size,
         based on the length of vocabulary.
