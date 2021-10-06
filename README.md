@@ -135,6 +135,8 @@ To follow, a schema of my analsyis workflow. In particular, I'll compare the clu
 Once the error messages are cleaned and tokenized, the patterns that are equal are grouped together (equal groups) and clustered. In
 case of the Machine Learning approach (ML), a Word2Vec model (already trained) allows to obtain the tokens vectorization and the error message is vectorized by averaging its
 token-vectors. Finally the sentence-vectors feed the DBSCAN clustering algorithm. The state-of-the-art analysis clusters by Levenshtein distance (LD).
+
+As usage example please look at [this notebook(https://github.com/micolocco/ClusterLog/blob/micol_dev/clusterMLandSIM_example.ipynb).
 # How to install clusterlogs module on lxplus
 Firstly, connect to lxplus:
 
