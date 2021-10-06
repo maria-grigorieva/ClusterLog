@@ -192,7 +192,7 @@ Now your virtual env is set up correctly. Next time you access to lxplus follow 
 ## How to run training_corpus.py
 After you followed the instructions described [After installation](##-after-installation) section, enter:
 
-`python3 training_corpus.py <modelname>.model <number_of_days>`
+`python3 training_corpus.py <modelname>.model <number_of_days_to_be_read>`
 
 ex:`python3 training_corpus.py test.model 3`
 
