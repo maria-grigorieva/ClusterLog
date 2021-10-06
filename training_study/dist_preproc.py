@@ -102,7 +102,7 @@ def clean_tokenized(df_tokenized,stop_one=True):
                 'this','that','those','these','is','are','were','was','be','being','having','had','does','did','doing',
                 'and','if','about','again','then','so','too','by','error'] 
     
-   #removes words occuring once
+   #removes words occurring once
     if(stop_one):  
          count_df = df_tokenized.withColumn('word', F.explode(F.col('tokenized_message')))\
          .groupBy('word')\
