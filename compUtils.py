@@ -4,38 +4,7 @@ import numpy as np
 from pyspark.sql.types import StructField, StructType, StringType, LongType, IntegerType
 from pyspark.sql.functions import col
 
-def readCompareDist(file1, file2):
-    df_1=pd.read_csv('{}_clusters.csv'.format(file1))
-    df_2=pd.read_csv('{}_clusters.csv'.format(file2))
-    f,ax=plt.subplots(figsize=(20,8))
-    bins=np.arange(0,160000,800)
-    ax.hist(df_1['cluster_size'].values,bins=bins,alpha=0.9,label=file1)
-    ax.hist(df_2['cluster_size'].values,bins=bins,alpha=0.5,label=file2)
-
-    ax.set_xlabel('cluster_size')
-    #ax.xaxis.set_major_formatter(plt.NullFormatter())
-    ax.set_yscale('log')
-    ax.set_title("Distribution of clusters")
-    ax.legend(['{}: {} clusters'.format(file1,df_1.shape[0]),'{}: {} clusters'.format(file2,df_2.shape[0])])
-    plt.show()
-    f.savefig("{}VS{}.pdf".format(file1,file2))
-    return df_1,df_2
-
-def compareDist(df_1, df_2, label1, label2,bins):    
-    f,ax=plt.subplots(figsize=(20,8))
-    bins=bins
-    ax.hist(df_1['cluster_size'].values,bins=bins,alpha=0.9,label=label1)
-    ax.hist(df_2['cluster_size'].values,bins=bins,alpha=0.5,label=label2)
-
-    ax.set_xlabel('cluster_size')
-    #ax.xaxis.set_major_formatter(plt.NullFormatter())
-    ax.set_yscale('log')
-    ax.set_title("Distribution of clusters")
-    ax.legend(['{}: {} clusters'.format(label1,df_1.shape[0]),'{}: {} clusters'.format(label2,df_2.shape[0])])
-    plt.show()
-    f.savefig("{}VS{}.pdf".format(label1,label2))
-   
-
+#read data from HDFS, return pandas dataframe
 def readData(date,spark):
     _schema = StructType([
     StructField('metadata', StructType([StructField('timestamp',LongType(), nullable=True)])),
@@ -63,6 +32,57 @@ def readData(date,spark):
     df.drop_duplicates(inplace=True)
     
     return df
+
+#read multiple dates
+def readDateVector(dateVec,spark):
+    _schema = StructType([
+    StructField('metadata', StructType([StructField('timestamp',LongType(), nullable=True)])),
+    StructField('data', StructType([
+        StructField('t__error_message', StringType(), nullable=True),
+        StructField('src_hostname', StringType(), nullable=True),
+        StructField('dst_hostname', StringType(), nullable=True)])),])
+    fts_df = spark.read.json(dateVec,schema=_schema)
+    fts_df = fts_df.select(
+    col('metadata.timestamp').alias('time'),
+    col('data.src_hostname').alias('src'),
+    col('data.dst_hostname').alias('dst'),
+    col('data.t__error_message').alias('error_message')).where('error_message <> ""')
+    df = fts_df.toPandas()
+    return df
+
+#compare distributions from CSV files
+def readCompareDist(file1, file2):
+    df_1=pd.read_csv('{}_clusters.csv'.format(file1))
+    df_2=pd.read_csv('{}_clusters.csv'.format(file2))
+    f,ax=plt.subplots(figsize=(20,8))
+    bins=np.arange(0,160000,800)
+    ax.hist(df_1['cluster_size'].values,bins=bins,alpha=0.9,label=file1)
+    ax.hist(df_2['cluster_size'].values,bins=bins,alpha=0.5,label=file2)
+
+    ax.set_xlabel('cluster_size')
+    #ax.xaxis.set_major_formatter(plt.NullFormatter())
+    ax.set_yscale('log')
+    ax.set_title("Distribution of clusters")
+    ax.legend(['{}: {} clusters'.format(file1,df_1.shape[0]),'{}: {} clusters'.format(file2,df_2.shape[0])])
+    plt.show()
+    f.savefig("{}VS{}.pdf".format(file1,file2))
+    return df_1,df_2
+
+#compare distributions from pandas dataframes
+def compareDist(df_1, df_2, label1, label2,bins):    
+    f,ax=plt.subplots(figsize=(20,8))
+    bins=bins
+    ax.hist(df_1['cluster_size'].values,bins=bins,alpha=0.9,label=label1)
+    ax.hist(df_2['cluster_size'].values,bins=bins,alpha=0.5,label=label2)
+
+    ax.set_xlabel('cluster_size')
+    #ax.xaxis.set_major_formatter(plt.NullFormatter())
+    ax.set_yscale('log')
+    ax.set_title("Distribution of clusters")
+    ax.legend(['{}: {} clusters'.format(label1,df_1.shape[0]),'{}: {} clusters'.format(label2,df_2.shape[0])])
+    plt.show()
+    f.savefig("{}VS{}.pdf".format(label1,label2))
+    
 
 def explode(df, lst_cols, fill_value='', preserve_index=False):
     # make sure `lst_cols` is list-alike
@@ -95,18 +115,4 @@ def explode(df, lst_cols, fill_value='', preserve_index=False):
         res = res.reset_index(drop=True)
     return res
 
-def readDateVector(dateVec,spark):
-    _schema = StructType([
-    StructField('metadata', StructType([StructField('timestamp',LongType(), nullable=True)])),
-    StructField('data', StructType([
-        StructField('t__error_message', StringType(), nullable=True),
-        StructField('src_hostname', StringType(), nullable=True),
-        StructField('dst_hostname', StringType(), nullable=True)])),])
-    fts_df = spark.read.json(dateVec,schema=_schema)
-    fts_df = fts_df.select(
-    col('metadata.timestamp').alias('time'),
-    col('data.src_hostname').alias('src'),
-    col('data.dst_hostname').alias('dst'),
-    col('data.t__error_message').alias('error_message')).where('error_message <> ""')
-    df = fts_df.toPandas()
-    return df
+
