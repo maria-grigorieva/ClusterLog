@@ -48,6 +48,56 @@ def parallel_file_read(comm, file_name):
 
     return portion
 
+def parallel_db_read(comm, dbname, user, host='localhost', password=None, date_range=None, limit=None):
+    import psycopg2
+    conn = psycopg2.connect("dbname={} user={} host={} password='{}'".format(dbname, user, host, password)
+    with conn.cursor() as cur:
+        query = "INSERT INTO clusterlog_runs (end_time) VALUES (CURRENT_TIMESTAMP) RETURNING run_id;"
+        run_id = None
+        if comm.Get_rank() == 0:
+            print("before create run")
+            cur.execute(query)
+            run_id = int(cur.fetchone()[0])
+            print("after create run {}".format(run_id))
+        run_id = comm.bcast(run_id, 0)
+        query = "CREATE TABLE temp_messages_{} as SELECT error_messages.pandaid, message FROM panda_raw,  error_messages where panda_raw.pandaid = error_messages.pandaid".format(run_id)
+        if date_range != None:
+            where_query = " AND creationtime >= '{}' AND creationtime <= '{}'".format(*date_range)
+            query = query + where_query
+        if limit != None:
+            query = query + " LIMIT {}".format(limit)
+        query = query + ";"
+        lines_num = None
+        if comm.Get_rank() == 0:
+            print("before copy data")
+            try:
+                print(query)
+                cur.execute(query)
+                cur.execute("COMMIT")
+            except Exception as err:
+                print(err)
+                exit()
+            print("after copy data")
+            #cur.fetchall()
+            print("before getting lines_num")
+            cur.execute("SELECT count(*) FROM temp_messages_{};".format(run_id))
+            lines_num = min(int(cur.fetchone()[0]), limit)
+            print("after getting lines_num {}".format(lines_num))
+        lines_num = comm.bcast(lines_num, 0)
+        if comm.Get_rank() == 0:
+            print("starage:db;processes:{};lines:{}".format(comm.Get_size(), lines_num))
+        lines_num_p = lines_num / comm.Get_size();
+        query = "SELECT pandaid, message FROM temp_messages_{}".format(run_id)
+        query = query + " LIMIT {} OFFSET {};".format(lines_num_p, lines_num_p * comm.Get_rank())
+        cur.execute(query)
+        lines = cur.fetchall()
+        comm.barrier()
+        if comm.Get_rank() == 0:
+            cur.execute("DROP TABLE temp_messages_{};".format(run_id))
+    conn.close()
+
+    return lines, run_id
+
 def gather_df(comm, df):
     if comm != None and comm.Get_size() > 1:
         import math

@@ -16,16 +16,16 @@ class SClustering:
         self.tokenizer_type = tokenizer_type
         self.keywords_extraction = keywords_extraction
 
-    def process(self):
+    def process(self, to_db=None):
         """
         Clustering of messages using sequence matching
         """
         result = []
-        self.reclustering(self.groups.copy(deep=True), result)
+        self.reclustering(self.groups.copy(deep=True), result, to_db)
         self.result = pd.DataFrame(result)
         return self.result.sort_values(by=['cluster_size'], ascending=False)
 
-    def reclustering(self, df, result):
+    def reclustering(self, df, result, to_db=None):
         """
         Clustering of the groups:
         - take the most frequent sequence of tokens and compare if with others
@@ -51,6 +51,10 @@ class SClustering:
         common_sequence = sequence.sequence_matcher(filtered['sequence'].values)
         # Detect indices for the group
         indices = [item for sublist in filtered['indices'].values for item in sublist]
+        if to_db:
+            pandaids = [i for sublist in filtered['pandaids'].values for i in sublist]
+        else:
+            pandaids = None
         # Convert list of sequences to text
         text = '. '.join([' '.join(row) for row in filtered['sequence'].values])
         # Extract common phrases
@@ -59,10 +63,11 @@ class SClustering:
         result.append({'pattern': [textual_pattern],
                        'tokenized_pattern': tokenized_pattern,
                        'indices': indices,
+                       'pandaids': pandaids,
                        'cluster_size': len(indices),
                        'sequence': common_sequence,
                        'common_phrases': common_phrases})
 
         df.drop(filtered.index, axis=0, inplace=True)
         while df.shape[0] > 0:
-            self.reclustering(df, result)
+            self.reclustering(df, result, to_db=to_db)

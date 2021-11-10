@@ -113,11 +113,13 @@ class Chain(object):
                 setattr(self, key, value)
 
     @safe_run
-    def process(self):
+    def process(self, to_db=None, run_id=None):
         """
         Chain of methods, providing data preparation, vectorization and clusterization
         """
         
+        self.to_db = to_db
+        self.run_id = run_id
         time_start("messages_index_time")
         # e2e indexing for df
         self.df.set_index(pd.RangeIndex(comm_rank, comm_rank + comm_size * self.df.shape[0], comm_size), inplace=True)
@@ -167,6 +169,7 @@ class Chain(object):
                 self.groups = self.groups.groupby("sequence_str").aggregate({"indices": "sum", "pattern": "first",
                                                                              "sequence": "first",
                                                                              "tokenized_pattern": "first",
+                                                                             "pandaids": "sum",
                                                                              "cluster_size": "sum"}).reset_index()
                 time_stop("merge_groups_time")
             else:
@@ -205,6 +208,20 @@ class Chain(object):
                     report.generate_html_report(self.result, fname)
             elif self.output_type == 'csv':
                 self.result.to_csv(fname)
+            if to_db:
+                import psycopg2
+                conn = psycopg2.connect("dbname=golkeeper user=nordmike host=polus-ib password='KwbkxTfG3qdJCpE2x3px'")
+                with conn.cursor() as cur:
+                    for index, row in self.result.iterrows():
+                        cur.execute("INSERT into clusterlog_clusters (cluster_id, run_id, keyphrases, patterns, cluster_size) VALUES (%s, %s, %s, %s, %s);", (index, run_id, row["sequence"], row["pattern"], row["cluster_size"]))
+                        mes_ids = pd.DataFrame()
+                        mes_ids["pandaid"] = row["pandaids"]
+                        mes_ids["run_id"] = run_id
+                        mes_ids["cluster_id"] = index
+                        for i, r in mes_ids.iterrows():
+                            cur.execute("INSERT into clusterlog_message_results (run_id, cluster_id, pandaid) VALUES (%s, %s, %s);", (int(r["run_id"]), int(r["cluster_id"]), int(r["pandaid"])))
+                    cur.execute("COMMIT")
+                conn.close()
             time_stop("outputing_time")
         
         return parallel_profile
@@ -262,6 +279,7 @@ class Chain(object):
                               'pattern': detokenize_row(tokenized_pattern, self.tokenizer_type),
                               'sequence': gr['sequence'].values[0],
                               'tokenized_pattern': tokenized_pattern,
+                              'pandaids': gr['pandaid'].values.tolist(),
                               'cluster_size': len(gr.index.values.tolist())}])
         return df
 
@@ -322,12 +340,17 @@ class Chain(object):
 
         # Get all indices for the group
         indices = [i for sublist in gb['indices'].values for i in sublist]
+        if self.to_db:
+            pandaids = [i for sublist in gb['pandaids'].values for i in sublist]
+        else:
+            pandaids = None
         size = len(indices)
 
         phrases = self.search_keyphrases(pattern)
 
         return {'pattern': pattern,
                 'indices': indices,
+                'pandaids': pandaids,
                 'cluster_size': size,
                 'common_phrases': phrases[:10]}
 
@@ -359,7 +382,7 @@ class Chain(object):
                                self.add_placeholder,
                                self.tokenizer_type,
                                self.keywords_extraction)
-        self.result = clusters.process()
+        self.result = clusters.process(to_db=self.to_db)
         print('Finished with {} clusters'.format(self.result.shape[0]))
 
     @safe_run
