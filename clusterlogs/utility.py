@@ -5,7 +5,10 @@ T = Iterable[Hashable]
 
 
 def levenshtein_similarity(a: Sequence[T], b: Sequence[T]) -> float:
-    return 1 - editdistance.eval(a, b) / max(len(a), len(b))
+    try:
+        return 1 - editdistance.eval(a, b) / max(len(a), len(b))
+    except Exception as e:
+        print(f'{a}, {b}, len(a)={len(a)}, len(b)={len(b)}')
 
 
 def levenshtein_similarity_1_to_n(many: Sequence[Sequence[T]], single: Optional[Sequence[T]] = None) -> Union[List[float], float]:

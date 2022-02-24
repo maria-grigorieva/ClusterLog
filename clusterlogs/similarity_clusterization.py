@@ -37,38 +37,39 @@ class SClustering:
         """
         # Detect the most frequent textual sequence
         top_sequence = df['sequence'].apply(tuple).describe().top
-        # Calculate Levenshtein similarities between the most frequent and
-        # all other textual sequences
-        df['ratio'] = levenshtein_similarity_1_to_n(df['sequence'].values, top_sequence)
-        # Filter the inistal DataFrame by accuracy values
-        filtered = df[(df['ratio'] >= self.accuracy)]
-        # Search common tokenized pattern and detokenize it
-        pattern = Match(add_placeholder=self.add_placeholder)
-        tokenized_pattern = pattern.sequence_matcher(filtered['tokenized_pattern'].values)
-        textual_pattern = detokenize_row(tokenized_pattern, self.tokenizer_type)
-        textual_pattern = re.sub(r'(\(\.\*\?\))(?:[\W\s]*\1)+', r'(.*?)', textual_pattern)
-        # Search common sequence
-        sequence = Match()
-        common_sequence = sequence.sequence_matcher(filtered['sequence'].values)
-        # Detect indices for the group
-        indices = [item for sublist in filtered['indices'].values for item in sublist]
-        # Extract common phrases
-        text = [' '.join(row) for row in filtered['sequence'].values]
-        common_phrases = extract_common_phrases(text, self.keywords_extraction)
+        if bool(top_sequence):
+            # Calculate Levenshtein similarities between the most frequent and
+            # all other textual sequences
+            df['ratio'] = levenshtein_similarity_1_to_n(df['sequence'].values, top_sequence)
+            # Filter the inistal DataFrame by accuracy values
+            filtered = df[(df['ratio'] >= self.accuracy)]
+            # Search common tokenized pattern and detokenize it
+            pattern = Match(add_placeholder=self.add_placeholder)
+            tokenized_pattern = pattern.sequence_matcher(filtered['tokenized_pattern'].values)
+            textual_pattern = detokenize_row(tokenized_pattern, self.tokenizer_type)
+            textual_pattern = re.sub(r'(\(\.\*\?\))(?:[\W\s]*\1)+', r'(.*?)', textual_pattern)
+            # Search common sequence
+            sequence = Match()
+            common_sequence = sequence.sequence_matcher(filtered['sequence'].values)
+            # Detect indices for the group
+            indices = [item for sublist in filtered['indices'].values for item in sublist]
+            # Extract common phrases
+            text = [' '.join(row) for row in filtered['sequence'].values]
+            common_phrases = extract_common_phrases(text, self.keywords_extraction)
 
-        pattern_indices = dict()
-        textual_patterns = [textual_pattern]
-        for i in textual_patterns:
-            pattern_indices[i] = indices
+            pattern_indices = dict()
+            textual_patterns = [textual_pattern]
+            for i in textual_patterns:
+                pattern_indices[i] = indices
 
-        result.append({'patterns': list(pattern_indices.keys()),
-                       'tokenized_pattern': tokenized_pattern,
-                       'pattern_indices': pattern_indices,
-                       'indices': indices,
-                       'cluster_size': len(indices),
-                       'sequence': common_sequence,
-                       'common_phrases': common_phrases[:10]})
+            result.append({'patterns': list(pattern_indices.keys()),
+                           'tokenized_pattern': tokenized_pattern,
+                           'pattern_indices': pattern_indices,
+                           'indices': indices,
+                           'cluster_size': len(indices),
+                           'sequence': common_sequence,
+                           'common_phrases': common_phrases[:1]})
 
-        df.drop(filtered.index, axis=0, inplace=True)
-        while df.shape[0] > 0:
-            self.reclustering(df, result)
+            df.drop(filtered.index, axis=0, inplace=True)
+            while df.shape[0] > 0:
+                self.reclustering(df, result)
