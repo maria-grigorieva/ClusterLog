@@ -122,17 +122,17 @@ class Chain(object):
 
                 self.df["key_phrases"] = self.df["key_phrases"].astype('object')
 
-                def extend_source(x):
-                    for p, indices in x["pattern_indices"].items():
-                        self.df.loc[indices, "common_pattern"] = p
-                        self.df.loc[indices, "key_phrases"] = str(x["common_phrases"])
-                        self.df.loc[indices, "cluster_num"] = x["cluster_number"]
+            def extend_source(x):
+                for p, indices in x["pattern_indices"].items():
+                    self.df.loc[indices, "common_pattern"] = p
+                    self.df.loc[indices, "key_phrases"] = str(x["common_phrases"])
+                    self.df.loc[indices, "cluster_num"] = x["cluster_number"]
 
-                self.result.apply(axis="columns", func=extend_source)
+            self.result.apply(axis="columns", func=extend_source)
 
-                self.df.drop(columns=["tokenized_pattern", "hash", "sequence"], inplace=True)
+            self.df.drop(columns=["tokenized_pattern", "hash", "sequence"], inplace=True)
 
-                self.df.to_csv(f'{self.output_fname}.orig.csv')
+            self.df.to_csv(f'{self.output_fname}.orig.csv')
 
             self.process_timings()
 

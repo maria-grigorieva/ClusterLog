@@ -23,6 +23,7 @@ class SClustering:
         result = []
         self.reclustering(self.groups.copy(deep=True), result)
         self.result = pd.DataFrame(result)
+        self.result['cluster_number'] = list(range(0,len(result)))
         return self.result.sort_values(by=['cluster_size'], ascending=False)
 
     def reclustering(self, df, result):
@@ -55,8 +56,14 @@ class SClustering:
         text = [' '.join(row) for row in filtered['sequence'].values]
         common_phrases = extract_common_phrases(text, self.keywords_extraction)
 
-        result.append({'pattern': [textual_pattern],
+        pattern_indices = dict()
+        textual_patterns = [textual_pattern]
+        for i in textual_patterns:
+            pattern_indices[i] = indices
+
+        result.append({'patterns': list(pattern_indices.keys()),
                        'tokenized_pattern': tokenized_pattern,
+                       'pattern_indices': pattern_indices,
                        'indices': indices,
                        'cluster_size': len(indices),
                        'sequence': common_sequence,
