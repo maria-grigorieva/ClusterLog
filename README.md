@@ -6,6 +6,10 @@ Python >= 3.7 < 3.8
 ```
 This package doesn't work currently with python 2.7 because of `kneed` library, and with python 3.8 because of `gensim`.
 
+```
+conda config --add channels conda-forge
+```
+
 Create the environment from the environment.yml file:
 ```
 conda env create -f environment.yml
