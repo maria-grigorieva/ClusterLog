@@ -3,12 +3,58 @@ from itertools import chain
 from pyonmttok import Tokenizer
 from collections import Counter
 from nltk.corpus import stopwords
+# import spacy
+# from spacy import displacy
+import re
+# import nltk
+# from nltk.tag.stanford import StanfordNERTagger
+#
+# st = StanfordNERTagger('/Users/maria/PycharmProjects/ClusterLog/stanford-ner-2020-11-17/classifiers/english.all.3class.distsim.crf.ser.gz',
+#                        '/Users/maria/PycharmProjects/ClusterLog/stanford-ner-2020-11-17/stanford-ner.jar')
+
+
+#NER = spacy.load("en_core_web_lg", disable=["tok2vec", "tagger", "parser", "attribute_ruler", "lemmatizer"])
 
 from itertools import groupby
 
 
 # TOKENIZER = Tokenizer("space", spacer_annotate=True, preserve_placeholders=True, spacer_new=True)
 STOP = stopwords.words('english') + list(punctuation) + ["``", "''", u"\u2581"]
+
+
+def regexp_cleaning(messages):
+    new_messages = []
+
+    for row in messages:
+        # replace date with DATE
+        row = re.sub(r"(\d{2,4}[-|\s]?\d{2}[-|\s]?\d{2,4})", 'DATE', row)
+        # replace time with TIME
+        row = re.sub(r"\d{2}:\d{2}:\d{2}", 'TIME', row)
+        # replace URLs
+        row = re.sub('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', 'URL', row)
+        # Removes words that contain at least one digit inside but not in the last place
+        row = re.sub(r'([a-zA-Z_]*\d+[a-zA-Z_]*)+', '*', row)
+        # replace numbers
+        row = re.sub('(\d+)','*', row)
+
+        # tokens = nltk.tokenize.word_tokenize(row)
+        # tags = st.tag(tokens)
+        # for tag in tags:
+        #     if tag[1] == 'PERSON':
+        #         print(tag)
+
+        new_messages.append(row)
+
+    return new_messages
+
+# def ner_replacing(messages):
+#     new_messages = []
+#     for row in messages:
+#         doc = NER(row)
+#         for ent in doc.ents:
+#             row = row.replace(ent.text, ent.label_)
+#         new_messages.append(row)
+#     return new_messages
 
 
 def tokenize_messages(messages, tokenizer_type, spacer_annotate=True, spacer_new=True):

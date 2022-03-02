@@ -8,7 +8,7 @@ from time import time
 
 from .reporting import report
 from .validation import Output
-from .tokenization import tokenize_messages, detokenize_messages, get_term_frequencies, detokenize_row
+from .tokenization import tokenize_messages, detokenize_messages, get_term_frequencies, detokenize_row, regexp_cleaning
 from .data_preparation import clean_messages
 from .sequence_matching import Match
 from .ml_clusterization import MLClustering
@@ -149,11 +149,13 @@ class Chain(object):
 
     @safe_run
     def tokenization(self):
-        self.df['tokenized_pattern'] = tokenize_messages(self.df[self.target].values, self.tokenizer_type)
+        self.df['cleaned_messages'] = regexp_cleaning(self.df[self.target])
+        self.df['tokenized_pattern'] = tokenize_messages(self.df['cleaned_messages'].values, self.tokenizer_type)
+        #self.df['tokenized_pattern'] = tokenize_messages(self.df[self.target].values, self.tokenizer_type)
 
     @safe_run
     def cleaning(self):
-        cleaned_strings = clean_messages(self.df[self.target].values)
+        cleaned_strings = clean_messages(self.df['cleaned_messages'].values)
         cleaned_tokens = tokenize_messages(cleaned_strings, self.tokenizer_type, spacer_annotate=False, spacer_new=False)
         self.df['hash'] = self.generateHash(cleaned_strings)
         self.df['sequence'] = cleaned_tokens

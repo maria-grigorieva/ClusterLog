@@ -12,7 +12,7 @@ from typing import List, Optional, Tuple, Dict, Any, Union
 
 from sklearn.manifold import TSNE
 from dash_extensions.snippets import send_file
-from plotly.graph_objects import Figure, Scatter
+from plotly.graph_objs import Figure, Scatter
 from dash.dependencies import Input, Output, State
 
 from webapp.process import execute_pipeline
