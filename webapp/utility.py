@@ -44,7 +44,8 @@ def generate_table(dataframe: pd.DataFrame, columns: Optional[List[str]] = None,
 def parse_input_file(content: str) -> pd.DataFrame:
     _, content_string = content.split(',')
     decoded = b64decode(content_string)
-    df = pd.read_csv(StringIO(decoded.decode('utf-8')))
+    df = pd.read_csv(StringIO(decoded.decode('utf-8')), low_memory=False, quoting=2)
+    df.fillna('unknown', inplace=True)
     return df  # type: ignore
 
 
