@@ -235,19 +235,34 @@ def update_graph(stored_groups: str, stored_embeddings: str, noise_threshold: in
         fig.add_trace(Scatter(
             x=cluster.x, y=cluster.y,
             name="Cluster № " + str(label),
-            marker_line_width=1,
-            marker_size=cluster.marker_size,
-            opacity=.8,
+            marker=dict(
+                size=cluster.marker_size,
+                opacity=0.8,
+                line=dict(
+                    width=1
+                ),
+            ),
+            # marker_line_width=1,
+            # marker_size=cluster.marker_size,
+            # opacity=.8,
             text=cluster.hover_text,
         ))
 
     fig.add_trace(Scatter(
         x=noise.x, y=noise.y,
         name="Noise",
-        marker_line_width=1,
-        marker_size=noise.marker_size,
-        marker_color='gray',
-        opacity=.8,
+        marker=dict(
+            size=cluster.marker_size,
+            opacity=0.8,
+            color='gray',
+            line=dict(
+                width=1
+            ),
+        ),
+        # marker_line_width=1,
+        # marker_size=noise.marker_size,
+        #marker_color='gray',
+        #opacity=.8,
         text=noise.hover_text,
     ))
 
@@ -275,22 +290,33 @@ def update_knee_graph(knee_data_json: str) -> Optional[dcc.Graph]:
         y=knee_data['y'],
         name="Data",
         mode='lines',
-        line_color="blue"
+        line=dict(
+            color='blue',
+        ),
+        # line_color="blue"
     )
 
     for knee in knee_data['knees']:
         fig.add_vline(
             x=knee,
-            line_color='black',
-            line_dash='dash'
+            line=dict(
+                color='black',
+                dash='dash',
+            ),
+            # line_color='black',
+            # line_dash='dash'
         )
 
     fig.add_vline(
         x=knee_data['chosen_knee'],
         annotation_text=" Chosen epsilon value",
         annotation_font_size=15,
-        line_color='red',
-        line_dash='dash'
+        line=dict(
+            color='red',
+            dash='dash',
+        ),
+        # line_color='red',
+        # line_dash='dash'
     )
 
     fig.update_yaxes(title_text='Number of points', title_font={"size": 18}, tickfont={'size': 14})

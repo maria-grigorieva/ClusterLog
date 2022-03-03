@@ -79,10 +79,10 @@ https://repo.anaconda.com/pkgs/main/osx-64/requests-2.23.0-py38_0.conda
 https://conda.anaconda.org/conda-forge/osx-64/conda-4.11.0-py38h50d1736_0.tar.bz2
 https://repo.anaconda.com/pkgs/main/noarch/elasticsearch-7.9.1-py_0.conda
 https://conda.anaconda.org/conda-forge/noarch/dash-bootstrap-components-0.13.1-pyhd8ed1ab_0.tar.bz2
-https://conda.anaconda.org/conda-forge/noarch/dash-extensions-0.0.60-pyhd8ed1ab_1.tar.bz2
+https://conda.anaconda.org/conda-forge/noarch/dash-extensions-0.0.71-pyhd8ed1ab_0.tar.bz2
 https://repo.anaconda.com/pkgs/main/noarch/dash-core-components-1.3.1-py_0.conda
 https://repo.anaconda.com/pkgs/main/noarch/dash-html-components-1.0.1-py_0.conda
-https://repo.anaconda.com/pkgs/main/noarch/dash-1.17.0-pyhd3eb1b0_0.conda
+https://repo.anaconda.com/pkgs/main/noarch/dash-1.19.0-pyhd3eb1b0_0.conda
 https://repo.anaconda.com/pkgs/main/noarch/dash-table-4.4.1-pyhd3eb1b0_0.conda
 https://repo.anaconda.com/pkgs/main/osx-64/cython-blis-0.4.1-py38haf1e3a3_1.conda
 https://repo.anaconda.com/pkgs/main/osx-64/mkl_fft-1.2.0-py38hc64f4ea_0.conda
