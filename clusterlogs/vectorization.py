@@ -86,7 +86,7 @@ class Vector(Chain):
         else:
             for sent in self.tokenized:
                 # sent2vec.append(np.average(self.word2vec[sent],0))
-                sent_vec = np.average([self.word2vec[w] if w in self.word2vec else np.zeros((self.w2v_size,), dtype=np.float32)
+                sent_vec = np.average([self.word2vec.wv.get_vector(w) if w in self.word2vec.wv else np.zeros((self.w2v_size,), dtype=np.float32)
                                        for w in sent], 0)
                 sent2vec.append(np.zeros((self.w2v_size,), dtype=np.float32) if np.isnan(np.sum(sent_vec)) else sent_vec)
             self.sent2vec = np.array(sent2vec)

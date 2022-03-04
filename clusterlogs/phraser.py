@@ -9,7 +9,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 from .data_preparation import clean_messages
 import nltk
 from nltk.collocations import BigramCollocationFinder, TrigramCollocationFinder
-from gensim.summarization import keywords  # , summarize
+# TODO: update gensim without summarization
+# from gensim.summarization import keywords  # , summarize
 
 
 def extract_common_phrases(pattern, algorithm):
@@ -19,7 +20,7 @@ def extract_common_phrases(pattern, algorithm):
         "rake_nltk": _extract_common_phrases_rake_nltk,
         'lda': _extract_common_phrases_lda,
         "ngrams": _extract_common_phrases_ngrams,
-        "gensim": _extract_common_phrases_gensim,
+        # "gensim": _extract_common_phrases_gensim,
 
         "tfidf": partial(_extract_common_phrases_pke, algorithm="tfidf"),
         "KPMiner": partial(_extract_common_phrases_pke, algorithm="KPMiner"),
@@ -38,9 +39,9 @@ def extract_common_phrases(pattern, algorithm):
     except KeyError as key:
         raise KeyError(f"Invalid keyword extraction method name: {key}! Available methods are: {tuple(dispatch.keys())}")
 
-
-def _extract_common_phrases_gensim(pattern):
-    return keywords('. '.join(clean_messages(pattern)), words=10).split("\n")
+#
+# def _extract_common_phrases_gensim(pattern):
+#     return keywords('. '.join(clean_messages(pattern)), words=10).split("\n")
 
 
 def _extract_common_phrases_ngrams(pattern):
