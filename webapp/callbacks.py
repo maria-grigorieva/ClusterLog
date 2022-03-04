@@ -5,19 +5,38 @@ import dash_html_components as html
 
 from math import log
 from json import dumps, loads
+from ntpath import basename
+from base64 import b64encode
 from os import listdir
 from dataclasses import dataclass
 from tempfile import NamedTemporaryFile
 from typing import List, Optional, Tuple, Dict, Any, Union
 
 from sklearn.manifold import TSNE
-from dash_extensions.snippets import send_file
 from plotly.graph_objs import Figure, Scatter
 from dash.dependencies import Input, Output, State
 
 from webapp.process import execute_pipeline
 from webapp.app import app, CUSTOM_MODEL_DIR
 from webapp.utility import parse_input_file, parse_model_file, generate_table
+
+
+def send_file(path, filename=None, mime_type=None):
+    """
+    Convert a file into the format expected by the Download component.
+    :param path: path to the file to be sent
+    :param filename: name of the file, if not provided the original filename is used
+    :param mime_type: mime type of the file (optional, passed to Blob in the javascript layer)
+    :return: dict of file content (base64 encoded) and meta data used by the Download component
+    """
+    # If filename is not set, read it from the path.
+    if filename is None:
+        filename = basename(path)
+    # Read the file into a base64 string.
+    with open(path, "rb") as f:
+        content = b64encode(f.read()).decode()
+    # Wrap in dict.
+    return dict(content=content, filename=filename, mime_type=mime_type, base64=True)
 
 
 @app.callback(

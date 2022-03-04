@@ -6,16 +6,29 @@ Python >= 3.7 < 3.8
 ```
 This package doesn't work currently with python 2.7 because of `kneed` library, and with python 3.8 because of `gensim`.
 
+For the full list of requirements, see `environment.yml`
+
+**Installation instructions:**
+
+Clone the repository and enter the resulting directory:
+```
+git clone https://github.com/maria-grigorieva/ClusterLog
+cd ClusterLog
+git switch development
+```
+
+Add the `conda-forge` channel if necessary
 ```
 conda config --add channels conda-forge
 ```
 
-Create the environment from the environment.yml file:
+Create the environment from the environment.yml file and activate it:
 ```
 conda env create -f environment.yml
+conda activate clusterlogs
 ```
 
-Execute in command line to download dictionary required for pyTextRank library
+Download the SpaCy dataset:
 ```
 python -m spacy download en_core_web_sm
 ```
@@ -24,7 +37,7 @@ python -m spacy download en_core_web_sm
    Pandas DataFrame with error log messages. DataFrame may have arbitrary columns and column names, but
    it must contain index column with IDs and column with text log messages. The name of log column is not
    fixed, but it must be specified explicitly in settings as 'target'.
-   Possible structure of DataFrame is the following (in this example, `tagret='log_message'`):
+   Possible structure of DataFrame is the following (in this example, `target='log_message'`):
    ```
    ID   |   log_message                                                            | timestamp
    -----------------------------------------------------------------------------------------------------

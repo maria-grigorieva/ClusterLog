@@ -57,7 +57,10 @@ app.layout = html.Div(children=[
 
 
 def delete_temp_files() -> None:
-    model_files = listdir(CUSTOM_MODEL_DIR)
+    try:
+        model_files = listdir(CUSTOM_MODEL_DIR)
+    except FileNotFoundError:
+        return
     file_num = len(model_files)
     for file in model_files:
         remove(join(CUSTOM_MODEL_DIR, file))
