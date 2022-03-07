@@ -25,11 +25,11 @@ class Vector(Chain):
         :param min_count: minimum frequency count of words (recommended value is 10)
         """
         self.word2vec = Word2Vec(self.tokenized,
-                                 size=self.w2v_size,
+                                 vector_size=self.w2v_size,
                                  window=self.w2v_window,
                                  min_count=min_count,
                                  workers=self.cpu_number,
-                                 iter=iterations)
+                                 epochs=iterations)
 
         self.word2vec.save(self.model_name)
 
