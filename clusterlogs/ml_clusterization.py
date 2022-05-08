@@ -7,8 +7,10 @@ from sklearn.cluster import DBSCAN, AgglomerativeClustering, MiniBatchKMeans
 from sklearn.neighbors import NearestNeighbors
 from sklearn.decomposition import PCA
 from sklearn.cluster import OPTICS
+from pdsdbscanmpilib import pdsdbscan
 
 from .tokenization import get_vocabulary
+from .utility import split_vectors, gather_cluster_labels
 import spacy
 
 nlp = spacy.load("en_core_web_sm")
@@ -17,7 +19,8 @@ nlp = spacy.load("en_core_web_sm")
 
 class MLClustering:
 
-    def __init__(self, df, vectors, cpu_number, add_placeholder, method, tokenizer_type, pca, parameters):
+    def __init__(self, mpi_comm, df, vectors, cpu_number, add_placeholder, method, tokenizer_type, pca, parameters):
+        self.mpi_comm = mpi_comm
         self.df = df
         self.vectors = vectors
         self.cpu_number = cpu_number
@@ -33,7 +36,11 @@ class MLClustering:
             self.vectors.sent2vec = self.dimensionality_reduction()
         # Call a method with the corresponding name
         self.cluster_labels = getattr(self, self.method.lower())()
+        if self.df is None:
+            self.df = {}
         self.df['cluster'] = self.cluster_labels
+        if self.df['cluster'] is None:
+            return
         print(f"{self.method.title()} clustering finished with {len(set(self.cluster_labels))} clusters")
 
     def dimensionality_reduction(self):
@@ -73,18 +80,7 @@ class MLClustering:
         Execution of the DBSCAN clustering algorithm.
         Returns cluster labels
         """
-        parameters = {
-            'epsilon': None,
-            'metric': 'euclidean',
-            'min_samples': 1
-        }
-        parameters.update(self.parameters)
-
-        distances = self.kneighbors(metric=parameters['metric'])
-        epsilon = self.epsilon_search(distances)
-        if parameters['epsilon'] is None:
-            parameters['epsilon'] = epsilon
-        self.knee_data['chosen_knee'] = parameters['epsilon']
+        parameters = self.__get_dbscan_parameters()
 
         cluster_labels = DBSCAN(eps=parameters['epsilon'],
                                 metric=parameters['metric'],
@@ -157,3 +153,52 @@ class MLClustering:
         )
         cluster_labels = model.fit_predict(self.vectors.sent2vec)
         return cluster_labels
+
+    def pdsdbscand(self) -> np.ndarray:
+        """
+        Parallel DBSCAN algorithm using the disjoint set data structure.
+        Modified distributed version.
+        """
+        if self.mpi_comm is None:
+            raise RuntimeError("PDSDBSCAN-D is supported in MPI-mode only (check USE_MPI env flag)")
+
+        if self.mpi_comm.Get_rank() == 0:
+            parameters = self.__get_dbscan_parameters()
+        else:
+            parameters = None
+        parameters = self.mpi_comm.bcast(parameters, root=0)
+
+        self.vectors.sent2vec = split_vectors(self.mpi_comm, self.vectors.sent2vec)
+        status, cluster_labels = pdsdbscan.run_pdsdbscan(
+            self.mpi_comm,
+            self.vectors.sent2vec,
+            parameters['min_samples'],
+            parameters['epsilon'],
+            0,
+            len(self.vectors.sent2vec),
+        )
+        if status != pdsdbscan.RESULT_OK:
+            raise RuntimeError(f"PDSDBSCAN-D failed (status {status})")
+        cluster_labels = gather_cluster_labels(self.mpi_comm, cluster_labels)
+
+        return cluster_labels
+
+    @staticmethod
+    def is_mpi_supported(clustering_type):
+        return clustering_type == 'pdsdbscand'
+
+    def __get_dbscan_parameters(self):
+        parameters = {
+            'epsilon': None,
+            'metric': 'euclidean',
+            'min_samples': 1
+        }
+        parameters.update(self.parameters)
+
+        distances = self.kneighbors(metric=parameters['metric'])
+        epsilon = self.epsilon_search(distances)
+        if parameters['epsilon'] is None:
+            parameters['epsilon'] = epsilon
+        self.knee_data['chosen_knee'] = parameters['epsilon']
+
+        return parameters
