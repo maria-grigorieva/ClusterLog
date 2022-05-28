@@ -142,5 +142,13 @@ cluster_dbscan_c = Chain(df, target, mode='create', model_name='<path to new wor
 cluster_dbscan_c.process()
 ```
 
+**Running in MPI-mode**
+
+ClusterLogs supports distributed memory computations at preprocessing and clustering steps with MPI-mode. 
+
+See usage example in `test/pdsdbscan_panda_test.py`. 
+
+Run as: `$ USE_MPI=1 mpirun -n <num_proc> python3 test/pdsdbscan_panda_test.py`
+
 **Author:**
 maria.grigorieva@cern.ch (Maria Grigorieva)
