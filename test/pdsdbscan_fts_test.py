@@ -27,8 +27,6 @@ def main():
         'sentence_vectorization': 0,
         'ml_clustering': 0,
         'clusters_description': 0,
-        'split_vectors': 0,
-        'gather_vectors': 0,
     }
 
     cluster_pdsdbscand.process()

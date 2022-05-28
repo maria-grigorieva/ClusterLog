@@ -94,49 +94,6 @@ def gather_df(comm, df):
         return df
 
 
-def split_vectors_by_parts(comm, vectors, slice_len=20000):
-    """
-    Is needed because internal mpi4py limitations on sending big slices of data.
-    """
-    if comm is None:
-        return vectors
-    rank = comm.Get_rank()
-    comm_size = comm.Get_size()
-    if comm_size == 1:
-        return vectors
-
-    comm.Barrier()
-
-    if rank == 0:
-        dtype = vectors.dtype
-        dims = vectors.shape[1]
-        num_slices = int(math.ceil(len(vectors) / slice_len))
-    else:
-        dtype = None
-        dims = 0
-        num_slices = 0
-    dtype = comm.bcast(dtype, root=0)
-    dims = comm.bcast(dims, root=0)
-    num_slices = comm.bcast(num_slices, root=0)
-
-    if num_slices == 1:
-        return split_vectors(comm, vectors)
-
-    if rank == 0:
-        slices_ind = [i * slice_len for i in range(1, num_slices)]
-        slices = np.split(vectors, slices_ind)
-    else:
-        slices = [None] * num_slices
-
-    result = np.ndarray((0, dims), dtype=dtype)
-    for i in range(num_slices):
-        part = split_vectors(comm, slices[i])
-        part_sizes.append(len(part))
-        result = np.concatenate((result, part))
-
-    return result
-
-
 def split_vectors(comm, vectors):
     """
     Distribute vectorized messages across processes before clustering.
@@ -175,87 +132,6 @@ def split_vectors(comm, vectors):
     result = np.empty((counts[rank] // dims, dims), dtype)
     sys.stdout.flush()
     comm.Scatterv([send_buf, counts, displacements, MPI.FLOAT], result, root=0)
-
-    return result
-
-
-def gather_vectors_by_parts(comm, vectors):
-    """
-    Is needed because internal mpi4py limitations on sending big slices of data.
-    """
-    if comm is None:
-        return vectors
-
-    rank = comm.Get_rank()
-    comm_size = comm.Get_size()
-
-    if comm_size == 1:
-        return vectors
-
-    comm.Barrier()
-
-    dims = vectors.shape[1]
-    dtype = vectors.dtype
-
-    part_ind = []
-    part_ind.append(part_sizes[0])
-    for i in range(1, len(part_sizes)):
-        part_size = part_sizes[i]
-        part_ind.append(part_size + part_ind[i-1])
-
-    parts = np.split(vectors, part_ind)
-    if rank == 0:
-        result = np.empty((0, dims), dtype)
-    else:
-        result = None
-
-    for part in parts:
-        gathered_part = gather_vectors(comm, part)
-        if rank == 0:
-            result = np.concatenate((result, gathered_part))
-
-    return result
-
-
-def gather_vectors(comm, vectors):
-    """
-    Gather vectorized messages to root process after clustering.
-    """
-    if comm is None:
-        return vectors
-
-    rank = comm.Get_rank()
-    comm_size = comm.Get_size()
-
-    if comm_size == 1:
-        return vectors
-
-    counts = []
-    displacements = []
-    dims = vectors.shape[1]
-    dtype = vectors.dtype
-    common_len = comm.allreduce(len(vectors))
-
-    default_count = (common_len // comm_size) * dims
-    last_pos = 0
-    for rank_num in range(comm_size):
-        count = default_count
-        if rank_num == 0:
-            count += (common_len % comm_size) * dims
-        counts.append(count)
-        displacements.append(last_pos)
-        last_pos += count
-
-    send_buf = np.ravel(vectors)
-
-    if rank == 0:
-        result = np.empty(common_len * dims, dtype)
-    else:
-        result = None
-
-    comm.Gatherv(send_buf, [result, counts, displacements, MPI.LONG_LONG], root=0)
-    if rank == 0:
-        result = np.reshape(result, (-1, dims))
 
     return result
 
