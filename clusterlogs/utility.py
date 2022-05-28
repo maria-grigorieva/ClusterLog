@@ -2,8 +2,6 @@ import editdistance
 import numpy as np
 from typing import Sequence, Iterable, Hashable, List, Optional, Union
 from mpi4py import MPI
-import math
-import sys
 
 T = Iterable[Hashable]
 
@@ -24,6 +22,7 @@ def levenshtein_similarity_1_to_n(many: Sequence[Sequence[T]], single: Optional[
     return [levenshtein_similarity(single, item) for item in many]
 
 def parallel_file_read(comm, file_name):
+    import math
     import os
 
     if comm != None:
@@ -130,7 +129,6 @@ def split_vectors(comm, vectors):
     dims = comm.bcast(dims, root=0)
 
     result = np.empty((counts[rank] // dims, dims), dtype)
-    sys.stdout.flush()
     comm.Scatterv([send_buf, counts, displacements, MPI.FLOAT], result, root=0)
 
     return result
