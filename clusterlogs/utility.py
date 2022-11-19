@@ -1,7 +1,11 @@
 import editdistance
+import numpy as np
 from typing import Sequence, Iterable, Hashable, List, Optional, Union
+from mpi4py import MPI
 
 T = Iterable[Hashable]
+
+part_sizes = []
 
 
 def levenshtein_similarity(a: Sequence[T], b: Sequence[T]) -> float:
@@ -49,6 +53,7 @@ def parallel_file_read(comm, file_name):
 
     return portion
 
+
 def gather_df(comm, df):
     if comm != None:
         import math
@@ -86,3 +91,82 @@ def gather_df(comm, df):
             return None
     else:
         return df
+
+
+def split_vectors(comm, vectors):
+    """
+    Distribute vectorized messages across processes before clustering.
+    """
+    if comm is None:
+        return vectors
+    rank = comm.Get_rank()
+    comm_size = comm.Get_size()
+    if comm_size == 1:
+        return vectors
+
+    counts = []
+    displacements = []
+
+    if rank == 0:
+        dims = vectors.shape[1]
+        send_buf = np.ravel(vectors)
+        default_count = (len(vectors) // comm_size) * dims
+        last_pos = 0
+        for rank_num in range(comm_size):
+            count = default_count
+            if rank_num == 0:
+                count += (len(vectors) % comm_size) * dims
+            counts.append(count)
+            displacements.append(last_pos)
+            last_pos += count
+    else:
+        dims = None
+        send_buf = None
+
+    dtype = np.float32
+    counts = comm.bcast(counts, root=0)
+    displacements = comm.bcast(displacements, root=0)
+    dims = comm.bcast(dims, root=0)
+
+    result = np.empty((counts[rank] // dims, dims), dtype)
+    comm.Scatterv([send_buf, counts, displacements, MPI.FLOAT], result, root=0)
+
+    return result
+
+
+def gather_cluster_labels(comm, labels):
+    """
+    Gather cluster labels to root process after clustering.
+    """
+    if comm is None:
+        return labels
+
+    rank = comm.Get_rank()
+    comm_size = comm.Get_size()
+
+    if comm_size == 1:
+        return labels
+
+    counts = []
+    displacements = []
+    dtype = labels.dtype
+    common_len = comm.allreduce(len(labels))
+
+    default_count = common_len // comm_size
+    last_pos = 0
+    for rank_num in range(comm_size):
+        count = default_count
+        if rank_num == 0:
+            count += common_len % comm_size
+        counts.append(count)
+        displacements.append(last_pos)
+        last_pos += count
+
+    if rank == 0:
+        result = np.empty(common_len, dtype)
+    else:
+        result = None
+
+    comm.Gatherv(labels, [result, counts, displacements, MPI.INT], root=0)
+
+    return result

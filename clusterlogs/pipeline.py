@@ -41,7 +41,7 @@ def safe_run(method):
                 self.timings[method.__name__] = round((te - ts), 4)
             return result
         except Exception as e:
-            print(f"{method.__name__} threw an exception: {e}")
+            print(f"{method.__name__} (rank {comm_rank}) threw an exception: {e}")
 
     return func_wrapper
 
@@ -86,6 +86,7 @@ class Chain(object):
         self.categorization = categorization
         self.dimensionality_reduction = dimensionality_reduction
         self.keywords_extraction = keywords_extraction
+        self.vectors = None
 
     @staticmethod
     def get_cpu_number():
@@ -106,34 +107,13 @@ class Chain(object):
         self.tokenization()
         # self.cleaning()
         self.df = gather_df(comm, self.df)
+
+        if MLClustering.is_mpi_supported(self.clustering_type):
+            self.vectorization_and_mpi_clustering()
+        else:
+            self.vectorization_and_clustering()
+
         if comm_rank == 0:
-            # self.group_equals(self.df, 'hash')
-            if self.clustering_type == 'similarity' and self.groups.shape[0] <= self.threshold:
-                self.similarity_clustering()
-            else:
-                self.tokens_vectorization()
-                self.sentence_vectorization()
-                self.ml_clustering()
-                self.clusters_description()
-
-                # self.df["common_pattern"] = None
-                # self.df["key_phrases"] = None
-                # self.df["cluster_num"] = None
-                #
-                # self.df["key_phrases"] = self.df["key_phrases"].astype('object')
-                #
-                # def extend_source(x):
-                #     for p, indices in x["pattern_indices"].items():
-                #         self.df.loc[indices, "common_pattern"] = p
-                #         self.df.loc[indices, "key_phrases"] = str(x["common_phrases"])
-                #         self.df.loc[indices, "cluster_num"] = x["cluster_number"]
-                #
-                # self.result.apply(axis="columns", func=extend_source)
-                #
-                # self.df.drop(columns=["tokenized_pattern", "hash", "sequence"], inplace=True)
-                #
-                # self.df.to_csv(f'{self.output_fname}.orig.csv')
-
             self.process_timings()
 
             # Categorization
@@ -169,6 +149,33 @@ class Chain(object):
 
     def generateHash(self, sequences):
         return [hashlib.md5(repr(row).encode('utf-8')).hexdigest() for row in sequences]
+
+    def vectorization_and_mpi_clustering(self):
+        if comm_rank == 0:
+            self.tokens_vectorization()
+            self.sentence_vectorization()
+        else:
+            from .vectorization import Vector
+            self.vectors = Vector(None, None, None, None, '')
+            self.vectors.sent2vec = None
+
+        self.ml_clustering(comm)
+
+        if comm_rank == 0:
+            self.clusters_description()
+
+    def vectorization_and_clustering(self):
+        if comm_rank != 0:
+            return
+
+        if self.clustering_type == 'similarity' and self.groups.shape[0] <= self.threshold:
+            self.similarity_clustering()
+            return
+
+        self.tokens_vectorization()
+        self.sentence_vectorization()
+        self.ml_clustering(comm)
+        self.clusters_description()
 
     @safe_run
     def group_equals(self, df, column):
@@ -238,9 +245,10 @@ class Chain(object):
         return self
 
     @safe_run
-    def ml_clustering(self):
+    def ml_clustering(self, mpi_comm):
 
         self.clusters = MLClustering(
+            mpi_comm,
             self.df,
             self.vectors,
             self.cpu_number,
