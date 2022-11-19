@@ -12,5 +12,5 @@ python-rake==1.4.5
 pytextrank==2.0.1
 Jinja2==2.11.1
 google-pasta>=0.1.6
-rake-nltk 
+rake-nltk
 spacy

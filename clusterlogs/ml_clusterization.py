@@ -7,7 +7,7 @@ from hdbscan import HDBSCAN
 from sklearn.cluster import DBSCAN, AgglomerativeClustering
 from sklearn.neighbors import NearestNeighbors
 from sklearn.decomposition import PCA
-
+from sklearn import metrics
 from .phraser import extract_common_phrases
 from .Drain import LogParser
 from .tokenization import get_vocabulary, detokenize_messages
@@ -21,21 +21,22 @@ LIMIT = 30
 
 class MLClustering:
 
-    def __init__(self, df, groups, vectors, cpu_number, add_placeholder, method, tokenizer_type, pca):
+    def __init__(self, df, groups, vectors, cpu_number, add_placeholder, method, tokenizer_type, pca, clean_short):
         self.groups = groups
         self.df = df
         self.method = method
         self.vectors = vectors
         self.distances = None
         self.epsilon = None
-        self.min_samples = 1 
+        self.min_samples = 1
         self.cpu_number = cpu_number
         self.add_placeholder = add_placeholder
         self.tokenizer_type = tokenizer_type
         self.diversity_factor = 0
         self.pca = pca
-
-
+        self.clean_short=clean_short
+        self.metric='cosine'
+        
     def process(self):
         if self.method == 'dbscan':
             return self.dbscan()
@@ -43,6 +44,7 @@ class MLClustering:
             return self.hdbscan()
         if self.method == 'hierarchical':
             return self.hierarchical()
+        self.silhouette_score()
 
 
     def dimensionality_reduction(self):
@@ -85,17 +87,32 @@ class MLClustering:
             self.vectors.sent2vec = self.dimensionality_reduction()
         self.kneighbors()
         self.epsilon_search()
-        self.cluster_labels = DBSCAN(eps=self.epsilon,
+        self.db= DBSCAN(eps=self.epsilon,
                                      min_samples=self.min_samples,
                                      n_jobs=self.cpu_number) \
-            .fit_predict(self.vectors.sent2vec)
+            .fit(self.vectors.sent2vec)
+        self.cluster_labels=self.db.labels_ 
+        #self.groups['silhouette_coef'] = metrics.silhouette_samples(self.vectors.sent2vec, self.cluster_labels)#metric='cosine'
         self.groups['cluster'] = self.cluster_labels
-        print('DBSCAN finished with {} clusters'.format(len(set(self.cluster_labels))))
-        return pd.DataFrame.from_dict(
+        n_clusters= len(set(self.cluster_labels)) - (1 if -1 in self.cluster_labels else 0)
+        n_noise = list(self.cluster_labels).count(-1)
+        print('DBSCAN finished with %i clusters and %i noise points'% (n_clusters,n_noise))
+        df= pd.DataFrame.from_dict(
             [item for item in self.groups.groupby('cluster').apply(func=self.gb_regroup)],
             orient='columns').sort_values(by=['cluster_size'], ascending=False)
-
-
+        df=self.silhouette_score (df)
+        return df
+    
+    def silhouette_score (self,df):
+        X=self.vectors.sent2vec
+        labels=self.cluster_labels
+        sample_silhouette_values=metrics.silhouette_samples(X,labels)
+        means_lst = []
+        for label in df.index:
+            means_lst.append(sample_silhouette_values[labels == label].mean())
+        df['silhouette_coef']=means_lst
+        return df
+        
     def hdbscan(self):
         self.vectors.sent2vec = self.vectors.sent2vec if self.vectors.w2v_size <= 10 else self.dimensionality_reduction()
 
@@ -142,7 +159,7 @@ class MLClustering:
         common_pattern = detokenize_messages(tokenized_pattern, self.tokenizer_type)
 #         common_patt_cleaned = detokenize_messages(tok_patt_cleaned, self.tokenizer_type)#original in Maria 
         pattern_cl=[sublist[0] for sublist in gb['cleaned_strings'].values]
-        text = '. '.join(clean_messages(common_pattern))
+        text = '. '.join(clean_messages(common_pattern,self.clean_short))
         #phrases_pyTextRank = Phraser(text, 'pyTextRank')
         # print('Extracting key phrases...')
         # phrases_RAKE = extract_common_phrases(text, 'rake_nltk')
@@ -153,6 +170,7 @@ class MLClustering:
         #phase= [i for sublist in gb['failure_phase'].values for i in sublist]
         #scope = [i for sublist in gb['error_scope'].values for i in sublist]
         size = len(indices)
+        #average_sil=gb['silhouette_coef'].mean()
         phrases_RAKE = extract_common_phrases(text, 'RAKE')
         #phrases_RAKE = extract_common_phrases(text, 'rake_nltk')
 
@@ -175,6 +193,7 @@ class MLClustering:
                 'cleaned_pattern': pattern_cl,#message patterns made of cleaned strings
                 'indices': indices,
 #                 'error_code': code,
+               # 'silhoutte_score': average_sil,
                 'error_category': category,
 #                 'error_scope':scope,
 #                 'failure_phase':phase,

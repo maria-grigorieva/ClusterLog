@@ -55,20 +55,23 @@ class SClustering:
         common_sequence = sequence.sequence_matcher()
         # Detect indices for the group
         indices = [item for sublist in filtered['indices'].values for item in sublist]
+        pattern_cl=[sublist[0] for sublist in filtered['cleaned_strings'].values]
         # Convert list of sequences to text
         text = '. '.join([' '.join(row) for row in filtered['sequence'].values])
         # Extract common phrases
         # phrases_pyTextRank = Phraser(text, 'pyTextRank')
         phrases_RAKE = extract_common_phrases(text, 'RAKE')
-
+        category = [i for sublist in filtered['error_category'].values for i in sublist]
         result.append({'pattern': [textual_pattern],
-                       'tokenized_pattern': tokenized_pattern,
+                           #'tokenized_pattern': tokenized_pattern
                        'indices': indices,
+                       'category':category,
                        'cluster_size': len(indices),
+                       'cleaned_pattern': pattern_cl,
                        'sequence': common_sequence,
                        # 'common_phrases_pyTextRank': phrases_pyTextRank.extract_common_phrases(),
                        'common_phrases_RAKE': phrases_RAKE,
-                      'vec': df['ratio']>= self.accuracy})
+                     })
         df.drop(filtered.index, axis=0, inplace=True)
         while df.shape[0] > 0:
             self.reclustering(df, result)

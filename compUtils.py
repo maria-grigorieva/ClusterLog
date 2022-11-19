@@ -4,6 +4,53 @@ import numpy as np
 from pyspark.sql.types import StructField, StructType, StringType, LongType, IntegerType
 from pyspark.sql.functions import col
 
+#read data from HDFS, return pandas dataframe
+def readData(date,spark):
+    _schema = StructType([
+    StructField('metadata', StructType([StructField('timestamp',LongType(), nullable=True)])),
+    StructField('data', StructType([
+        StructField('endpnt', StringType(), nullable=True),
+        StructField('src_hostname', StringType(), nullable=True),
+        StructField('dst_hostname', StringType(), nullable=True),
+        StructField('t_error_code', IntegerType(), nullable=True),
+        StructField('tr_error_category', StringType(), nullable=True),
+        StructField('tr_error_scope', StringType(), nullable=True),
+        StructField('t_failure_phase', StringType(), nullable=True),
+        StructField('t__error_message', StringType(), nullable=True)])),])
+    fts_df = spark.read.json('/project/monitoring/archive/fts/raw/complete/{}'.format(date),schema=_schema)
+    fts_df = fts_df.select(
+    col('metadata.timestamp').alias('time'),
+    col('data.src_hostname').alias('src'),
+    col('data.endpnt').alias('endpnt'),
+    col('data.dst_hostname').alias('dst'),
+    col('data.t_error_code').alias('error_code'),
+    col('data.tr_error_category').alias('error_category'),
+    col('data.tr_error_scope').alias('error_scope'),
+    col('data.t_failure_phase').alias('failure_phase'),        
+    col('data.t__error_message').alias('error_message')).where('error_message <> ""')
+    df = fts_df.toPandas()
+    df.drop_duplicates(inplace=True)
+    
+    return df
+
+#read multiple dates
+def readDateVector(dateVec,spark):
+    _schema = StructType([
+    StructField('metadata', StructType([StructField('timestamp',LongType(), nullable=True)])),
+    StructField('data', StructType([
+        StructField('t__error_message', StringType(), nullable=True),
+        StructField('src_hostname', StringType(), nullable=True),
+        StructField('dst_hostname', StringType(), nullable=True)])),])
+    fts_df = spark.read.json(dateVec,schema=_schema)
+    fts_df = fts_df.select(
+    col('metadata.timestamp').alias('time'),
+    col('data.src_hostname').alias('src'),
+    col('data.dst_hostname').alias('dst'),
+    col('data.t__error_message').alias('error_message')).where('error_message <> ""')
+    df = fts_df.toPandas()
+    return df
+
+#compare distributions from CSV files
 def readCompareDist(file1, file2):
     df_1=pd.read_csv('{}_clusters.csv'.format(file1))
     df_2=pd.read_csv('{}_clusters.csv'.format(file2))
@@ -21,6 +68,7 @@ def readCompareDist(file1, file2):
     f.savefig("{}VS{}.pdf".format(file1,file2))
     return df_1,df_2
 
+#compare distributions from pandas dataframes
 def compareDist(df_1, df_2, label1, label2,bins):    
     f,ax=plt.subplots(figsize=(20,8))
     bins=bins
@@ -34,33 +82,7 @@ def compareDist(df_1, df_2, label1, label2,bins):
     ax.legend(['{}: {} clusters'.format(label1,df_1.shape[0]),'{}: {} clusters'.format(label2,df_2.shape[0])])
     plt.show()
     f.savefig("{}VS{}.pdf".format(label1,label2))
-   
-
-def readData(date,spark):
-    _schema = StructType([
-    StructField('metadata', StructType([StructField('timestamp',LongType(), nullable=True)])),
-    StructField('data', StructType([
-        StructField('src_hostname', StringType(), nullable=True),
-        StructField('dst_hostname', StringType(), nullable=True),
-        StructField('t_error_code', IntegerType(), nullable=True),
-        StructField('tr_error_category', StringType(), nullable=True),
-        StructField('tr_error_scope', StringType(), nullable=True),
-        StructField('t_failure_phase', StringType(), nullable=True),
-        StructField('t__error_message', StringType(), nullable=True)])),])
-    fts_df = spark.read.json('/project/monitoring/archive/fts/raw/complete/{}'.format(date),schema=_schema)
-    fts_df = fts_df.select(
-    col('metadata.timestamp').alias('time'),
-    col('data.src_hostname').alias('src'),
-    col('data.dst_hostname').alias('dst'),
-    col('data.t_error_code').alias('error_code'),
-    col('data.tr_error_category').alias('error_category'),
-    col('data.tr_error_scope').alias('error_scope'),
-    col('data.t_failure_phase').alias('failure_phase'),        
-    col('data.t__error_message').alias('error_message')).where('error_message <> ""')
-    df = fts_df.toPandas()
-    df.drop_duplicates(inplace=True)
     
-    return df
 
 def explode(df, lst_cols, fill_value='', preserve_index=False):
     # make sure `lst_cols` is list-alike
@@ -93,18 +115,4 @@ def explode(df, lst_cols, fill_value='', preserve_index=False):
         res = res.reset_index(drop=True)
     return res
 
-def readDateVector(dateVec,spark):
-    _schema = StructType([
-    StructField('metadata', StructType([StructField('timestamp',LongType(), nullable=True)])),
-    StructField('data', StructType([
-        StructField('t__error_message', StringType(), nullable=True),
-        StructField('src_hostname', StringType(), nullable=True),
-        StructField('dst_hostname', StringType(), nullable=True)])),])
-    fts_df = spark.read.json(dateVec,schema=_schema)
-    fts_df = fts_df.select(
-    col('metadata.timestamp').alias('time'),
-    col('data.src_hostname').alias('src'),
-    col('data.dst_hostname').alias('dst'),
-    col('data.t__error_message').alias('error_message')).where('error_message <> ""')
-    df = fts_df.toPandas()
-    return df
+

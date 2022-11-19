@@ -70,7 +70,10 @@ class Chain(object):
                  clustering_type=CLUSTERING_TYPE,
                  algorithm=ALGORITHM,
                  categorization=False,
-                 generate_html_report=False):
+                 generate_html_report=False,
+                 tf_idf=True,
+                 min_freq=True,
+                 clean_short=False):
         self.df = df
         self.target = target
         self.tokenizer_type = tokenizer_type
@@ -88,7 +91,9 @@ class Chain(object):
         self.categorization = categorization
         self.generate_html_report = generate_html_report
         self.dimensionality_reduction = dimensionality_reduction
-
+        self.tf_idf=tf_idf
+        self.min_freq=min_freq
+        self.clean_short=clean_short
     @staticmethod
     def get_cpu_number():
         return multiprocessing.cpu_count()
@@ -134,10 +139,11 @@ class Chain(object):
     @safe_run
     def tokenization(self):
         self.df['tokenized_pattern'] = tokenize_messages(self.df[self.target].values, self.tokenizer_type)
-        pre_cleaned_mex=pre_cleaning(self.df[self.target].values)
-        self.df['cleaned_strings'] = clean_messages(pre_cleaned_mex)
+#         pre_cleaned_mex=pre_cleaning(self.df[self.target].values)
+#         self.df['cleaned_strings'] = clean_messages(pre_cleaned_mex)
+        self.df['cleaned_strings'] = clean_messages(self.df[self.target].values,self.clean_short)
         cleaned_tokens = tokenize_messages(self.df['cleaned_strings'].values, self.tokenizer_type, spacer_annotate=False, spacer_new=False)
-        cleaned_tokens= clean_tokenized(cleaned_tokens)#remove stopwords
+        cleaned_tokens= clean_tokenized(cleaned_tokens,min_freq=self.min_freq)#remove stopwords
 #         self.df['hash'] = self.generateHash(self.df['cleaned_strings'].values)
         self.df['hash'] = self.generateHash(self.df['cleaned_strings'])
         self.df['sequence'] = cleaned_tokens
@@ -154,7 +160,7 @@ class Chain(object):
             self.sentence_vectorization()
             self.ml_clusterization()
             
-
+        print("--- %s seconds ---" % (time() - start_time))
         # Categorization
         if self.generate_html_report:
             if self.categorization:
@@ -162,7 +168,7 @@ class Chain(object):
                 report.categorized_report(self.categories, self.output_file)
             else:
                 report.generate_html_report(self.result, self.output_file)
-        print("--- %s seconds ---" % (time() - start_time))
+        
 
     def generateHash(self, sequences):
         return [hashlib.md5(repr(row).encode('utf-8')).hexdigest() for row in sequences]
@@ -234,7 +240,7 @@ class Chain(object):
         of all the words in each sentence
         :return:
         """
-        self.vectors.vectorize_messages(tf_idf=False)
+        self.vectors.vectorize_messages(tf_idf=self.tf_idf)
         print('Vectorization of sentences is finished')
         return self
 
@@ -245,7 +251,7 @@ class Chain(object):
                                      self.vectors, self.cpu_number, self.add_placeholder,
                                      self.algorithm,
                                      self.tokenizer_type,
-                                     self.dimensionality_reduction)
+                                     self.dimensionality_reduction,self.clean_short)
         self.result = self.clusters.process() #process as described in ml_clusterization.py
 
     def in_cluster(self, groups, cluster_label):
